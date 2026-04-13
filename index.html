@@ -147,6 +147,26 @@
     .dash-grid { grid-template-columns: repeat(2,1fr); }
     .fw-status-grid { grid-template-columns: repeat(3,1fr); }
   }
+
+  .settings-section { background:white; border-radius:10px; border:1px solid var(--border); padding:20px; margin-bottom:16px; }
+  .settings-section h4 { font-size:13px; font-weight:700; color:var(--navy); margin-bottom:14px; padding-bottom:8px; border-bottom:1.5px solid var(--lblue); }
+  .item-list { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .item-row { display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--gray); border-radius:7px; }
+  .item-row .item-num { font-weight:700; color:var(--dgray); font-size:12px; min-width:24px; }
+  .item-row input { flex:1; padding:5px 8px; border:1.5px solid var(--border); border-radius:5px; font-size:12px; outline:none; }
+  .item-row input:focus { border-color:var(--blue); }
+  .item-row .del-btn { background:none; border:none; color:#ccc; cursor:pointer; font-size:16px; padding:0 4px; }
+  .item-row .del-btn:hover { color:var(--red); }
+  .add-row { display:flex; gap:8px; margin-top:4px; }
+  .add-row input { flex:1; padding:7px 10px; border:1.5px solid var(--border); border-radius:6px; font-size:12px; outline:none; }
+  .add-row input:focus { border-color:var(--blue); }
+  .btn-add { background:var(--blue); color:white; border:none; padding:7px 16px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .btn-add:hover { background:#1a5fa8; }
+  .route-row { display:grid; grid-template-columns:40px 80px 70px 90px 90px 70px 60px 30px; gap:6px; align-items:center; padding:6px 10px; background:var(--gray); border-radius:6px; }
+  .route-row input { padding:4px 6px; border:1.5px solid var(--border); border-radius:4px; font-size:11px; outline:none; width:100%; }
+  .route-row input:focus { border-color:var(--blue); }
+  .route-row .no-label { font-weight:700; color:var(--dgray); font-size:12px; text-align:center; }
+  .save-banner { background:#E8F5E9; border:1px solid #A5D6A7; border-radius:8px; padding:10px 16px; font-size:12px; color:#2E7D32; font-weight:600; display:none; margin-bottom:12px; }
 </style>
 </head>
 <body>
@@ -267,6 +287,7 @@
       <div class="tab" onclick="showTab('rank')">순위계산</div>
       <div class="tab" onclick="showTab('report')">보고자료</div>
       <div class="tab" onclick="showTab('eval')">종합평가</div>
+      <div class="tab" onclick="showTab('settings')">⚙ 설정</div>
     </div>
 
     <!-- 현황 탭 -->
@@ -361,6 +382,78 @@
         <div id="eval-content"></div>
       </div>
     </div>
+  </div>
+
+    <div id="tab-settings" style="display:none;">
+      <div class="save-banner" id="settings-banner">✓ 저장되었습니다. 페이지를 새로고침하면 반영됩니다.</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <!-- 포워더 관리 -->
+        <div class="settings-section">
+          <h4>포워더 관리</h4>
+          <div style="display:grid;grid-template-columns:24px 1fr 1fr 28px;gap:8px;padding:4px 12px;margin-bottom:4px;">
+            <div></div>
+            <div style="font-size:10px;color:var(--dgray);font-weight:700;">업체명</div>
+            <div style="font-size:10px;color:var(--dgray);font-weight:700;">비밀번호 (포워더별 개별 설정)</div>
+            <div></div>
+          </div>
+          <div class="item-list" id="fw-list"></div>
+          <div class="add-row">
+            <input type="text" id="new-fw-name" placeholder="새 포워더명 입력">
+            <button class="btn-add" onclick="addForwarder()">+ 추가</button>
+          </div>
+          <div style="margin-top:12px;">
+            <button class="btn-sm btn-primary" onclick="saveForwarders()">저장</button>
+          </div>
+        </div>
+
+        <!-- 기본 설정 -->
+        <div class="settings-section">
+          <h4>기본 설정</h4>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div>
+              <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">기준 환율 (KRW/USD)</label>
+              <input type="number" id="cfg-exrate" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">사업계획 매출 (C조건, 원)</label>
+              <input type="number" id="cfg-plan-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">사업계획 물류비 (C조건, 원)</label>
+              <input type="number" id="cfg-plan-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">공통 비밀번호 (개별 미설정 시 적용)</label>
+              <input type="text" id="cfg-fw-pw" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+            </div>
+            <button class="btn-sm btn-primary" onclick="saveConfig()">저장</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 노선 관리 -->
+      <div class="settings-section">
+        <h4>노선 관리</h4>
+        <div style="display:grid;grid-template-columns:40px 80px 70px 90px 90px 70px 60px 30px;gap:6px;padding:6px 10px;margin-bottom:4px;">
+          <div style="font-size:10px;color:var(--dgray);font-weight:700;text-align:center;">NO</div>
+          <div style="font-size:10px;color:var(--dgray);font-weight:700;">도착국가</div>
+          <div style="font-size:10px;color:var(--dgray);font-weight:700;">작업지</div>
+          <div style="font-size:10px;color:var(--dgray);font-weight:700;">출발PORT</div>
+          <div style="font-size:10px;color:var(--dgray);font-weight:700;">도착PORT</div>
+          <div style="font-size:10px;color:var(--dgray);font-weight:700;">CTNR</div>
+          <div style="font-size:10px;color:var(--dgray);font-weight:700;">예상물량</div>
+          <div></div>
+        </div>
+        <div class="item-list" id="route-list" style="gap:5px;"></div>
+        <button class="btn-add" style="margin-top:8px;" onclick="addRoute()">+ 노선 추가</button>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+          <button class="btn-sm btn-primary" onclick="saveRoutes()">저장</button>
+          <span style="font-size:11px;color:var(--dgray);">저장 후 포워더 입력 양식에 바로 반영됩니다.</span>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -477,7 +570,9 @@ function doLogin() {
     const fw = document.getElementById('fw-select').value;
     const pw = document.getElementById('fw-password').value;
     if(!fw) { showLoginErr('업체를 선택해주세요.'); return; }
-    if(pw !== FW_PW) { showLoginErr('비딩 코드가 올바르지 않습니다.'); return; }
+    // 포워더별 비밀번호 우선, 없으면 공통 비밀번호
+    const validPw = (cfgFwPasswords && cfgFwPasswords[fw]) ? cfgFwPasswords[fw] : (cfgFwPw || FW_PW);
+    if(pw !== validPw) { showLoginErr('비딩 코드가 올바르지 않습니다.'); return; }
     currentFw = fw;
     showFwPage();
   } else {
@@ -937,6 +1032,188 @@ if(!window.storage) {
   const saved = await loadFromStorage('eval_scores');
   if(saved) Object.assign(evalScores, saved);
 })();
+
+
+// ══════════════════════════════════════════
+// 설정 탭
+// ══════════════════════════════════════════
+
+// 현재 설정값 (스토리지에서 로드, 없으면 기본값)
+let cfgForwarders = [...FORWARDERS];
+let cfgFwPasswords = {};  // {업체명: 비밀번호}
+let cfgRoutes = ROUTES.map(r=>({...r}));
+let cfgExRate = EXCHANGE_RATE;
+let cfgPlanSales = PLAN_SALES;
+let cfgPlanLogistics = PLAN_LOGISTICS;
+let cfgFwPw = FW_PW;
+
+// 설정 로드 (앱 시작 시)
+async function loadSettings() {
+  const fwSaved = await loadFromStorage('cfg_forwarders');
+  if(fwSaved && fwSaved.length > 0) cfgForwarders = fwSaved;
+
+  const rtSaved = await loadFromStorage('cfg_routes');
+  if(rtSaved && rtSaved.length > 0) cfgRoutes = rtSaved;
+
+  const cfgSaved = await loadFromStorage('cfg_basic');
+  if(cfgSaved) {
+    if(cfgSaved.exRate) cfgExRate = cfgSaved.exRate;
+    if(cfgSaved.planSales) cfgPlanSales = cfgSaved.planSales;
+    if(cfgSaved.planLogistics) cfgPlanLogistics = cfgSaved.planLogistics;
+    if(cfgSaved.fwPw) cfgFwPw = cfgSaved.fwPw;
+  }
+
+  const pwSaved = await loadFromStorage('cfg_fw_passwords');
+  if(pwSaved) cfgFwPasswords = pwSaved;
+
+  // 포워더 선택 드롭다운 업데이트
+  updateFwDropdown();
+}
+
+function updateFwDropdown() {
+  const sel = document.getElementById('fw-select');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- 업체를 선택하세요 --</option>';
+  cfgForwarders.forEach(fw => {
+    const opt = document.createElement('option');
+    opt.value = fw; opt.textContent = fw;
+    if(fw === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function showSettingsTab() {
+  // 포워더 목록 렌더
+  renderFwList();
+  // 노선 목록 렌더
+  renderRouteList();
+  // 기본 설정 값 채우기
+  document.getElementById('cfg-exrate').value = cfgExRate;
+  document.getElementById('cfg-plan-sales').value = cfgPlanSales;
+  document.getElementById('cfg-plan-logistics').value = cfgPlanLogistics;
+  document.getElementById('cfg-fw-pw').value = cfgFwPw;
+}
+
+function renderFwList() {
+  const list = document.getElementById('fw-list');
+  list.innerHTML = cfgForwarders.map((fw, i) => {
+    const pw = cfgFwPasswords[fw] || '';
+    return `
+    <div class="item-row" style="grid-template-columns:24px 1fr 1fr 28px;display:grid;gap:8px;align-items:center;">
+      <span class="item-num" style="text-align:center;">${i+1}</span>
+      <input type="text" value="${fw}" placeholder="업체명" onchange="renameFw(${i},this.value)" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:5px;font-size:12px;outline:none;">
+      <input type="text" value="${pw}" placeholder="비밀번호 설정" onchange="cfgFwPasswords['${fw}']=this.value" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:5px;font-size:12px;outline:none;background:#FFFDE7;">
+      <button class="del-btn" onclick="removeForwarder(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renameFw(idx, newName) {
+  const oldName = cfgForwarders[idx];
+  cfgForwarders[idx] = newName;
+  // 비밀번호도 새 이름으로 이전
+  if(cfgFwPasswords[oldName]) {
+    cfgFwPasswords[newName] = cfgFwPasswords[oldName];
+    delete cfgFwPasswords[oldName];
+  }
+}
+
+function addForwarder() {
+  const inp = document.getElementById('new-fw-name');
+  const name = inp.value.trim();
+  if(!name) return;
+  if(cfgForwarders.includes(name)) { showToast('이미 있는 업체명이에요.'); return; }
+  cfgForwarders.push(name);
+  inp.value = '';
+  renderFwList();
+}
+
+function removeForwarder(idx) {
+  if(cfgForwarders.length <= 1) { showToast('최소 1개 이상의 포워더가 필요해요.'); return; }
+  cfgForwarders.splice(idx, 1);
+  renderFwList();
+}
+
+async function saveForwarders() {
+  // 렌더된 비밀번호 입력값 수집
+  const rows = document.getElementById('fw-list').querySelectorAll('.item-row');
+  rows.forEach((row, i) => {
+    const inputs = row.querySelectorAll('input');
+    const fwName = inputs[0].value.trim();
+    const fwPw   = inputs[1].value.trim();
+    if(fwName) cfgFwPasswords[fwName] = fwPw;
+  });
+
+  const ok1 = await saveToStorage('cfg_forwarders', cfgForwarders);
+  const ok2 = await saveToStorage('cfg_fw_passwords', cfgFwPasswords);
+  if(ok1 && ok2) {
+    updateFwDropdown();
+    showSettingsBanner();
+    showToast('포워더 목록과 비밀번호가 저장됐어요!');
+  }
+}
+
+function renderRouteList() {
+  const list = document.getElementById('route-list');
+  list.innerHTML = cfgRoutes.map((r, i) => `
+    <div class="route-row">
+      <div class="no-label">${r.no}</div>
+      <input type="text" value="${r.nation||''}" placeholder="도착국가" onchange="cfgRoutes[${i}].nation=this.value">
+      <input type="text" value="${r.site||''}" placeholder="작업지" onchange="cfgRoutes[${i}].site=this.value">
+      <input type="text" value="${r.port_o||''}" placeholder="출발PORT" onchange="cfgRoutes[${i}].port_o=this.value">
+      <input type="text" value="${r.port_i||''}" placeholder="도착PORT" onchange="cfgRoutes[${i}].port_i=this.value">
+      <input type="text" value="${r.ctnr||''}" placeholder="CTNR" onchange="cfgRoutes[${i}].ctnr=this.value">
+      <input type="number" value="${r.vol||''}" placeholder="물량" onchange="cfgRoutes[${i}].vol=parseInt(this.value)||0" style="text-align:right;">
+      <button class="del-btn" onclick="removeRoute(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addRoute() {
+  const lastNo = cfgRoutes.length > 0 ? Math.max(...cfgRoutes.map(r=>r.no||0)) + 1 : 1;
+  cfgRoutes.push({no:lastNo, nation:'', site:'', port_o:'', port_i:'', ctnr:'', vol:0});
+  renderRouteList();
+  // 스크롤 아래로
+  document.getElementById('route-list').lastElementChild?.scrollIntoView({behavior:'smooth'});
+}
+
+function removeRoute(idx) {
+  cfgRoutes.splice(idx, 1);
+  renderRouteList();
+}
+
+async function saveRoutes() {
+  const ok = await saveToStorage('cfg_routes', cfgRoutes);
+  if(ok) {
+    showSettingsBanner();
+    showToast('노선 정보가 저장됐어요!');
+  }
+}
+
+async function saveConfig() {
+  const cfg = {
+    exRate:        parseFloat(document.getElementById('cfg-exrate').value) || EXCHANGE_RATE,
+    planSales:     parseFloat(document.getElementById('cfg-plan-sales').value) || PLAN_SALES,
+    planLogistics: parseFloat(document.getElementById('cfg-plan-logistics').value) || PLAN_LOGISTICS,
+    fwPw:          document.getElementById('cfg-fw-pw').value || FW_PW,
+  };
+  const ok = await saveToStorage('cfg_basic', cfg);
+  if(ok) {
+    cfgExRate = cfg.exRate;
+    cfgPlanSales = cfg.planSales;
+    cfgPlanLogistics = cfg.planLogistics;
+    cfgFwPw = cfg.fwPw;
+    showSettingsBanner();
+    showToast('기본 설정이 저장됐어요!');
+  }
+}
+
+function showSettingsBanner() {
+  const b = document.getElementById('settings-banner');
+  b.style.display = 'block';
+  setTimeout(() => b.style.display='none', 4000);
+}
+
 </script>
 </body>
 </html>
