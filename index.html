@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>매일유업 포워딩 비딩 2026 하반기</title>
+<style>
+  :root {
+    --navy: #1F4E79;
+    --blue: #2E75B6;
+    --lblue: #BDD7EE;
+    --green: #70AD47;
+    --orange: #ED7D31;
+    --red: #C00000;
+    --gray: #F2F2F2;
+    --dgray: #595959;
+    --border: #D9D9D9;
+    --yellow: #FFF2CC;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; font-size: 13px; background: #F5F7FA; color: #222; }
+  
+  /* 공통 */
+  .page { display: none; }
+  .page.active { display: block; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+  
+  /* 헤더 */
+  .top-bar { background: var(--navy); color: white; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .top-bar h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+  .top-bar .sub { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+  .nav-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  .nav-btn:hover { background: rgba(255,255,255,0.25); }
+  
+  /* 로그인 */
+  #login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1F4E79 0%, #2E75B6 100%); }
+  .login-box { background: white; border-radius: 16px; padding: 48px 40px; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+  .login-logo { text-align: center; margin-bottom: 32px; }
+  .login-logo .co { font-size: 13px; color: var(--dgray); }
+  .login-logo .title { font-size: 20px; font-weight: 700; color: var(--navy); margin-top: 6px; }
+  .login-logo .period { font-size: 12px; color: var(--blue); margin-top: 4px; }
+  .role-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .role-tab { flex: 1; padding: 10px; border: 1.5px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; font-size: 12px; color: var(--dgray); transition: all 0.15s; }
+  .role-tab.active { border-color: var(--navy); background: var(--navy); color: white; font-weight: 600; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; color: var(--dgray); margin-bottom: 6px; font-weight: 600; }
+  .form-group select, .form-group input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; transition: border 0.15s; }
+  .form-group select:focus, .form-group input:focus { border-color: var(--blue); }
+  .btn-login { width: 100%; padding: 12px; background: var(--navy); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+  .btn-login:hover { background: #163a5f; }
+  .login-err { color: var(--red); font-size: 12px; text-align: center; margin-top: 12px; display: none; }
+
+  /* 포워더 입력 페이지 */
+  .fw-header { background: white; border-bottom: 1px solid var(--border); padding: 16px 24px; }
+  .fw-header h2 { font-size: 16px; color: var(--navy); font-weight: 700; }
+  .fw-header p { font-size: 12px; color: var(--dgray); margin-top: 4px; }
+  .info-bar { background: var(--yellow); border: 1px solid #FFD966; border-radius: 8px; padding: 10px 16px; margin: 16px 0; font-size: 12px; color: #7F6000; }
+  
+  /* 입력 테이블 */
+  .input-table-wrap { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: auto; margin-bottom: 20px; }
+  .input-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1200px; }
+  .input-table th { background: var(--navy); color: white; padding: 8px 6px; text-align: center; font-weight: 600; font-size: 11px; border-right: 1px solid rgba(255,255,255,0.15); white-space: nowrap; position: sticky; top: 0; }
+  .input-table td { padding: 5px 4px; border-bottom: 1px solid #eee; border-right: 1px solid #f0f0f0; text-align: center; }
+  .input-table tr:hover td { background: #f8f9ff; }
+  .input-table tr.domestic td.info { background: #EEF2F7; color: var(--dgray); }
+  td.info { background: var(--gray); font-size: 11px; color: #444; }
+  td.vol { background: #EEF2F7; color: var(--dgray); font-weight: 600; }
+  td.total { background: #E8F5E9; color: #2E7D32; font-weight: 700; font-size: 12px; }
+  td.nation { font-weight: 600; color: var(--navy); }
+  td.no { font-weight: 700; color: var(--dgray); font-size: 11px; }
+  .input-table input[type=number] { width: 100%; padding: 4px 6px; border: 1.5px solid var(--border); border-radius: 4px; font-size: 12px; text-align: right; outline: none; background: var(--yellow); }
+  .input-table input[type=number]:focus { border-color: var(--blue); background: white; }
+  .input-table input[type=text] { width: 100%; padding: 4px 6px; border: 1.5px solid var(--border); border-radius: 4px; font-size: 11px; outline: none; background: var(--yellow); }
+  .input-table input[type=text]:focus { border-color: var(--blue); background: white; }
+  .section-divider td { background: #EEF2F7; font-weight: 700; color: var(--navy); font-size: 11px; padding: 6px 10px; text-align: left; }
+  
+  .btn-submit { background: var(--green); color: white; border: none; padding: 14px 40px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .btn-submit:hover { background: #5a9438; }
+  .btn-submit:disabled { background: #aaa; cursor: not-allowed; }
+  .submit-area { display: flex; align-items: center; gap: 16px; padding: 16px 0; }
+  .save-status { font-size: 12px; color: var(--dgray); }
+  .save-status.saved { color: var(--green); font-weight: 600; }
+  .save-status.error { color: var(--red); }
+
+  /* 담당자 대시보드 */
+  .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; }
+  .stat-card .label { font-size: 12px; color: var(--dgray); margin-bottom: 8px; }
+  .stat-card .value { font-size: 26px; font-weight: 700; color: var(--navy); }
+  .stat-card .sub { font-size: 11px; color: var(--dgray); margin-top: 4px; }
+  .stat-card.green .value { color: var(--green); }
+  .stat-card.orange .value { color: var(--orange); }
+  
+  /* 포워더 제출 현황 */
+  .fw-status-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 24px; }
+  .fw-card { background: white; border-radius: 10px; border: 2px solid var(--border); padding: 14px; text-align: center; transition: all 0.2s; }
+  .fw-card.submitted { border-color: var(--green); background: #F1F8E9; }
+  .fw-card.submitted .fw-name { color: var(--green); }
+  .fw-card .fw-name { font-weight: 700; font-size: 13px; color: var(--dgray); }
+  .fw-card .fw-count { font-size: 11px; color: var(--dgray); margin-top: 4px; }
+  .fw-card .fw-badge { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .fw-card.submitted .fw-badge { background: var(--green); color: white; }
+  .fw-card:not(.submitted) .fw-badge { background: var(--border); color: var(--dgray); }
+
+  /* 순위 테이블 */
+  .rank-table-wrap { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: auto; margin-bottom: 20px; }
+  .rank-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
+  .rank-table th { background: var(--navy); color: white; padding: 8px; text-align: center; font-size: 11px; }
+  .rank-table td { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: center; }
+  .rank-table tr:hover td { background: #f8f9ff; }
+  .rank-1 { background: #E8F5E9; color: #2E7D32; font-weight: 700; }
+  .rank-2 { background: #F3F8E8; color: #558B2F; }
+  .rank-3 { background: #FFFDE7; color: #F57F17; }
+  .rank-4 { background: #FFF3E0; color: #E65100; }
+  .no-data { color: #aaa; font-style: italic; }
+
+  /* 보고자료 */
+  .report-section { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 24px; margin-bottom: 20px; }
+  .report-section h3 { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid var(--lblue); }
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .summary-table th { background: var(--navy); color: white; padding: 8px 12px; text-align: center; }
+  .summary-table td { padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right; }
+  .summary-table td:first-child { text-align: left; font-weight: 600; }
+  .summary-table tr.total { background: var(--lblue); font-weight: 700; }
+  .highlight { color: var(--green); font-weight: 700; }
+  .negative { color: var(--red); font-weight: 700; }
+
+  /* 탭 */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+  .tab { padding: 10px 20px; cursor: pointer; font-size: 13px; color: var(--dgray); border-bottom: 2px solid transparent; margin-bottom: -2px; font-weight: 600; }
+  .tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+  /* 섹션 제목 */
+  .sec-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .sec-title h3 { font-size: 15px; font-weight: 700; color: var(--navy); }
+  .btn-sm { padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1.5px solid; font-weight: 600; }
+  .btn-primary { background: var(--navy); color: white; border-color: var(--navy); }
+  .btn-primary:hover { background: #163a5f; }
+  .btn-outline { background: white; color: var(--navy); border-color: var(--navy); }
+  .btn-outline:hover { background: var(--gray); }
+
+  /* 토스트 */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #333; color: white; padding: 12px 20px; border-radius: 8px; font-size: 13px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 768px) {
+    .dash-grid { grid-template-columns: repeat(2,1fr); }
+    .fw-status-grid { grid-template-columns: repeat(3,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- 로그인 페이지 -->
+<div id="login-page" class="page active">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="co">매일유업 해외사업기획팀</div>
+      <div class="title">포워딩 비딩 시스템</div>
+      <div class="period">2026년 하반기 (2026.07 ~ 2026.12)</div>
+    </div>
+    <div class="role-tabs">
+      <div class="role-tab active" onclick="setRole('forwarder')">포워더 견적 입력</div>
+      <div class="role-tab" onclick="setRole('admin')">담당자 관리</div>
+    </div>
+    <div id="forwarder-form">
+      <div class="form-group">
+        <label>업체 선택</label>
+        <select id="fw-select">
+          <option value="">-- 업체를 선택하세요 --</option>
+          <option value="람세스">람세스</option>
+          <option value="원스탑">원스탑</option>
+          <option value="판토스">판토스</option>
+          <option value="태웅">태웅</option>
+          <option value="JPI">JPI</option>
+          <option value="솔트랜스">솔트랜스</option>
+          <option value="오리엔트">오리엔트</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>비딩 코드</label>
+        <input type="password" id="fw-password" placeholder="담당자에게 문의하세요">
+      </div>
+    </div>
+    <div id="admin-form" style="display:none;">
+      <div class="form-group">
+        <label>관리자 비밀번호</label>
+        <input type="password" id="admin-password" placeholder="관리자 비밀번호 입력">
+      </div>
+    </div>
+    <button class="btn-login" onclick="doLogin()">입장하기</button>
+    <div class="login-err" id="login-err">비밀번호가 올바르지 않습니다.</div>
+  </div>
+</div>
+
+<!-- 포워더 입력 페이지 -->
+<div id="fw-page" class="page">
+  <div class="top-bar">
+    <div>
+      <div style="font-size:15px;font-weight:700;" id="fw-title">견적 입력</div>
+      <div style="font-size:11px;opacity:0.7;">매일유업 포워딩 비딩 2026 하반기</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span id="fw-save-indicator" style="font-size:12px;opacity:0.8;"></span>
+      <button class="nav-btn" onclick="logout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="info-bar">
+      노란색 셀에만 운임을 입력하세요. 입력한 내용은 실시간으로 저장됩니다. 모든 구간 입력 완료 후 하단의 <strong>[견적 제출]</strong> 버튼을 눌러주세요.
+      기준환율: <strong>1,450 KRW/USD</strong>
+    </div>
+    <div class="input-table-wrap">
+      <table class="input-table" id="fw-table">
+        <thead>
+          <tr>
+            <th style="width:30px;">NO</th>
+            <th>도착국가</th>
+            <th>작업지</th>
+            <th>출발PORT</th>
+            <th>도착PORT</th>
+            <th>CTNR</th>
+            <th style="width:50px;">예상물량</th>
+            <th>O/FRT<br>(USD/CTNR)</th>
+            <th>LSS<br>(USD/CTNR)</th>
+            <th>AMS/AFR<br>(USD/CTNR)</th>
+            <th>THC<br>(원)</th>
+            <th>내륙운송료<br>(원)</th>
+            <th>DOC<br>(원)</th>
+            <th>WFG<br>(원)</th>
+            <th>SEF<br>(원)</th>
+            <th>PSC<br>(원)</th>
+            <th>PSM<br>(원)</th>
+            <th>적하보험요율<br>(%)</th>
+            <th>스케줄</th>
+            <th>비고</th>
+            <th>★합계(원)</th>
+          </tr>
+        </thead>
+        <tbody id="fw-tbody"></tbody>
+      </table>
+    </div>
+    <div class="submit-area">
+      <button class="btn-submit" onclick="submitQuote()" id="submit-btn">
+        <span>✓</span> 견적 제출 완료
+      </button>
+      <span class="save-status" id="submit-status"></span>
+    </div>
+  </div>
+</div>
+
+<!-- 담당자 대시보드 -->
+<div id="admin-page" class="page">
+  <div class="top-bar">
+    <div>
+      <div style="font-size:15px;font-weight:700;">관리자 대시보드</div>
+      <div style="font-size:11px;opacity:0.7;">매일유업 포워딩 비딩 2026 하반기</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="nav-btn" onclick="refreshData()">새로고침</button>
+      <button class="nav-btn" onclick="logout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('dash')">현황</div>
+      <div class="tab" onclick="showTab('rank')">순위계산</div>
+      <div class="tab" onclick="showTab('report')">보고자료</div>
+      <div class="tab" onclick="showTab('eval')">종합평가</div>
+    </div>
+
+    <!-- 현황 탭 -->
+    <div id="tab-dash" class="tab-content">
+      <div class="dash-grid" id="stat-cards"></div>
+      <div class="sec-title"><h3>포워더별 제출 현황</h3></div>
+      <div class="fw-status-grid" id="fw-status-grid"></div>
+      <div class="sec-title">
+        <h3>최근 제출 내역</h3>
+        <button class="btn-sm btn-outline" onclick="exportExcel()">Excel 내보내기</button>
+      </div>
+      <div class="rank-table-wrap">
+        <table class="rank-table">
+          <thead><tr><th>업체명</th><th>제출 시각</th><th>입력 구간 수</th><th>상태</th></tr></thead>
+          <tbody id="submission-log"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 순위계산 탭 -->
+    <div id="tab-rank" class="tab-content" style="display:none;">
+      <div class="sec-title">
+        <h3>노선별 순위 자동계산</h3>
+        <div style="display:flex;gap:8px;">
+          <select id="nation-filter" onchange="renderRankTable()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
+            <option value="all">전체 노선</option>
+            <option value="중국">중국</option>
+            <option value="대만">대만</option>
+            <option value="미국">미국</option>
+            <option value="싱가폴">싱가폴</option>
+            <option value="말레이시아">말레이시아</option>
+            <option value="홍콩">홍콩</option>
+            <option value="국내">국내</option>
+          </select>
+        </div>
+      </div>
+      <div class="rank-table-wrap">
+        <table class="rank-table" id="rank-table">
+          <thead>
+            <tr>
+              <th>NO</th><th>도착국가</th><th>작업지</th><th>출발PORT</th><th>도착PORT</th><th>CTNR</th><th>예상물량</th>
+              <th class="rank-1">1위 업체</th><th class="rank-1">1위 금액(원)</th>
+              <th class="rank-2">2위 업체</th><th class="rank-2">2위 금액(원)</th>
+              <th class="rank-3">3위 업체</th><th class="rank-3">3위 금액(원)</th>
+              <th>절감여력(원)</th>
+            </tr>
+          </thead>
+          <tbody id="rank-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 보고자료 탭 -->
+    <div id="tab-report" class="tab-content" style="display:none;">
+      <div class="sec-title">
+        <h3>물류비 비딩 결과 보고자료</h3>
+        <button class="btn-sm btn-primary" onclick="printReport()">인쇄 / PDF</button>
+      </div>
+      <div id="report-content">
+        <div class="report-section">
+          <h3>1. 물류비 비딩 결과 요약</h3>
+          <table class="summary-table" id="summary-table"></table>
+        </div>
+        <div class="report-section">
+          <h3>2. 노선별 선정 포워더</h3>
+          <div class="rank-table-wrap" style="border:none;">
+            <table class="rank-table" id="report-route-table">
+              <thead>
+                <tr>
+                  <th>NO</th><th>도착국가</th><th>작업지</th><th>출발PORT</th><th>도착PORT</th><th>CTNR</th><th>예상물량</th>
+                  <th class="rank-1">선정업체</th><th class="rank-1">선정 견적가(원)</th>
+                  <th class="rank-2">2위 업체</th><th class="rank-2">2위 금액(원)</th>
+                  <th>절감여력(원)</th>
+                </tr>
+              </thead>
+              <tbody id="report-route-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="report-section">
+          <h3>3. 국가별 물류비 소계</h3>
+          <table class="summary-table" id="country-table"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 종합평가 탭 -->
+    <div id="tab-eval" class="tab-content" style="display:none;">
+      <div class="sec-title"><h3>업체 종합평가</h3></div>
+      <div class="report-section">
+        <p style="font-size:12px;color:var(--dgray);margin-bottom:16px;">역량평가 점수를 입력하세요. 가격평가는 순위 데이터에서 자동 계산됩니다.</p>
+        <div id="eval-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const EXCHANGE_RATE = 1450;
+const ADMIN_PW = 'maeil2026!';
+const FW_PW = 'bidding2026';
+const PLAN_SALES = 3586500000;
+const PLAN_LOGISTICS = 282110000;
+const F_SALES = 23423904724;
+const F_LOGISTICS = 1470281964;
+
+const FORWARDERS = ['람세스','원스탑','판토스','태웅','JPI','솔트랜스','오리엔트'];
+const VOL = {2:81,3:40,4:2,5:24,6:18,8:90,10:20,12:10,14:5,16:6,17:3,18:6,19:5,20:6,22:2,24:4,26:4,28:2,29:7};
+
+const ROUTES = [
+  {no:1,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'상해',ctnr:'20DRY'},
+  {no:2,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'상해',ctnr:'40DRY'},
+  {no:3,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'상해',ctnr:'40RF'},
+  {no:4,nation:'중국',site:'도곡',port_o:'평택',port_i:'상해',ctnr:'40RF'},
+  {no:5,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'천진',ctnr:'40RF'},
+  {no:6,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'심천',ctnr:'40RF'},
+  {no:7,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'닝보',ctnr:'20DRY'},
+  {no:8,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'닝보',ctnr:'40DRY'},
+  {no:9,nation:'중국',site:'켄달',port_o:'평택',port_i:'닝보',ctnr:'20DRY'},
+  {no:10,nation:'중국',site:'켄달',port_o:'평택',port_i:'닝보',ctnr:'40DRY'},
+  {no:11,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'심양',ctnr:'20DRY'},
+  {no:12,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'심양',ctnr:'40DRY'},
+  {no:13,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'청도',ctnr:'20RF'},
+  {no:14,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'청도',ctnr:'40RF'},
+  {no:15,nation:'대만',site:'켄달',port_o:'인천(경인)',port_i:'타이중',ctnr:'20DRY'},
+  {no:16,nation:'대만',site:'켄달',port_o:'인천(경인)',port_i:'타이중',ctnr:'40DRY'},
+  {no:17,nation:'미국',site:'경산/우성',port_o:'부산',port_i:'LA',ctnr:'40RF'},
+  {no:18,nation:'미국',site:'도곡',port_o:'부산',port_i:'LA',ctnr:'40RF'},
+  {no:19,nation:'미국',site:'경산/우성',port_o:'부산',port_i:'NY',ctnr:'40RF'},
+  {no:20,nation:'미국',site:'도곡',port_o:'부산',port_i:'NY',ctnr:'40RF'},
+  {no:21,nation:'싱가폴',site:'켄달',port_o:'부산',port_i:'싱가폴',ctnr:'20DRY'},
+  {no:22,nation:'싱가폴',site:'켄달',port_o:'부산',port_i:'싱가폴',ctnr:'40DRY'},
+  {no:23,nation:'싱가폴',site:'도곡',port_o:'부산',port_i:'싱가폴',ctnr:'20RF'},
+  {no:24,nation:'싱가폴',site:'도곡',port_o:'부산',port_i:'싱가폴',ctnr:'40RF'},
+  {no:25,nation:'싱가폴',site:'도곡',port_o:'인천',port_i:'싱가폴',ctnr:'20RF'},
+  {no:26,nation:'싱가폴',site:'도곡',port_o:'인천',port_i:'싱가폴',ctnr:'40RF'},
+  {no:27,nation:'말레이시아',site:'도곡',port_o:'부산',port_i:'포트켈랑(W)',ctnr:'20DRY'},
+  {no:28,nation:'말레이시아',site:'도곡',port_o:'부산',port_i:'포트켈랑(W)',ctnr:'40DRY'},
+  {no:29,nation:'홍콩',site:'경산/우성',port_o:'부산',port_i:'홍콩',ctnr:'20RF'},
+  {no:30,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
+  {no:31,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
+  {no:32,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
+  {no:33,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
+  {no:34,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
+  {no:35,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
+  {no:36,nation:'국내',site:'경산/우성',port_o:'부산',port_i:'국내',ctnr:'20RF'},
+  {no:37,nation:'국내',site:'경산/우성',port_o:'부산',port_i:'국내',ctnr:'40RF'},
+  {no:38,nation:'국내',site:'도곡',port_o:'부산',port_i:'국내',ctnr:'20RF'},
+  {no:39,nation:'국내',site:'도곡',port_o:'부산',port_i:'국내',ctnr:'40RF'},
+  {no:40,nation:'국내',site:'도곡',port_o:'인천',port_i:'국내',ctnr:'20RF'},
+  {no:41,nation:'국내',site:'도곡',port_o:'인천',port_i:'국내',ctnr:'40RF'},
+  {no:42,nation:'국내',site:'켄달',port_o:'부산',port_i:'국내',ctnr:'20DRY'},
+  {no:43,nation:'국내',site:'켄달',port_o:'부산',port_i:'국내',ctnr:'40DRY'},
+  {no:44,nation:'국내',site:'켄달',port_o:'인천',port_i:'국내',ctnr:'20DRY'},
+  {no:45,nation:'국내',site:'켄달',port_o:'인천',port_i:'국내',ctnr:'40DRY'},
+];
+
+let currentFw = null;
+let currentRole = 'forwarder';
+let fwData = {}; // 현재 포워더 입력 데이터
+let allSubmissions = {}; // 전체 제출 데이터 (admin용)
+let evalScores = {}; // 종합평가 점수
+
+FORWARDERS.forEach(fw => { evalScores[fw] = {stability:0, network:0, response:0}; });
+evalScores['람세스'] = {stability:3, network:2, response:5};
+evalScores['원스탑'] = {stability:3, network:2, response:5};
+evalScores['판토스'] = {stability:3, network:2, response:4};
+evalScores['태웅']   = {stability:3, network:2, response:5};
+evalScores['JPI']   = {stability:2, network:2, response:3};
+
+// ── 스토리지
+async function saveToStorage(key, value) {
+  try {
+    await window.storage.set(key, JSON.stringify(value), true);
+    return true;
+  } catch(e) { return false; }
+}
+async function loadFromStorage(key) {
+  try {
+    const r = await window.storage.get(key, true);
+    return r ? JSON.parse(r.value) : null;
+  } catch(e) { return null; }
+}
+
+// ── 유틸
+const fmt = n => n ? Math.round(n).toLocaleString('ko-KR') : '';
+const fmtK = n => n ? (n/1e8).toFixed(2)+'억' : '';
+const pct = n => n ? (n*100).toFixed(2)+'%' : '';
+
+function showToast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+function setRole(role) {
+  currentRole = role;
+  document.querySelectorAll('.role-tab').forEach((t,i)=>t.classList.toggle('active', (i===0&&role==='forwarder')||(i===1&&role==='admin')));
+  document.getElementById('forwarder-form').style.display = role==='forwarder' ? 'block' : 'none';
+  document.getElementById('admin-form').style.display = role==='admin' ? 'block' : 'none';
+}
+
+function doLogin() {
+  if(currentRole === 'forwarder') {
+    const fw = document.getElementById('fw-select').value;
+    const pw = document.getElementById('fw-password').value;
+    if(!fw) { showLoginErr('업체를 선택해주세요.'); return; }
+    if(pw !== FW_PW) { showLoginErr('비딩 코드가 올바르지 않습니다.'); return; }
+    currentFw = fw;
+    showFwPage();
+  } else {
+    const pw = document.getElementById('admin-password').value;
+    if(pw !== ADMIN_PW) { showLoginErr('관리자 비밀번호가 올바르지 않습니다.'); return; }
+    showAdminPage();
+  }
+}
+document.getElementById('admin-password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('fw-password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+
+function showLoginErr(msg) {
+  const el = document.getElementById('login-err');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 3000);
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function logout() {
+  currentFw = null;
+  showPage('login-page');
+  document.getElementById('fw-select').value = '';
+  document.getElementById('fw-password').value = '';
+  document.getElementById('admin-password').value = '';
+}
+
+// ── 포워더 페이지
+async function showFwPage() {
+  showPage('fw-page');
+  document.getElementById('fw-title').textContent = `[${currentFw}] 견적 입력`;
+  const saved = await loadFromStorage(`fw_data_${currentFw}`);
+  fwData = saved || {};
+  buildFwTable();
+}
+
+function buildFwTable() {
+  const tbody = document.getElementById('fw-tbody');
+  tbody.innerHTML = '';
+  let lastNation = '';
+
+  ROUTES.forEach(route => {
+    if(!route.nation && route.no >= 30 && route.no <= 35) {
+      // 빈 슬롯 (NO 30~35)
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="no">${route.no}</td><td colspan="19" style="color:#ccc;font-style:italic;font-size:11px;">빈 슬롯 (추가 노선 발생 시 담당자 공지)</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    if(route.nation && route.nation !== lastNation && route.nation !== '') {
+      lastNation = route.nation;
+      const divider = document.createElement('tr');
+      divider.className = 'section-divider';
+      divider.innerHTML = `<td colspan="21">${route.nation === '국내' ? '🏠 국내 구간' : `🌏 ${route.nation}`}</td>`;
+      tbody.appendChild(divider);
+    }
+
+    const d = fwData[route.no] || {};
+    const isDom = route.nation === '국내';
+    const vol = VOL[route.no] || '';
+    const total = calcTotal(d);
+
+    const tr = document.createElement('tr');
+    tr.className = isDom ? 'domestic' : '';
+    tr.innerHTML = `
+      <td class="no">${route.no}</td>
+      <td class="info nation">${route.nation||''}</td>
+      <td class="info">${route.site||''}</td>
+      <td class="info">${route.port_o||''}</td>
+      <td class="info">${route.port_i||''}</td>
+      <td class="info">${route.ctnr||''}</td>
+      <td class="vol">${vol}</td>
+      ${inp(route.no,'ofrt',d.ofrt,'number','0.00')}
+      ${inp(route.no,'lss',d.lss,'number','0.00')}
+      ${inp(route.no,'ams',d.ams,'number','0.00')}
+      ${inp(route.no,'thc',d.thc,'number','0')}
+      ${inp(route.no,'inland',d.inland,'number','0')}
+      ${inp(route.no,'doc',d.doc,'number','0')}
+      ${inp(route.no,'wfg',d.wfg,'number','0')}
+      ${inp(route.no,'sef',d.sef,'number','0')}
+      ${inp(route.no,'psc',d.psc,'number','0')}
+      ${inp(route.no,'psm',d.psm,'number','0')}
+      ${inp(route.no,'ins',d.ins,'number','0.000')}
+      ${inp(route.no,'sch',d.sch,'text','')}
+      ${inp(route.no,'note',d.note,'text','')}
+      <td class="total" id="total-${route.no}">${total ? fmt(total) : ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // 이벤트
+  tbody.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', () => onInputChange(el));
+  });
+}
+
+function inp(no, field, val, type, step) {
+  const v = val !== undefined && val !== null ? val : '';
+  if(type === 'text') {
+    return `<td><input type="text" data-no="${no}" data-field="${field}" value="${v}" placeholder=""></td>`;
+  }
+  return `<td><input type="number" data-no="${no}" data-field="${field}" value="${v}" step="${step}" placeholder="0" min="0"></td>`;
+}
+
+function onInputChange(el) {
+  const no = parseInt(el.dataset.no);
+  const field = el.dataset.field;
+  const val = el.type === 'number' ? (parseFloat(el.value)||0) : el.value;
+
+  if(!fwData[no]) fwData[no] = {};
+  fwData[no][field] = val;
+
+  const total = calcTotal(fwData[no]);
+  const totalEl = document.getElementById(`total-${no}`);
+  if(totalEl) totalEl.textContent = total ? fmt(total) : '';
+
+  // 자동 저장 (디바운스)
+  clearTimeout(el._saveTimer);
+  el._saveTimer = setTimeout(() => autoSave(), 1500);
+}
+
+async function autoSave() {
+  const ind = document.getElementById('fw-save-indicator');
+  ind.textContent = '저장 중...';
+  const ok = await saveToStorage(`fw_data_${currentFw}`, fwData);
+  ind.textContent = ok ? '✓ 자동 저장됨' : '저장 실패';
+  setTimeout(()=>{ if(ind.textContent.includes('저장됨')) ind.textContent = ''; }, 3000);
+}
+
+function calcTotal(d) {
+  if(!d) return 0;
+  const usd = ((d.ofrt||0)+(d.lss||0)+(d.ams||0)) * EXCHANGE_RATE;
+  const krw = (d.thc||0)+(d.inland||0)+(d.doc||0)+(d.wfg||0)+(d.sef||0)+(d.psc||0)+(d.psm||0);
+  return usd + krw;
+}
+
+async function submitQuote() {
+  const btn = document.getElementById('submit-btn');
+  const status = document.getElementById('submit-status');
+  btn.disabled = true;
+  status.textContent = '제출 중...';
+
+  await autoSave();
+
+  const submission = {
+    fw: currentFw,
+    data: fwData,
+    submittedAt: new Date().toISOString(),
+    submitted: true
+  };
+
+  const ok = await saveToStorage(`submission_${currentFw}`, submission);
+  if(ok) {
+    status.textContent = '✓ 제출 완료! ' + new Date().toLocaleString('ko-KR');
+    status.className = 'save-status saved';
+    showToast('견적이 성공적으로 제출되었습니다!');
+  } else {
+    status.textContent = '제출 실패. 다시 시도해주세요.';
+    status.className = 'save-status error';
+    btn.disabled = false;
+  }
+}
+
+// ── 관리자 페이지
+async function showAdminPage() {
+  showPage('admin-page');
+  await refreshData();
+}
+
+async function refreshData() {
+  // 전체 포워더 제출 데이터 로드
+  for(const fw of FORWARDERS) {
+    const sub = await loadFromStorage(`submission_${fw}`);
+    if(sub) allSubmissions[fw] = sub;
+    else {
+      const draft = await loadFromStorage(`fw_data_${fw}`);
+      if(draft) allSubmissions[fw] = { fw, data: draft, submitted: false };
+    }
+  }
+  renderDash();
+  renderRankTable();
+  renderReport();
+  renderEval();
+}
+
+function renderDash() {
+  // 통계 카드
+  const submitted = FORWARDERS.filter(fw => allSubmissions[fw]?.submitted).length;
+  const drafted   = FORWARDERS.filter(fw => allSubmissions[fw] && !allSubmissions[fw].submitted).length;
+  const totalRoutes = ROUTES.filter(r=>r.nation).length;
+
+  document.getElementById('stat-cards').innerHTML = `
+    <div class="stat-card green"><div class="label">제출 완료</div><div class="value">${submitted}</div><div class="sub">/ ${FORWARDERS.length}개 업체</div></div>
+    <div class="stat-card orange"><div class="label">작성 중</div><div class="value">${drafted}</div><div class="sub">미제출</div></div>
+    <div class="stat-card"><div class="label">총 노선 수</div><div class="value">${totalRoutes}</div><div class="sub">해외+국내</div></div>
+    <div class="stat-card"><div class="label">기준 환율</div><div class="value">1,450</div><div class="sub">KRW/USD</div></div>
+  `;
+
+  // 포워더별 현황
+  document.getElementById('fw-status-grid').innerHTML = FORWARDERS.map(fw => {
+    const sub = allSubmissions[fw];
+    const submitted = sub?.submitted;
+    const count = sub ? Object.keys(sub.data||{}).filter(k=>calcTotal(sub.data[k])>0).length : 0;
+    const time = submitted && sub.submittedAt ? new Date(sub.submittedAt).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div class="fw-card ${submitted?'submitted':''}">
+      <div class="fw-name">${fw}</div>
+      <div class="fw-count">${count}개 구간 입력</div>
+      ${time ? `<div style="font-size:10px;color:var(--dgray);margin-top:4px;">${time}</div>` : ''}
+      <div class="fw-badge">${submitted?'제출완료':'미제출'}</div>
+    </div>`;
+  }).join('');
+
+  // 제출 로그
+  document.getElementById('submission-log').innerHTML = FORWARDERS
+    .filter(fw => allSubmissions[fw])
+    .map(fw => {
+      const sub = allSubmissions[fw];
+      const count = Object.keys(sub.data||{}).filter(k=>calcTotal(sub.data[k])>0).length;
+      const time = sub.submittedAt ? new Date(sub.submittedAt).toLocaleString('ko-KR') : '-';
+      return `<tr>
+        <td><strong>${fw}</strong></td>
+        <td>${time}</td>
+        <td>${count}개 구간</td>
+        <td><span style="padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;background:${sub.submitted?'#E8F5E9':'#FFF3E0'};color:${sub.submitted?'#2E7D32':'#E65100'};">${sub.submitted?'제출완료':'작성중'}</span></td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="4" class="no-data">제출된 견적이 없습니다.</td></tr>';
+}
+
+function getRanked(no) {
+  const quotes = [];
+  FORWARDERS.forEach(fw => {
+    const sub = allSubmissions[fw];
+    if(!sub?.data?.[no]) return;
+    const total = calcTotal(sub.data[no]);
+    if(total > 0) quotes.push({ fw, total, data: sub.data[no] });
+  });
+  return quotes.sort((a,b) => a.total - b.total);
+}
+
+function renderRankTable() {
+  const filter = document.getElementById('nation-filter')?.value || 'all';
+  const tbody = document.getElementById('rank-tbody');
+  tbody.innerHTML = '';
+
+  ROUTES.filter(r => r.nation && (filter==='all' || r.nation===filter)).forEach(route => {
+    const ranked = getRanked(route.no);
+    const vol = VOL[route.no] || 0;
+    const r1 = ranked[0], r2 = ranked[1], r3 = ranked[2];
+    const saving = (r1 && r2) ? r2.total - r1.total : null;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${route.no}</td>
+      <td>${route.nation}</td>
+      <td>${route.site}</td>
+      <td>${route.port_o}</td>
+      <td>${route.port_i}</td>
+      <td>${route.ctnr}</td>
+      <td>${vol||''}</td>
+      <td class="rank-1">${r1?r1.fw:'<span class="no-data">-</span>'}</td>
+      <td class="rank-1">${r1?fmt(r1.total):''}</td>
+      <td class="rank-2">${r2?r2.fw:'<span class="no-data">-</span>'}</td>
+      <td class="rank-2">${r2?fmt(r2.total):''}</td>
+      <td class="rank-3">${r3?r3.fw:'<span class="no-data">-</span>'}</td>
+      <td class="rank-3">${r3?fmt(r3.total):''}</td>
+      <td>${saving!==null?fmt(saving):''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderReport() {
+  // 비딩 물류비 계산 (해외 구간 NO1~35, 1위금액×예상물량)
+  let bidTotal = 0;
+  ROUTES.filter(r=>r.nation && r.nation!=='국내').forEach(route => {
+    const ranked = getRanked(route.no);
+    const vol = VOL[route.no] || 0;
+    if(ranked[0] && vol) bidTotal += ranked[0].total * vol;
+  });
+
+  const savings = PLAN_LOGISTICS - bidTotal;
+  const planRate = PLAN_LOGISTICS / PLAN_SALES;
+  const bidRate  = bidTotal / PLAN_SALES;
+  const fBidTot  = bidTotal + F_LOGISTICS;
+  const fPlanTot = PLAN_LOGISTICS + F_LOGISTICS;
+  const fSales   = PLAN_SALES + F_SALES;
+
+  // 요약 테이블
+  document.getElementById('summary-table').innerHTML = `
+    <thead><tr>
+      <th>구분</th><th>사업계획 매출</th><th>사업계획 물류비</th><th>비딩 물류비</th>
+      <th>절감액</th><th>물류비율(계획)</th><th>물류비율(비딩후)</th><th>물류비율 절감</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td>C조건 (비딩 대상)</td>
+        <td>${fmt(PLAN_SALES)}</td><td>${fmt(PLAN_LOGISTICS)}</td>
+        <td class="${bidTotal>PLAN_LOGISTICS?'negative':'highlight'}">${fmt(bidTotal)}</td>
+        <td class="${savings>0?'highlight':'negative'}">${savings>0?'+':''}${fmt(savings)}</td>
+        <td>${pct(planRate)}</td><td>${pct(bidRate)}</td>
+        <td class="${planRate>bidRate?'highlight':'negative'}">${pct(planRate-bidRate)}</td>
+      </tr>
+      <tr>
+        <td>F조건 (비딩 미대상)</td>
+        <td>${fmt(F_SALES)}</td><td>${fmt(F_LOGISTICS)}</td><td>${fmt(F_LOGISTICS)}</td>
+        <td>0</td><td>${pct(F_LOGISTICS/F_SALES)}</td><td>${pct(F_LOGISTICS/F_SALES)}</td><td>0.00%</td>
+      </tr>
+      <tr class="total">
+        <td>합 계</td>
+        <td>${fmt(fSales)}</td><td>${fmt(fPlanTot)}</td><td>${fmt(fBidTot)}</td>
+        <td class="${fPlanTot>fBidTot?'highlight':'negative'}">${fmt(fPlanTot-fBidTot)}</td>
+        <td>${pct(fPlanTot/fSales)}</td><td>${pct(fBidTot/fSales)}</td>
+        <td class="${fPlanTot/fSales>fBidTot/fSales?'highlight':'negative'}">${pct(fPlanTot/fSales-fBidTot/fSales)}</td>
+      </tr>
+    </tbody>
+  `;
+
+  // 노선별 테이블
+  const rtbody = document.getElementById('report-route-tbody');
+  rtbody.innerHTML = '';
+  ROUTES.filter(r=>r.nation).forEach(route => {
+    const ranked = getRanked(route.no);
+    const vol = VOL[route.no]||'';
+    const r1=ranked[0],r2=ranked[1];
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${route.no}</td><td>${route.nation}</td><td>${route.site}</td>
+      <td>${route.port_o}</td><td>${route.port_i}</td><td>${route.ctnr}</td><td>${vol}</td>
+      <td class="rank-1">${r1?r1.fw:'-'}</td><td class="rank-1">${r1?fmt(r1.total):''}</td>
+      <td class="rank-2">${r2?r2.fw:'-'}</td><td class="rank-2">${r2?fmt(r2.total):''}</td>
+      <td>${r1&&r2?fmt(r2.total-r1.total):''}</td>
+    `;
+    rtbody.appendChild(tr);
+  });
+
+  // 국가별 소계
+  const countries=['중국','대만','미국','싱가폴','말레이시아','홍콩'];
+  let ctRows='<thead><tr><th>도착국가</th><th>노선 수</th><th>선정 물류비 합계(원)</th></tr></thead><tbody>';
+  let grandTotal=0;
+  countries.forEach(c=>{
+    const routes=ROUTES.filter(r=>r.nation===c);
+    let tot=0;
+    routes.forEach(r=>{
+      const ranked=getRanked(r.no);
+      const vol=VOL[r.no]||0;
+      if(ranked[0]&&vol) tot+=ranked[0].total*vol;
+    });
+    grandTotal+=tot;
+    ctRows+=`<tr><td>${c}</td><td>${routes.length}</td><td>${fmt(tot)}</td></tr>`;
+  });
+  ctRows+=`<tr class="total"><td>합 계</td><td></td><td>${fmt(grandTotal)}</td></tr></tbody>`;
+  document.getElementById('country-table').innerHTML=ctRows;
+}
+
+function renderEval() {
+  const fwdrs = FORWARDERS.filter(fw => allSubmissions[fw]?.submitted);
+  if(fwdrs.length === 0) {
+    document.getElementById('eval-content').innerHTML = '<p style="color:var(--dgray);">제출된 견적이 없습니다.</p>';
+    return;
+  }
+
+  // 가격점수: 1~2위 진입 횟수 × 4.5
+  const counts = {};
+  FORWARDERS.forEach(fw=>counts[fw]=0);
+  ROUTES.filter(r=>r.nation&&r.nation!=='국내').forEach(route=>{
+    const ranked=getRanked(route.no);
+    if(ranked[0]) counts[ranked[0].fw]=(counts[ranked[0].fw]||0)+1;
+    if(ranked[1]) counts[ranked[1].fw]=(counts[ranked[1].fw]||0)+1;
+  });
+
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead><tr style="background:var(--navy);color:white;">
+      <th style="padding:10px;text-align:left;">업체명</th>
+      <th style="padding:10px;">서비스<br>안정성(3)</th>
+      <th style="padding:10px;">글로벌<br>네트워크(2)</th>
+      <th style="padding:10px;">대응력·<br>커뮤니케이션(5)</th>
+      <th style="padding:10px;">역량 소계</th>
+      <th style="padding:10px;">1~2위<br>진입횟수</th>
+      <th style="padding:10px;">가격점수</th>
+      <th style="padding:10px;background:#375623;">최종점수</th>
+      <th style="padding:10px;background:#375623;">순위</th>
+    </tr></thead><tbody>`;
+
+  const finals = {};
+  FORWARDERS.forEach(fw=>{
+    const e=evalScores[fw]||{};
+    const qual=(e.stability||0)+(e.network||0)+(e.response||0);
+    const price=(counts[fw]||0)*4.5;
+    finals[fw]=qual+price;
+  });
+  const sortedFw=[...FORWARDERS].sort((a,b)=>(finals[b]||0)-(finals[a]||0));
+
+  FORWARDERS.forEach((fw,fi)=>{
+    const e=evalScores[fw]||{stability:0,network:0,response:0};
+    const qual=(e.stability||0)+(e.network||0)+(e.response||0);
+    const price=(counts[fw]||0)*4.5;
+    const final=qual+price;
+    const rank=sortedFw.indexOf(fw)+1;
+    const bg=fi%2===0?'#F9F9F9':'white';
+    html+=`<tr style="background:${bg};">
+      <td style="padding:10px;font-weight:700;">${fw}</td>
+      <td style="padding:10px;text-align:center;"><input type="number" value="${e.stability}" min="0" max="3" step="1" onchange="updateEval('${fw}','stability',this.value)" style="width:50px;text-align:center;padding:4px;border:1.5px solid var(--border);border-radius:4px;"></td>
+      <td style="padding:10px;text-align:center;"><input type="number" value="${e.network}" min="0" max="2" step="1" onchange="updateEval('${fw}','network',this.value)" style="width:50px;text-align:center;padding:4px;border:1.5px solid var(--border);border-radius:4px;"></td>
+      <td style="padding:10px;text-align:center;"><input type="number" value="${e.response}" min="0" max="5" step="1" onchange="updateEval('${fw}','response',this.value)" style="width:50px;text-align:center;padding:4px;border:1.5px solid var(--border);border-radius:4px;"></td>
+      <td style="padding:10px;text-align:center;font-weight:700;background:#EEF2F7;">${qual}</td>
+      <td style="padding:10px;text-align:center;">${counts[fw]||0}회</td>
+      <td style="padding:10px;text-align:center;">${price.toFixed(1)}</td>
+      <td style="padding:10px;text-align:center;font-weight:700;background:#E8F5E9;color:#2E7D32;font-size:15px;">${final.toFixed(1)}</td>
+      <td style="padding:10px;text-align:center;font-weight:700;background:#E8F5E9;color:#2E7D32;">${rank}위</td>
+    </tr>`;
+  });
+  html+='</tbody></table>';
+  document.getElementById('eval-content').innerHTML=html;
+}
+
+async function updateEval(fw, field, val) {
+  if(!evalScores[fw]) evalScores[fw]={};
+  evalScores[fw][field]=parseFloat(val)||0;
+  await saveToStorage('eval_scores', evalScores);
+  renderEval();
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',t.textContent.includes({dash:'현황',rank:'순위',report:'보고',eval:'종합'}[name])));
+  document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none');
+  document.getElementById('tab-'+name).style.display='block';
+  if(name==='rank') renderRankTable();
+  if(name==='report') renderReport();
+  if(name==='eval') renderEval();
+}
+
+function printReport() {
+  window.print();
+}
+
+function exportExcel() {
+  showToast('Excel 내보내기는 Vercel 배포 후 서버 기능으로 추가됩니다.');
+}
+
+// 스토리지 없는 환경 fallback (미리보기용)
+if(!window.storage) {
+  const mem = {};
+  window.storage = {
+    get: async(k,s)=>mem[k]?{value:mem[k]}:null,
+    set: async(k,v,s)=>{ mem[k]=v; return {key:k,value:v}; },
+    delete: async(k,s)=>{ delete mem[k]; return {deleted:true}; },
+    list: async(p,s)=>({ keys: Object.keys(mem).filter(k=>!p||k.startsWith(p)) })
+  };
+}
+
+// 저장된 평가점수 로드
+(async()=>{
+  const saved = await loadFromStorage('eval_scores');
+  if(saved) Object.assign(evalScores, saved);
+})();
+</script>
+</body>
+</html>
