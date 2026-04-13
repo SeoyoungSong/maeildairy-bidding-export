@@ -1,4 +1,6 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+const redis = Redis.fromEnv();
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,8 +12,7 @@ export default async function handler(req, res) {
   try {
     const { prefix } = req.query;
     const pattern = prefix ? `bidding:${prefix}*` : 'bidding:*';
-    const keys = await kv.keys(pattern);
-    // strip 'bidding:' prefix from keys
+    const keys = await redis.keys(pattern);
     const cleaned = keys.map(k => k.replace(/^bidding:/, ''));
     return res.status(200).json({ keys: cleaned });
   } catch (e) {
