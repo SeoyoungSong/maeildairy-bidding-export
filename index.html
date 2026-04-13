@@ -168,6 +168,7 @@
   .route-row .no-label { font-weight:700; color:var(--dgray); font-size:12px; text-align:center; }
   .save-banner { background:#E8F5E9; border:1px solid #A5D6A7; border-radius:8px; padding:10px 16px; font-size:12px; color:#2E7D32; font-weight:600; display:none; margin-bottom:12px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -229,6 +230,13 @@
     <div class="info-bar">
       노란색 셀에만 운임을 입력하세요. 입력한 내용은 실시간으로 저장됩니다. 모든 구간 입력 완료 후 하단의 <strong>[견적 제출]</strong> 버튼을 눌러주세요.
       기준환율: <strong>1,450 KRW/USD</strong>
+    </div>
+    <div style="background:white;border:1.5px dashed #90CAF9;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <div style="font-size:13px;color:var(--navy);font-weight:700;">📂 엑셀 파일로 일괄 입력</div>
+      <div style="font-size:11px;color:var(--dgray);">포워더 입력양식 엑셀을 작성 후 업로드하면 자동으로 채워드려요.</div>
+      <label for="excel-upload" style="background:var(--blue);color:white;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📤 엑셀 업로드</label>
+      <input type="file" id="excel-upload" accept=".xlsx,.xls" style="display:none;" onchange="handleExcelUpload(this)">
+      <span id="upload-status" style="font-size:12px;color:var(--green);font-weight:600;"></span>
     </div>
     <div class="input-table-wrap">
       <table class="input-table" id="fw-table">
@@ -1101,10 +1109,10 @@ function renderFwList() {
   list.innerHTML = cfgForwarders.map((fw, i) => {
     const pw = cfgFwPasswords[fw] || '';
     return `
-    <div class="item-row" style="grid-template-columns:24px 1fr 1fr 28px;display:grid;gap:8px;align-items:center;">
+    <div class="item-row" style="grid-template-columns:24px 1fr 1fr 28px;display:grid;gap:8px;align-items:center;" data-idx="${i}">
       <span class="item-num" style="text-align:center;">${i+1}</span>
-      <input type="text" value="${fw}" placeholder="업체명" onchange="renameFw(${i},this.value)" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:5px;font-size:12px;outline:none;">
-      <input type="text" value="${pw}" placeholder="비밀번호 설정" onchange="cfgFwPasswords['${fw}']=this.value" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:5px;font-size:12px;outline:none;background:#FFFDE7;">
+      <input type="text" class="fw-name-inp" value="${fw}" placeholder="업체명" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:5px;font-size:12px;outline:none;">
+      <input type="text" class="fw-pw-inp" value="${pw}" placeholder="비밀번호 설정" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:5px;font-size:12px;outline:none;background:#FFFDE7;">
       <button class="del-btn" onclick="removeForwarder(${i})">✕</button>
     </div>`;
   }).join('');
@@ -1137,18 +1145,35 @@ function removeForwarder(idx) {
 }
 
 async function saveForwarders() {
-  // 렌더된 비밀번호 입력값 수집
+  // DOM에서 현재 입력값 읽어서 cfgForwarders, cfgFwPasswords 모두 갱신
   const rows = document.getElementById('fw-list').querySelectorAll('.item-row');
-  rows.forEach((row, i) => {
-    const inputs = row.querySelectorAll('input');
-    const fwName = inputs[0].value.trim();
-    const fwPw   = inputs[1].value.trim();
-    if(fwName) cfgFwPasswords[fwName] = fwPw;
+  const newFwdrs = [];
+  const newPws = {};
+  rows.forEach(row => {
+    const nameInp = row.querySelector('.fw-name-inp');
+    const pwInp   = row.querySelector('.fw-pw-inp');
+    const name = nameInp ? nameInp.value.trim() : '';
+    const pw   = pwInp   ? pwInp.value.trim()   : '';
+    if(name) {
+      newFwdrs.push(name);
+      newPws[name] = pw;
+    }
   });
+
+  // 새로 추가된 포워더도 반영
+  if(document.getElementById('new-fw-name').value.trim()) {
+    const newName = document.getElementById('new-fw-name').value.trim();
+    if(!newFwdrs.includes(newName)) newFwdrs.push(newName);
+    document.getElementById('new-fw-name').value = '';
+  }
+
+  cfgForwarders = newFwdrs;
+  cfgFwPasswords = newPws;
 
   const ok1 = await saveToStorage('cfg_forwarders', cfgForwarders);
   const ok2 = await saveToStorage('cfg_fw_passwords', cfgFwPasswords);
   if(ok1 && ok2) {
+    renderFwList();
     updateFwDropdown();
     showSettingsBanner();
     showToast('포워더 목록과 비밀번호가 저장됐어요!');
@@ -1214,6 +1239,102 @@ function showSettingsBanner() {
   const b = document.getElementById('settings-banner');
   b.style.display = 'block';
   setTimeout(() => b.style.display='none', 4000);
+}
+
+
+// ══════════════════════════════════════════
+// 엑셀 업로드 → 자동 입력
+// ══════════════════════════════════════════
+function handleExcelUpload(input) {
+  const file = input.files[0];
+  if(!file) return;
+
+  const status = document.getElementById('upload-status');
+  status.textContent = '읽는 중...';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type: 'array'});
+
+      // '견적입력' 시트 찾기
+      const sheetName = wb.SheetNames.find(n => n.includes('견적입력') || n.includes('Sheet1') || n === wb.SheetNames[0]);
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+
+      // 업체명 읽기 (B2셀 = rows[1][1])
+      const companyName = rows[1] ? rows[1][1] : '';
+      if(companyName && companyName !== curFw) {
+        // 업체명이 다르면 경고
+        if(!confirm(`파일의 업체명(${companyName})과 로그인한 업체명(${curFw})이 다릅니다. 계속 불러올까요?`)) {
+          status.textContent = '취소됨';
+          input.value = '';
+          return;
+        }
+      }
+
+      // 헤더행 찾기 (NO, 도착국가 있는 행 = 행5 = index 4)
+      let headerRow = -1;
+      for(let i=0; i<rows.length; i++) {
+        if(rows[i][0]==='NO' || rows[i][0]==1 || String(rows[i][0]).trim()==='NO') {
+          if(rows[i][1] && (rows[i][1].toString().includes('국') || rows[i][1]==='도착국가')) {
+            headerRow = i;
+            break;
+          }
+        }
+      }
+
+      // 헤더행 못 찾으면 행5(index4) 가정
+      if(headerRow === -1) headerRow = 4;
+
+      let count = 0;
+
+      // 데이터 행 파싱 (헤더 다음부터)
+      for(let i = headerRow+1; i < rows.length; i++) {
+        const row = rows[i];
+        const no = parseInt(row[0]);
+        if(!no || isNaN(no)) continue;
+
+        // 입력값 읽기 (엑셀 열 순서: A=NO, B=국가, C=작업지, D=출발, E=도착, F=CTNR, G=예상물량, H=OFRT, I=LSS, J=AMS, K=THC, L=내륙, M=DOC, N=WFG, O=SEF, P=PSC, Q=PSM, R=적하보험, S=스케줄, T=비고)
+        const ofrt   = parseFloat(row[7])  || 0;
+        const lss    = parseFloat(row[8])  || 0;
+        const ams    = parseFloat(row[9])  || 0;
+        const thc    = parseFloat(row[10]) || 0;
+        const inland = parseFloat(row[11]) || 0;
+        const doc    = parseFloat(row[12]) || 0;
+        const wfg    = parseFloat(row[13]) || 0;
+        const sef    = parseFloat(row[14]) || 0;
+        const psc    = parseFloat(row[15]) || 0;
+        const psm    = parseFloat(row[16]) || 0;
+        const ins    = parseFloat(row[17]) || 0;
+        const sch    = row[18] ? String(row[18]) : '';
+        const note   = row[19] ? String(row[19]) : '';
+
+        // 입력값이 하나라도 있으면 저장
+        if(ofrt||lss||ams||thc||inland||doc||wfg||sef||psc||psm||ins||sch||note) {
+          if(!fwData[no]) fwData[no] = {};
+          Object.assign(fwData[no], {ofrt,lss,ams,thc,inland,doc,wfg,sef,psc,psm,ins,sch,note});
+          count++;
+        }
+      }
+
+      // 화면 다시 그리기
+      buildFwTable();
+
+      // 자동 저장
+      autoSave();
+
+      status.textContent = `✓ ${count}개 구간 불러오기 완료!`;
+      setTimeout(() => status.textContent = '', 4000);
+
+    } catch(err) {
+      console.error(err);
+      status.textContent = '파일 읽기 실패. 엑셀 형식을 확인해주세요.';
+    }
+    input.value = ''; // 같은 파일 재업로드 가능하게
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 </script>
