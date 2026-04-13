@@ -1,4 +1,6 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+const redis = Redis.fromEnv();
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,9 +12,10 @@ export default async function handler(req, res) {
   try {
     const { key } = req.query;
     if (!key) return res.status(400).json({ error: 'key required' });
-    const value = await kv.get(`bidding:${key}`);
-    if (value === null) return res.status(404).json({ value: null });
-    // kv.get already parses JSON
+    const raw = await redis.get(`bidding:${key}`);
+    if (raw === null) return res.status(200).json({ value: null });
+    // Upstash already parses JSON, but value might be string
+    const value = typeof raw === 'string' ? JSON.parse(raw) : raw;
     return res.status(200).json({ value });
   } catch (e) {
     console.error(e);
