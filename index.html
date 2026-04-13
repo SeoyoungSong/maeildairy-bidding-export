@@ -1269,8 +1269,8 @@ function handleExcelUpload(input) {
 
       // 업체명 읽기 (B2 = rows[1][1])
       const companyName = rows[1] ? String(rows[1][1]||'').trim() : '';
-      if(companyName && companyName !== curFw) {
-        if(!confirm('파일의 업체명(' + companyName + ')과 로그인 업체(' + curFw + ')가 다릅니다.\n계속 불러올까요?')) {
+      if(companyName && companyName !== currentFw) {
+        if(!confirm('파일의 업체명(' + companyName + ')과 로그인 업체(' + currentFw + ')가 다릅니다.\n계속 불러올까요?')) {
           status.textContent = '취소됨';
           input.value = '';
           return;
