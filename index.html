@@ -265,8 +265,8 @@
             <th>PSC<br>(원)</th>
             <th>PSM<br>(원)</th>
             <th>적하보험요율<br>(%)</th>
-            <th>스케줄</th>
-            <th>비고</th>
+            <th style="min-width:100px;">스케줄</th>
+            <th style="min-width:180px;">비고</th>
             <th>★합계(원)</th>
           </tr>
         </thead>
@@ -550,26 +550,52 @@ evalScores['판토스'] = {stability:3, network:2, response:4};
 evalScores['태웅']   = {stability:3, network:2, response:5};
 evalScores['JPI']   = {stability:2, network:2, response:3};
 
-// ── 스토리지 (localStorage 기반, 새로고침해도 유지)
+// ── 스토리지 (Vercel KV API 기반 — 모든 기기에서 공유)
 async function saveToStorage(key, value) {
   try {
-    localStorage.setItem('bidding_' + key, JSON.stringify(value));
+    const res = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    // 로컬에도 캐시 (오프라인 대비)
+    try { localStorage.setItem('bidding_cache_' + key, JSON.stringify(value)); } catch(e) {}
     return true;
   } catch(e) {
     console.error('저장 실패:', e);
-    return false;
+    // API 실패 시 로컬 캐시로 fallback
+    try { localStorage.setItem('bidding_cache_' + key, JSON.stringify(value)); return true; } catch(e2) { return false; }
   }
 }
+
 async function loadFromStorage(key) {
   try {
-    const v = localStorage.getItem('bidding_' + key);
-    return v ? JSON.parse(v) : null;
+    const res = await fetch('/api/load?key=' + encodeURIComponent(key));
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    return data.value ?? null;
   } catch(e) {
-    return null;
+    console.warn('API 로드 실패, 캐시 사용:', e);
+    // API 실패 시 로컬 캐시로 fallback
+    try {
+      const v = localStorage.getItem('bidding_cache_' + key);
+      return v ? JSON.parse(v) : null;
+    } catch(e2) { return null; }
   }
 }
+
 async function deleteFromStorage(key) {
-  try { localStorage.removeItem('bidding_' + key); return true; } catch(e) { return false; }
+  try {
+    await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value: null })
+    });
+    localStorage.removeItem('bidding_cache_' + key);
+    return true;
+  } catch(e) { return false; }
 }
 
 // ── 유틸
@@ -643,7 +669,7 @@ function buildFwTable() {
   tbody.innerHTML = '';
   let lastNation = '';
 
-  ROUTES.forEach(route => {
+  cfgRoutes.forEach(route => {
     if(!route.nation && route.no >= 30 && route.no <= 35) {
       // 빈 슬롯 (NO 30~35)
       const tr = document.createElement('tr');
@@ -662,7 +688,7 @@ function buildFwTable() {
 
     const d = fwData[route.no] || {};
     const isDom = route.nation === '국내';
-    const vol = VOL[route.no] || '';
+    const vol = (route.vol && route.vol > 0) ? route.vol : (VOL[route.no] || '');
     const total = calcTotal(d);
 
     const tr = document.createElement('tr');
@@ -826,7 +852,7 @@ function renderDash() {
   // 통계 카드
   const submitted = FORWARDERS.filter(fw => allSubmissions[fw]?.submitted).length;
   const drafted   = FORWARDERS.filter(fw => allSubmissions[fw] && !allSubmissions[fw].submitted).length;
-  const totalRoutes = ROUTES.filter(r=>r.nation).length;
+  const totalRoutes = cfgRoutes.filter(r=>r.nation).length;
 
   document.getElementById('stat-cards').innerHTML = `
     <div class="stat-card green"><div class="label">제출 완료</div><div class="value">${submitted}</div><div class="sub">/ ${FORWARDERS.length}개 업체</div></div>
@@ -881,9 +907,9 @@ function renderRankTable() {
   const tbody = document.getElementById('rank-tbody');
   tbody.innerHTML = '';
 
-  ROUTES.filter(r => r.nation && (filter==='all' || r.nation===filter)).forEach(route => {
+  cfgRoutes.filter(r => r.nation && (filter==='all' || r.nation===filter)).forEach(route => {
     const ranked = getRanked(route.no);
-    const vol = VOL[route.no] || 0;
+    const vol = (route.vol && route.vol > 0) ? route.vol : (VOL[route.no] || 0);
     const r1 = ranked[0], r2 = ranked[1], r3 = ranked[2];
     const saving = (r1 && r2) ? r2.total - r1.total : null;
 
@@ -911,9 +937,9 @@ function renderRankTable() {
 function renderReport() {
   // 비딩 물류비 계산 (해외 구간 NO1~35, 1위금액×예상물량)
   let bidTotal = 0;
-  ROUTES.filter(r=>r.nation && r.nation!=='국내').forEach(route => {
+  cfgRoutes.filter(r=>r.nation && r.nation!=='국내').forEach(route => {
     const ranked = getRanked(route.no);
-    const vol = VOL[route.no] || 0;
+    const vol = (route.vol && route.vol > 0) ? route.vol : (VOL[route.no] || 0);
     if(ranked[0] && vol) bidTotal += ranked[0].total * vol;
   });
 
@@ -957,9 +983,9 @@ function renderReport() {
   // 노선별 테이블
   const rtbody = document.getElementById('report-route-tbody');
   rtbody.innerHTML = '';
-  ROUTES.filter(r=>r.nation).forEach(route => {
+  cfgRoutes.filter(r=>r.nation).forEach(route => {
     const ranked = getRanked(route.no);
-    const vol = VOL[route.no]||'';
+    const vol = (r.vol && r.vol > 0) ? r.vol : (VOL[r.no]||'');
     const r1=ranked[0],r2=ranked[1];
     const tr=document.createElement('tr');
     tr.innerHTML=`
@@ -977,7 +1003,7 @@ function renderReport() {
   let ctRows='<thead><tr><th>도착국가</th><th>노선 수</th><th>선정 물류비 합계(원)</th></tr></thead><tbody>';
   let grandTotal=0;
   countries.forEach(c=>{
-    const routes=ROUTES.filter(r=>r.nation===c);
+    const routes=cfgRoutes.filter(r=>r.nation===c);
     let tot=0;
     routes.forEach(r=>{
       const ranked=getRanked(r.no);
@@ -1001,7 +1027,7 @@ function renderEval() {
   // 가격점수: 1~2위 진입 횟수 × 4.5
   const counts = {};
   FORWARDERS.forEach(fw=>counts[fw]=0);
-  ROUTES.filter(r=>r.nation&&r.nation!=='국내').forEach(route=>{
+  cfgRoutes.filter(r=>r.nation&&r.nation!=='국내').forEach(route=>{
     const ranked=getRanked(route.no);
     if(ranked[0]) counts[ranked[0].fw]=(counts[ranked[0].fw]||0)+1;
     if(ranked[1]) counts[ranked[1].fw]=(counts[ranked[1].fw]||0)+1;
@@ -1078,7 +1104,7 @@ function exportExcel() {
 }
 
 // 스토리지 없는 환경 fallback (미리보기용)
-// localStorage 직접 사용 (window.storage 불필요)
+// Vercel KV API 사용 (window.storage 불필요)
 
 // 앱 시작 시 설정 로드 (포워더 드롭다운 업데이트)
 (async()=>{
@@ -1254,10 +1280,23 @@ function removeRoute(idx) {
 }
 
 async function saveRoutes() {
+  // DOM에서 현재 입력값 읽어서 cfgRoutes 갱신
+  const rows = document.getElementById('route-list').querySelectorAll('.route-row');
+  rows.forEach((row, i) => {
+    if(!cfgRoutes[i]) return;
+    const inputs = row.querySelectorAll('input');
+    if(inputs[0]) cfgRoutes[i].nation = inputs[0].value.trim();
+    if(inputs[1]) cfgRoutes[i].site   = inputs[1].value.trim();
+    if(inputs[2]) cfgRoutes[i].port_o = inputs[2].value.trim();
+    if(inputs[3]) cfgRoutes[i].port_i = inputs[3].value.trim();
+    if(inputs[4]) cfgRoutes[i].ctnr   = inputs[4].value.trim();
+    if(inputs[5]) cfgRoutes[i].vol    = parseInt(inputs[5].value) || 0;
+  });
+
   const ok = await saveToStorage('cfg_routes', cfgRoutes);
   if(ok) {
     showSettingsBanner();
-    showToast('노선 정보가 저장됐어요!');
+    showToast('노선 정보가 저장됐어요! 포워더 입력 페이지에 즉시 반영됩니다.');
   }
 }
 
