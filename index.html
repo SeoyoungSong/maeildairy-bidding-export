@@ -74,9 +74,14 @@
   .input-table input[type=text]:focus { border-color: var(--blue); background: white; }
   .section-divider td { background: #EEF2F7; font-weight: 700; color: var(--navy); font-size: 11px; padding: 6px 10px; text-align: left; }
   
-  .btn-submit { background: var(--green); color: white; border: none; padding: 14px 40px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .btn-submit { background: var(--green); color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.15s; }
   .btn-submit:hover { background: #5a9438; }
   .btn-submit:disabled { background: #aaa; cursor: not-allowed; }
+  .btn-save-draft { background: white; color: var(--blue); border: 2px solid var(--blue); padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s; }
+  .btn-save-draft:hover { background: var(--lblue); }
+  .submit-area { display: flex; align-items: center; gap: 12px; padding: 16px 0; flex-wrap: wrap; }
+  .submit-divider { width: 1px; height: 32px; background: var(--border); margin: 0 4px; }
+  .submit-info { font-size: 11px; color: var(--dgray); line-height: 1.5; }
   .submit-area { display: flex; align-items: center; gap: 16px; padding: 16px 0; }
   .save-status { font-size: 12px; color: var(--dgray); }
   .save-status.saved { color: var(--green); font-weight: 600; }
@@ -269,10 +274,15 @@
       </table>
     </div>
     <div class="submit-area">
+      <button class="btn-save-draft" onclick="saveDraft()" id="draft-btn">
+        💾 임시저장
+      </button>
+      <div class="submit-divider"></div>
       <button class="btn-submit" onclick="submitQuote()" id="submit-btn">
-        <span>✓</span> 견적 제출 완료
+        ✓ 최종 제출
       </button>
       <span class="save-status" id="submit-status"></span>
+      <div class="submit-info" id="submit-info"></div>
     </div>
   </div>
 </div>
@@ -540,18 +550,26 @@ evalScores['판토스'] = {stability:3, network:2, response:4};
 evalScores['태웅']   = {stability:3, network:2, response:5};
 evalScores['JPI']   = {stability:2, network:2, response:3};
 
-// ── 스토리지
+// ── 스토리지 (localStorage 기반, 새로고침해도 유지)
 async function saveToStorage(key, value) {
   try {
-    await window.storage.set(key, JSON.stringify(value), true);
+    localStorage.setItem('bidding_' + key, JSON.stringify(value));
     return true;
-  } catch(e) { return false; }
+  } catch(e) {
+    console.error('저장 실패:', e);
+    return false;
+  }
 }
 async function loadFromStorage(key) {
   try {
-    const r = await window.storage.get(key, true);
-    return r ? JSON.parse(r.value) : null;
-  } catch(e) { return null; }
+    const v = localStorage.getItem('bidding_' + key);
+    return v ? JSON.parse(v) : null;
+  } catch(e) {
+    return null;
+  }
+}
+async function deleteFromStorage(key) {
+  try { localStorage.removeItem('bidding_' + key); return true; } catch(e) { return false; }
 }
 
 // ── 유틸
@@ -721,13 +739,43 @@ function calcTotal(d) {
   return usd + krw;
 }
 
+async function saveDraft() {
+  const btn = document.getElementById('draft-btn');
+  const status = document.getElementById('submit-status');
+  btn.textContent = '저장 중...';
+  btn.disabled = true;
+
+  const ok = await saveToStorage(`fw_data_${currentFw}`, fwData);
+  if(ok) {
+    status.textContent = '💾 임시저장 완료 — ' + new Date().toLocaleString('ko-KR');
+    status.className = 'save-status saved';
+    showToast('임시저장됐어요. 나중에 이어서 입력하실 수 있어요.');
+  } else {
+    status.textContent = '저장 실패. 다시 시도해주세요.';
+    status.className = 'save-status error';
+  }
+  btn.textContent = '💾 임시저장';
+  btn.disabled = false;
+}
+
 async function submitQuote() {
   const btn = document.getElementById('submit-btn');
   const status = document.getElementById('submit-status');
-  btn.disabled = true;
-  status.textContent = '제출 중...';
+  const info = document.getElementById('submit-info');
 
-  await autoSave();
+  // 재제출 시 확인
+  const prevSub = await loadFromStorage(`submission_${currentFw}`);
+  if(prevSub && prevSub.submitted) {
+    const prevTime = new Date(prevSub.submittedAt).toLocaleString('ko-KR');
+    if(!confirm('이미 제출한 내역이 있어요.\n(' + prevTime + ')\n\n수정된 내용으로 다시 제출할까요?')) return;
+  }
+
+  btn.textContent = '제출 중...';
+  btn.disabled = true;
+  status.textContent = '';
+
+  // 임시저장도 같이
+  await saveToStorage(`fw_data_${currentFw}`, fwData);
 
   const submission = {
     fw: currentFw,
@@ -738,14 +786,17 @@ async function submitQuote() {
 
   const ok = await saveToStorage(`submission_${currentFw}`, submission);
   if(ok) {
-    status.textContent = '✓ 제출 완료! ' + new Date().toLocaleString('ko-KR');
+    const timeStr = new Date().toLocaleString('ko-KR');
+    status.textContent = '✓ 최종 제출 완료!';
     status.className = 'save-status saved';
-    showToast('견적이 성공적으로 제출되었습니다!');
+    info.textContent = timeStr + ' 제출 · 수정이 필요하면 다시 입력 후 재제출 가능';
+    showToast('견적이 제출되었습니다! 수정이 필요하면 언제든 재제출 가능해요.');
   } else {
     status.textContent = '제출 실패. 다시 시도해주세요.';
     status.className = 'save-status error';
-    btn.disabled = false;
   }
+  btn.textContent = '✓ 최종 제출';
+  btn.disabled = false;
 }
 
 // ── 관리자 페이지
@@ -1027,18 +1078,11 @@ function exportExcel() {
 }
 
 // 스토리지 없는 환경 fallback (미리보기용)
-if(!window.storage) {
-  const mem = {};
-  window.storage = {
-    get: async(k,s)=>mem[k]?{value:mem[k]}:null,
-    set: async(k,v,s)=>{ mem[k]=v; return {key:k,value:v}; },
-    delete: async(k,s)=>{ delete mem[k]; return {deleted:true}; },
-    list: async(p,s)=>({ keys: Object.keys(mem).filter(k=>!p||k.startsWith(p)) })
-  };
-}
+// localStorage 직접 사용 (window.storage 불필요)
 
-// 저장된 평가점수 로드
+// 앱 시작 시 설정 로드 (포워더 드롭다운 업데이트)
 (async()=>{
+  await loadSettings();
   const saved = await loadFromStorage('eval_scores');
   if(saved) Object.assign(evalScores, saved);
 })();
