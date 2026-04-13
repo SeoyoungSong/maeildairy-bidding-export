@@ -743,6 +743,7 @@ async function submitQuote() {
 // ── 관리자 페이지
 async function showAdminPage() {
   showPage('admin-page');
+  await loadSettings();
   await refreshData();
 }
 
@@ -1000,12 +1001,13 @@ async function updateEval(fw, field, val) {
 }
 
 function showTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',t.textContent.includes({dash:'현황',rank:'순위',report:'보고',eval:'종합'}[name])));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',t.textContent.includes({dash:'현황',rank:'순위',report:'보고',eval:'종합',settings:'설정'}[name]||'')));
   document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none');
   document.getElementById('tab-'+name).style.display='block';
   if(name==='rank') renderRankTable();
   if(name==='report') renderReport();
   if(name==='eval') renderEval();
+  if(name==='settings') showSettingsTab();
 }
 
 function printReport() {
