@@ -1256,62 +1256,86 @@ function handleExcelUpload(input) {
   reader.onload = function(e) {
     try {
       const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, {type: 'array'});
+      const wb = XLSX.read(data, {type:'array'});
 
-      // '견적입력' 시트 찾기
-      const sheetName = wb.SheetNames.find(n => n.includes('견적입력') || n.includes('Sheet1') || n === wb.SheetNames[0]);
+      // 시트 찾기: 이름에 '견적' 또는 '포워더' 포함 → 없으면 첫 번째 시트
+      const sheetName = wb.SheetNames.find(n =>
+        n.includes('견적') || n.includes('포워더') || n.includes('Sheet')
+      ) || wb.SheetNames[0];
       const ws = wb.Sheets[sheetName];
-      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
 
-      // 업체명 읽기 (B2셀 = rows[1][1])
-      const companyName = rows[1] ? rows[1][1] : '';
+      // raw:false 로 읽어서 날짜·수식 등 문자열 변환
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:true});
+
+      // 업체명 읽기 (B2 = rows[1][1])
+      const companyName = rows[1] ? String(rows[1][1]||'').trim() : '';
       if(companyName && companyName !== curFw) {
-        // 업체명이 다르면 경고
-        if(!confirm(`파일의 업체명(${companyName})과 로그인한 업체명(${curFw})이 다릅니다. 계속 불러올까요?`)) {
+        if(!confirm('파일의 업체명(' + companyName + ')과 로그인 업체(' + curFw + ')가 다릅니다.\n계속 불러올까요?')) {
           status.textContent = '취소됨';
           input.value = '';
           return;
         }
       }
 
-      // 헤더행 찾기 (NO, 도착국가 있는 행 = 행5 = index 4)
-      let headerRow = -1;
-      for(let i=0; i<rows.length; i++) {
-        if(rows[i][0]==='NO' || rows[i][0]==1 || String(rows[i][0]).trim()==='NO') {
-          if(rows[i][1] && (rows[i][1].toString().includes('국') || rows[i][1]==='도착국가')) {
-            headerRow = i;
-            break;
-          }
-        }
+      // 헤더행 찾기: A열이 'NO' 또는 B열이 '도착국가'인 행
+      let headerRow = 4; // 기본값 행5(index4)
+      for(let i=0; i<Math.min(rows.length,10); i++) {
+        const a = String(rows[i][0]||'').trim();
+        const b = String(rows[i][1]||'').trim();
+        if(a==='NO' || b==='도착국가') { headerRow = i; break; }
       }
 
-      // 헤더행 못 찾으면 행5(index4) 가정
-      if(headerRow === -1) headerRow = 4;
+      // 열 매핑: 헤더행에서 컬럼 위치 동적 파악
+      const hdr = rows[headerRow] || [];
+      function colIdx(keyword) {
+        for(let c=0; c<hdr.length; c++) {
+          const h = String(hdr[c]||'').replace(/[\s\n]/g,'');
+          if(h.includes(keyword)) return c;
+        }
+        return -1;
+      }
+
+      // 각 필드 컬럼 인덱스 (헤더 키워드로 자동 탐색)
+      const CI = {
+        no:     0,
+        ofrt:   colIdx('O/FRT')   !== -1 ? colIdx('O/FRT')   : 6,
+        lss:    colIdx('LSS')     !== -1 ? colIdx('LSS')     : 7,
+        ams:    colIdx('AMS')     !== -1 ? colIdx('AMS')     : 8,
+        thc:    colIdx('THC')     !== -1 ? colIdx('THC')     : 9,
+        inland: colIdx('내륙운송')  !== -1 ? colIdx('내륙운송')  : 10,
+        doc:    colIdx('DOC')     !== -1 ? colIdx('DOC')     : 11,
+        wfg:    colIdx('WFG')     !== -1 ? colIdx('WFG')     : 12,
+        sef:    colIdx('SEF')     !== -1 ? colIdx('SEF')     : 13,
+        psc:    colIdx('PSC')     !== -1 ? colIdx('PSC')     : 14,
+        psm:    colIdx('PSM')     !== -1 ? colIdx('PSM')     : 15,
+        ins:    colIdx('적하보험')  !== -1 ? colIdx('적하보험')  : 17,
+        sch:    colIdx('스케줄')   !== -1 ? colIdx('스케줄')   : 18,
+        note:   colIdx('비고')     !== -1 ? colIdx('비고')     : 19,
+      };
 
       let count = 0;
 
-      // 데이터 행 파싱 (헤더 다음부터)
       for(let i = headerRow+1; i < rows.length; i++) {
         const row = rows[i];
-        const no = parseInt(row[0]);
+        const no = parseInt(row[CI.no]);
         if(!no || isNaN(no)) continue;
+        // 안내문 행 제외
+        if(String(row[0]||'').includes('작성 완료')) continue;
 
-        // 입력값 읽기 (엑셀 열 순서: A=NO, B=국가, C=작업지, D=출발, E=도착, F=CTNR, G=예상물량, H=OFRT, I=LSS, J=AMS, K=THC, L=내륙, M=DOC, N=WFG, O=SEF, P=PSC, Q=PSM, R=적하보험, S=스케줄, T=비고)
-        const ofrt   = parseFloat(row[7])  || 0;
-        const lss    = parseFloat(row[8])  || 0;
-        const ams    = parseFloat(row[9])  || 0;
-        const thc    = parseFloat(row[10]) || 0;
-        const inland = parseFloat(row[11]) || 0;
-        const doc    = parseFloat(row[12]) || 0;
-        const wfg    = parseFloat(row[13]) || 0;
-        const sef    = parseFloat(row[14]) || 0;
-        const psc    = parseFloat(row[15]) || 0;
-        const psm    = parseFloat(row[16]) || 0;
-        const ins    = parseFloat(row[17]) || 0;
-        const sch    = row[18] ? String(row[18]) : '';
-        const note   = row[19] ? String(row[19]) : '';
+        const ofrt   = parseFloat(row[CI.ofrt])   || 0;
+        const lss    = parseFloat(row[CI.lss])    || 0;
+        const ams    = parseFloat(row[CI.ams])    || 0;
+        const thc    = parseFloat(row[CI.thc])    || 0;
+        const inland = parseFloat(row[CI.inland]) || 0;
+        const doc    = parseFloat(row[CI.doc])    || 0;
+        const wfg    = parseFloat(row[CI.wfg])    || 0;
+        const sef    = parseFloat(row[CI.sef])    || 0;
+        const psc    = parseFloat(row[CI.psc])    || 0;
+        const psm    = parseFloat(row[CI.psm])    || 0;
+        const ins    = parseFloat(row[CI.ins])    || 0;
+        const sch    = row[CI.sch]  ? String(row[CI.sch])  : '';
+        const note   = row[CI.note] ? String(row[CI.note]) : '';
 
-        // 입력값이 하나라도 있으면 저장
         if(ofrt||lss||ams||thc||inland||doc||wfg||sef||psc||psm||ins||sch||note) {
           if(!fwData[no]) fwData[no] = {};
           Object.assign(fwData[no], {ofrt,lss,ams,thc,inland,doc,wfg,sef,psc,psm,ins,sch,note});
@@ -1319,20 +1343,19 @@ function handleExcelUpload(input) {
         }
       }
 
-      // 화면 다시 그리기
       buildFwTable();
-
-      // 자동 저장
       autoSave();
 
-      status.textContent = `✓ ${count}개 구간 불러오기 완료!`;
-      setTimeout(() => status.textContent = '', 4000);
+      status.textContent = count > 0
+        ? '✓ ' + count + '개 구간 불러오기 완료!'
+        : '데이터를 찾지 못했어요. 파일을 확인해주세요.';
+      setTimeout(() => status.textContent = '', 5000);
 
     } catch(err) {
       console.error(err);
-      status.textContent = '파일 읽기 실패. 엑셀 형식을 확인해주세요.';
+      status.textContent = '파일 읽기 실패: ' + err.message;
     }
-    input.value = ''; // 같은 파일 재업로드 가능하게
+    input.value = '';
   };
   reader.readAsArrayBuffer(file);
 }
