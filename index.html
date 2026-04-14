@@ -1001,7 +1001,7 @@ function renderReport() {
   rtbody.innerHTML = '';
   cfgRoutes.filter(r=>r.nation).forEach(route => {
     const ranked = getRanked(route.no);
-    const vol = r.vol || '';
+    const vol = route.vol || '';
     const r1=ranked[0],r2=ranked[1];
     const tr=document.createElement('tr');
     tr.innerHTML=`
@@ -1034,19 +1034,16 @@ function renderReport() {
 }
 
 function renderEval() {
-  const fwdrs = FORWARDERS.filter(fw => allSubmissions[fw]?.submitted);
-  if(fwdrs.length === 0) {
-    document.getElementById('eval-content').innerHTML = '<p style="color:var(--dgray);">제출된 견적이 없습니다.</p>';
-    return;
-  }
+  // 설정에 포워더가 있으면 그걸 쓰고, 없으면 기본 목록
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
 
-  // 가격점수: 1~2위 진입 횟수 × 4.5
+  // 가격점수: 1~2위 진입 횟수
   const counts = {};
-  FORWARDERS.forEach(fw=>counts[fw]=0);
-  cfgRoutes.filter(r=>r.nation&&r.nation!=='국내').forEach(route=>{
-    const ranked=getRanked(route.no);
-    if(ranked[0]) counts[ranked[0].fw]=(counts[ranked[0].fw]||0)+1;
-    if(ranked[1]) counts[ranked[1].fw]=(counts[ranked[1].fw]||0)+1;
+  allFwdrs.forEach(fw => counts[fw] = 0);
+  cfgRoutes.filter(r => r.nation && r.nation !== '국내').forEach(route => {
+    const ranked = getRanked(route.no);
+    if(ranked[0]) counts[ranked[0].fw] = (counts[ranked[0].fw]||0) + 1;
+    if(ranked[1]) counts[ranked[1].fw] = (counts[ranked[1].fw]||0) + 1;
   });
 
   let html = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
