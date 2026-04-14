@@ -232,6 +232,11 @@
     </div>
   </div>
   <div class="container">
+    <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px;">
+      <div id="fw-tab-input" onclick="switchFwTab('input')" style="padding:9px 20px;font-size:13px;font-weight:700;color:var(--navy);border-bottom:2px solid var(--navy);margin-bottom:-2px;cursor:pointer;">견적 입력</div>
+      <div id="fw-tab-conditions" onclick="switchFwTab('conditions')" style="padding:9px 20px;font-size:13px;font-weight:600;color:var(--dgray);cursor:pointer;">📋 비딩 조건</div>
+    </div>
+    <div id="fw-panel-input">
     <div class="info-bar">
       노란색 셀에만 운임을 입력하세요. 입력한 내용은 실시간으로 저장됩니다. 모든 구간 입력 완료 후 하단의 <strong>[견적 제출]</strong> 버튼을 눌러주세요.
       기준환율: <strong>1,450 KRW/USD</strong>
@@ -273,6 +278,10 @@
         <tbody id="fw-tbody"></tbody>
       </table>
     </div>
+    </div><!-- fw-panel-input 닫기 -->
+    <div id="fw-panel-conditions" style="display:none;">
+<div style="padding:4px;"><div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">1. 서류 지원 및 행정 업무</div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 선적서류 업로드</div><div style="font-size:11px;color:#333;">선사 사이트 또는 바이어가 요구하는 지정 플랫폼에 선적서류 업로드 지원 필수</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 미국 ISF Filing</div><div style="font-size:11px;color:#333;">미국향 화물의 경우 ISF Filing 업무 필수 지원</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 세금계산서 발행</div><div style="font-size:11px;color:#333;">세금계산서 발행 시 당사가 공유할 요청 양식에 따라 상세 내역 작성 제출</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 서류마감 알림</div><div style="font-size:11px;color:#333;">Doc Closing 1일 전 퇴근 시간 전까지 마감 일정을 유선 또는 메일로 안내</div></div><div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">2. 운임 및 비용 산정 조건</div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 운임 업데이트</div><div style="font-size:11px;color:#333;">전 구간 O/FRT 시황을 매월 1주차에 정기 업데이트하여 당사에 제공</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 운임 변동 허용</div><div style="font-size:11px;color:#333;">운임 변동 10% 이내는 기존 운임 적용, 10% 초과 시 해당 구간 재협의</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ LSS 포함 조건</div><div style="font-size:11px;color:#333;">중국·홍콩·대만 LSS는 당사 부담. 반드시 All-in 운임(LSS 포함)으로 제출</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ Document Fee</div><div style="font-size:11px;color:#333;">서류발급비용 40,000원 고정(상한선). 초과 금액 청구 불가</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 내륙운송 대행</div><div style="font-size:11px;color:#333;">노미 포워더 신규 진행 시 추가 비용 없이 내륙운송 및 계산서 처리 대행</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 적하보험 대행</div><div style="font-size:11px;color:#333;">적하보험 부보 대행. 보험료 산출 시 HS Code 2202.99 기준</div></div><div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">3. 화물 관리 및 선적 조건</div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ RF 온도 설정</div><div style="font-size:11px;color:#333;">일반 RF: +3°C / 경산·우성 출고 특정 품목: -20°C (Vent Closed)</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ T/S 불가</div><div style="font-size:11px;color:#333;">환적(T/S) 스케줄 원칙적으로 불가. 반드시 직항(Direct) 스케줄로 제출</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 싱가폴·말레이 T/T</div><div style="font-size:11px;color:#333;">싱가포르·말레이시아 노선은 Transit Time 최단 스케줄 최우선 확보</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 배차 대행</div><div style="font-size:11px;color:#333;">내륙운송 배차 대행 업무 수행</div></div><div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">4. 안전운임제 관련</div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 재비딩 방침</div><div style="font-size:11px;color:#333;">안전운임제 시행 등 이슈 발생 시 구간별 최저운임 기준으로 재비딩 진행 예정</div></div><div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">5. 기타 조건</div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 담당자 변경</div><div style="font-size:11px;color:#333;">서비스 응대 지연·업무연계 미흡 지속 시 당사는 담당자 변경 요구 가능</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 월별 시황 제공</div><div style="font-size:11px;color:#333;">매월 1주차 전 구간 O/FRT 시황 업데이트 제공 의무</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 스케줄 요건</div><div style="font-size:11px;color:#333;">항차, 리드타임 및 프리타임 등은 견적양식 해당 열에 반드시 기재</div></div><div style="margin-top:16px;background:#FFF2CC;border-radius:8px;padding:12px;font-size:11px;"><strong>📦 대표 품목 / HS Code</strong><br>커피/곡물음료/주스: 2202.99-9000 | 발효유: 0403.20-1000 | 분유: 1901.10-1010 | 유아식: 1904.10-9000 | 치즈: 0406.30-0000</div><div style="margin-top:10px;background:#EEF4FF;border-radius:8px;padding:12px;font-size:11px;"><strong>🏭 작업지 주소</strong><br>켄달: 안성시 원곡면 지문로 393 지상 1층 JP로지스틱스 상온창고<br>도곡: 경기도 안성시 양성면 도곡리 40-6 (양성로 376-92) 지하 2층<br>경산: 경북 경산시 진량읍 대학로 1090 매일유업 경산공장<br>우성월드: 경상북도 영천시 대창면 금박로 945</div></div>
+    </div>
     <div class="submit-area">
       <button class="btn-save-draft" onclick="saveDraft()" id="draft-btn">
         💾 임시저장
@@ -303,8 +312,8 @@
     <div class="tabs">
       <div class="tab active" onclick="showTab('dash')">현황</div>
       <div class="tab" onclick="showTab('rank')">순위계산</div>
-      <div class="tab" onclick="showTab('report')">보고자료</div>
       <div class="tab" onclick="showTab('eval')">종합평가</div>
+      <div class="tab" onclick="showTab('report')">보고자료</div>
       <div class="tab" onclick="showTab('settings')">⚙ 설정</div>
     </div>
 
@@ -329,7 +338,8 @@
     <div id="tab-rank" class="tab-content" style="display:none;">
       <div class="sec-title">
         <h3>노선별 순위 자동계산</h3>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn-sm btn-primary" onclick="saveSelections()" style="background:#375623;border-color:#375623;">💾 선정 결과 저장</button>
           <select id="nation-filter" onchange="renderRankTable()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
             <option value="all">전체 노선</option>
             <option value="중국">중국</option>
@@ -350,11 +360,17 @@
               <th class="rank-1">1위 업체</th><th class="rank-1">1위 금액(원)</th>
               <th class="rank-2">2위 업체</th><th class="rank-2">2위 금액(원)</th>
               <th class="rank-3">3위 업체</th><th class="rank-3">3위 금액(원)</th>
-              <th>절감여력(원)</th>
+              <th>4위 업체</th><th>4위 금액(원)</th>
+              <th style="background:#375623;color:white;min-width:120px;">✓ 선정 포워더</th>
+              <th style="background:#375623;color:white;">선정 견적가(원)</th>
             </tr>
           </thead>
           <tbody id="rank-tbody"></tbody>
         </table>
+      </div>
+      <div style="margin-top:20px;padding:16px;background:white;border-radius:12px;border:1px solid var(--border);">
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px;">포워더별 선정 노선 요약 <span style="font-size:11px;font-weight:400;color:var(--dgray);">(선정 변경 즉시 반영)</span></div>
+        <div id="fw-selection-summary"></div>
       </div>
     </div>
 
@@ -376,11 +392,13 @@
               <thead>
                 <tr>
                   <th>NO</th><th>도착국가</th><th>작업지</th><th>출발PORT</th><th>도착PORT</th><th>CTNR</th><th>예상물량</th>
-                  <th class="rank-1">선정업체</th><th class="rank-1">선정 견적가(원)</th>
-                  <th class="rank-2">2위 업체</th><th class="rank-2">2위 금액(원)</th>
-                  <th class="rank-3">3위 업체</th><th class="rank-3">3위 금액(원)</th>
-                  <th>4위 업체</th><th>4위 금액(원)</th>
-                  <th>절감여력(원)</th>
+                  <th class="rank-1">1위 업체</th><th class="rank-1">1위 견적가(원)</th>
+                  <th style="background:#375623;color:white;">선정업체</th><th style="background:#375623;color:white;">선정 견적가(원)</th>
+                  <th>1위↔선정 차액(원)</th>
+                  <th style="background:#2E75B6;color:white;">사업계획<br>물류비(원)</th>
+                  <th style="background:#2E75B6;color:white;">비딩 물류비(원)</th>
+                  <th style="background:#2E75B6;color:white;">절감금액(원)</th>
+                  <th style="background:#2E75B6;color:white;">절감율</th>
                 </tr>
               </thead>
               <tbody id="report-route-tbody"></tbody>
@@ -857,6 +875,7 @@ async function showAdminPage() {
 }
 
 async function refreshData() {
+  await loadSelections();
   // 전체 포워더 제출 데이터 로드 (설정에서 불러온 목록 기준)
   const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
   for(const fw of allFwdrs) {
@@ -932,31 +951,86 @@ function renderRankTable() {
   const tbody = document.getElementById('rank-tbody');
   tbody.innerHTML = '';
 
-  cfgRoutes.filter(r => r.nation && (filter==='all' || r.nation===filter)).forEach(route => {
-    const ranked = getRanked(route.no);
-    const vol = route.vol || 0;
-    const r1 = ranked[0], r2 = ranked[1], r3 = ranked[2];
-    const saving = (r1 && r2) ? r2.total - r1.total : null;
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+
+  cfgRoutes.filter(function(r) {
+    return r.nation && (filter === 'all' || r.nation === filter);
+  }).forEach(function(r) {
+    const ranked = getRanked(r.no);
+    const vol = r.vol || '';
+    const r1 = ranked[0], r2 = ranked[1], r3 = ranked[2], r4 = ranked[3];
+    const sav = r1 && r2 ? fmt(r2.total - r1.total) : '';
+    const sel = selectedFw[r.no];
 
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${route.no}</td>
-      <td>${route.nation}</td>
-      <td>${route.site}</td>
-      <td>${route.port_o}</td>
-      <td>${route.port_i}</td>
-      <td>${route.ctnr}</td>
-      <td>${vol||''}</td>
-      <td class="rank-1">${r1?r1.fw:'<span class="no-data">-</span>'}</td>
-      <td class="rank-1">${r1?fmt(r1.total):''}</td>
-      <td class="rank-2">${r2?r2.fw:'<span class="no-data">-</span>'}</td>
-      <td class="rank-2">${r2?fmt(r2.total):''}</td>
-      <td class="rank-3">${r3?r3.fw:'<span class="no-data">-</span>'}</td>
-      <td class="rank-3">${r3?fmt(r3.total):''}</td>
-      <td>${saving!==null?fmt(saving):''}</td>
-    `;
+
+    // 노선 기본 정보
+    const basic = [r.no, r.nation, r.site, r.port_o, r.port_i, r.ctnr, vol];
+    basic.forEach(function(v) {
+      const td = document.createElement('td');
+      td.textContent = v || '';
+      tr.appendChild(td);
+    });
+
+    // 1~4위 업체/금액
+    const ranks = [r1, r2, r3, r4];
+    const rankCls = ['rank-1', 'rank-2', 'rank-3', ''];
+    ranks.forEach(function(rk, i) {
+      const tdN = document.createElement('td');
+      const tdP = document.createElement('td');
+      tdN.className = rankCls[i];
+      tdP.className = rankCls[i];
+      tdN.textContent = rk ? rk.fw : '-';
+      tdP.textContent = rk ? fmt(rk.total) : '';
+      tr.appendChild(tdN);
+      tr.appendChild(tdP);
+    });
+
+    // 선정 드롭다운
+    const tdSel = document.createElement('td');
+    tdSel.style.background = '#F0FAF0';
+    const sel_select = document.createElement('select');
+    sel_select.style.cssText = 'width:100%;padding:4px 6px;border:1.5px solid #70AD47;border-radius:4px;font-size:11px;font-weight:700;background:white;cursor:pointer;';
+    sel_select.dataset.no = r.no;
+
+    const optEmpty = document.createElement('option');
+    optEmpty.value = '';
+    optEmpty.textContent = '-- 선정 --';
+    sel_select.appendChild(optEmpty);
+
+    ranks.forEach(function(rk) {
+      if(!rk) return;
+      const opt = document.createElement('option');
+      opt.value = rk.fw;
+      opt.dataset.total = rk.total;
+      opt.textContent = rk.fw + ' (' + fmt(rk.total) + ')';
+      if(sel && sel.fw === rk.fw) opt.selected = true;
+      sel_select.appendChild(opt);
+    });
+
+    sel_select.addEventListener('change', function() {
+      const selectedOpt = this.options[this.selectedIndex];
+      const total = selectedOpt.dataset.total || 0;
+      onSelectFw(parseInt(this.dataset.no), this.value, total);
+      // 선정 견적가 셀 업데이트
+      const priceCell = this.closest('tr').querySelector('.sel-price');
+      if(priceCell) priceCell.textContent = this.value ? fmt(parseFloat(total)) : '';
+    });
+
+    tdSel.appendChild(sel_select);
+    tr.appendChild(tdSel);
+
+    // 선정 견적가
+    const tdSelPrice = document.createElement('td');
+    tdSelPrice.className = 'sel-price';
+    tdSelPrice.style.cssText = 'background:#F0FAF0;font-weight:700;color:#375623;';
+    tdSelPrice.textContent = sel ? fmt(sel.total) : '';
+    tr.appendChild(tdSelPrice);
+
     tbody.appendChild(tr);
   });
+
+  renderFwSelectionSummary();
 }
 
 function renderReport() {
@@ -1008,20 +1082,41 @@ function renderReport() {
   // 노선별 테이블
   const rtbody = document.getElementById('report-route-tbody');
   rtbody.innerHTML = '';
-  cfgRoutes.filter(r=>r.nation).forEach(route => {
+  // 사업계획 물류비는 설정값 기준 노선별 배분(물량 비율)
+  const totalVol_c = cfgRoutes.filter(function(r){ return r.nation && r.nation !== '국내'; }).reduce(function(s,r){ return s+(r.vol||0); }, 0);
+  const cPlan = cfgPlanLogistics || PLAN_LOGISTICS;
+
+  cfgRoutes.filter(function(r){ return r.nation; }).forEach(function(route) {
     const ranked = getRanked(route.no);
-    const vol = route.vol || '';
-    const r1=ranked[0],r2=ranked[1],r3=ranked[2],r4=ranked[3];
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td>${route.no}</td><td>${route.nation}</td><td>${route.site}</td>
-      <td>${route.port_o}</td><td>${route.port_i}</td><td>${route.ctnr}</td><td>${vol}</td>
-      <td class="rank-1">${r1?r1.fw:'-'}</td><td class="rank-1">${r1?fmt(r1.total):''}</td>
-      <td class="rank-2">${r2?r2.fw:'-'}</td><td class="rank-2">${r2?fmt(r2.total):''}</td>
-      <td class="rank-3">${r3?r3.fw:'-'}</td><td class="rank-3">${r3?fmt(r3.total):''}</td>
-      <td>${r4?r4.fw:'-'}</td><td>${r4?fmt(r4.total):''}</td>
-      <td>${r1&&r2?fmt(r2.total-r1.total):''}</td>
-    `;
+    const vol = route.vol || 0;
+    const r1 = ranked[0];
+    const sel = selectedFw[route.no];
+    const selFw = sel && sel.fw ? sel : r1;
+    const selPrice = selFw ? selFw.total : 0;
+    const selName = selFw ? selFw.fw : '-';
+
+    // 사업계획 물류비 배분: 해외 구간만
+    const isDom = route.nation === '국내';
+    const routePlan = (!isDom && totalVol_c > 0 && vol > 0) ? Math.round(cPlan * vol / totalVol_c) : 0;
+    const bidCost = selPrice * vol;
+    const savings = routePlan > 0 ? routePlan - bidCost : 0;
+    const savePct = routePlan > 0 && bidCost > 0 ? ((savings / routePlan) * 100).toFixed(1) + '%' : '-';
+
+    const tr = document.createElement('tr');
+    const isSelected = sel && sel.fw && r1 && sel.fw !== r1.fw;
+
+    tr.innerHTML = '<td>' + route.no + '</td><td>' + route.nation + '</td><td>' + route.site + '</td>' +
+      '<td>' + route.port_o + '</td><td>' + route.port_i + '</td><td>' + route.ctnr + '</td><td>' + (vol||'') + '</td>' +
+      '<td class="rank-1">' + (r1?r1.fw:'-') + '</td>' +
+      '<td class="rank-1">' + (r1?fmt(r1.total):'') + '</td>' +
+      '<td style="background:#F0FAF0;font-weight:700;color:#375623;">' + selName + '</td>' +
+      '<td style="background:#F0FAF0;font-weight:700;color:#375623;">' + (selPrice?fmt(selPrice):'') + '</td>' +
+      '<td style="' + (isSelected?'color:#ED7D31;font-weight:700;':'') + '">' + (r1&&selPrice&&r1.total!==selPrice?fmt(selPrice-r1.total):'') + '</td>' +
+      '<td style="text-align:right;color:#2E75B6;">' + (routePlan?fmt(routePlan):'-') + '</td>' +
+      '<td style="text-align:right;">' + (bidCost?fmt(bidCost):'-') + '</td>' +
+      '<td style="text-align:right;' + (savings>0?'color:#375623;font-weight:700;':'color:#C00000;') + '">' + (routePlan>0?fmt(savings):'-') + '</td>' +
+      '<td style="text-align:center;' + (savings>0?'color:#375623;font-weight:700;':'color:#C00000;') + '">' + savePct + '</td>';
+
     rtbody.appendChild(tr);
   });
 
@@ -1036,12 +1131,14 @@ function renderReport() {
     if(routes.length===0) return; // 해당 국가 노선 없으면 스킵
     let tot=0;
     let hasData=false;
-    routes.forEach(r=>{
-      const ranked=getRanked(r.no);
-      const vol=r.vol||0;
-      if(ranked[0]) {
-        hasData=true;
-        if(vol) tot+=ranked[0].total*vol;
+    routes.forEach(function(r) {
+      const vol = r.vol || 0;
+      const sel = selectedFw[r.no];
+      const ranked = getRanked(r.no);
+      const eff = sel && sel.fw ? sel : ranked[0];
+      if(eff) {
+        hasData = true;
+        if(vol) tot += eff.total * vol;
       }
     });
     grandTotal+=tot;
@@ -1658,6 +1755,92 @@ function handleRouteExcelUpload(input) {
     input.value = '';
   };
   reader.readAsArrayBuffer(file);
+}
+
+
+// ══════════════════════════════════════════════════════
+// 선정 포워더 관리
+// ══════════════════════════════════════════════════════
+let selectedFw = {}; // {no: {fw, total}}
+
+async function loadSelections() {
+  const saved = await loadFromStorage('selected_fw');
+  if(saved) selectedFw = saved;
+}
+
+async function saveSelections() {
+  const ok = await saveToStorage('selected_fw', selectedFw);
+  if(ok) {
+    showToast('선정 결과가 저장됐어요! 보고자료에 반영됩니다.');
+    renderReport();
+  } else {
+    showToast('저장 실패. 다시 시도해주세요.');
+  }
+}
+
+function onSelectFw(no, fw, total) {
+  if(!fw || fw === '') {
+    delete selectedFw[no];
+  } else {
+    selectedFw[no] = { fw: fw, total: parseFloat(total) || 0 };
+  }
+  renderFwSelectionSummary();
+}
+
+function renderFwSelectionSummary() {
+  const el = document.getElementById('fw-selection-summary');
+  if(!el) return;
+
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  const fwRoutes = {};
+  allFwdrs.forEach(function(fw) { fwRoutes[fw] = { routes: [], total: 0, vol: 0 }; });
+
+  cfgRoutes.forEach(function(route) {
+    const sel = selectedFw[route.no];
+    if(!sel || !sel.fw) return;
+    if(!fwRoutes[sel.fw]) fwRoutes[sel.fw] = { routes: [], total: 0, vol: 0 };
+    const vol = route.vol || 0;
+    fwRoutes[sel.fw].routes.push(route.nation || '');
+    fwRoutes[sel.fw].total += sel.total * vol;
+    fwRoutes[sel.fw].vol += vol;
+  });
+
+  const fwdrsWithData = allFwdrs.filter(function(fw) {
+    return fwRoutes[fw] && fwRoutes[fw].routes.length > 0;
+  });
+
+  if(fwdrsWithData.length === 0) {
+    el.innerHTML = '<p style="color:var(--dgray);font-size:12px;">아직 선정된 포워더가 없어요. 위 테이블에서 ✓ 선정 포워더 드롭다운을 클릭해 선정하세요.</p>';
+    return;
+  }
+
+  const colors = ['#2E75B6','#70AD47','#ED7D31','#C00000','#7030A0','#00B0F0','#FF0000'];
+  let html = '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+  fwdrsWithData.forEach(function(fw, i) {
+    const d = fwRoutes[fw];
+    const nations = [...new Set(d.routes)].join(', ');
+    const color = colors[i % colors.length];
+    html += '<div style="background:' + color + ';color:white;border-radius:8px;padding:12px 16px;min-width:140px;">';
+    html += '<div style="font-weight:700;font-size:13px;">' + fw + '</div>';
+    html += '<div style="font-size:11px;opacity:0.85;margin:4px 0;">' + nations + '</div>';
+    html += '<div style="font-size:11px;opacity:0.85;">' + d.vol + 'CTN</div>';
+    html += '<div style="font-weight:700;font-size:12px;margin-top:4px;">' + fmt(Math.round(d.total)) + '원</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+
+function switchFwTab(tab) {
+  document.getElementById('fw-panel-input').style.display = tab === 'input' ? 'block' : 'none';
+  document.getElementById('fw-panel-conditions').style.display = tab === 'conditions' ? 'block' : 'none';
+  document.getElementById('fw-tab-input').style.cssText = tab === 'input' ?
+    'padding:9px 20px;font-size:13px;font-weight:700;color:var(--navy);border-bottom:2px solid var(--navy);margin-bottom:-2px;cursor:pointer;' :
+    'padding:9px 20px;font-size:13px;font-weight:600;color:var(--dgray);cursor:pointer;';
+  document.getElementById('fw-tab-conditions').style.cssText = tab === 'conditions' ?
+    'padding:9px 20px;font-size:13px;font-weight:700;color:var(--navy);border-bottom:2px solid var(--navy);margin-bottom:-2px;cursor:pointer;' :
+    'padding:9px 20px;font-size:13px;font-weight:600;color:var(--dgray);cursor:pointer;';
 }
 
 </script>
