@@ -456,6 +456,13 @@
       <!-- 노선 관리 -->
       <div class="settings-section">
         <h4>노선 관리</h4>
+        <div style="background:#EEF4FF;border:1.5px dashed #90CAF9;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="font-size:12px;color:var(--navy);font-weight:700;">📂 엑셀로 일괄 업로드</div>
+          <div style="font-size:11px;color:var(--dgray);">노선관리 양식 엑셀을 업로드하면 전체 노선이 자동으로 반영됩니다.</div>
+          <label for="route-excel-upload" style="background:var(--blue);color:white;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📤 엑셀 업로드</label>
+          <input type="file" id="route-excel-upload" accept=".xlsx,.xls" style="display:none;" onchange="handleRouteExcelUpload(this)">
+          <span id="route-upload-status" style="font-size:11px;color:var(--green);font-weight:600;"></span>
+        </div>
         <div style="display:grid;grid-template-columns:40px 80px 70px 90px 90px 70px 60px 30px;gap:6px;padding:6px 10px;margin-bottom:4px;">
           <div style="font-size:10px;color:var(--dgray);font-weight:700;text-align:center;">NO</div>
           <div style="font-size:10px;color:var(--dgray);font-weight:700;">도착국가</div>
@@ -1456,6 +1463,93 @@ async function saveEvalScores() {
   const ok = await saveToStorage('eval_scores', evalScores);
   if(ok) showToast('평가점수가 저장됐어요!');
   else showToast('저장 실패. 다시 시도해주세요.');
+}
+
+
+// ══════════════════════════════════════════
+// 노선관리 엑셀 업로드
+// ══════════════════════════════════════════
+function handleRouteExcelUpload(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const status = document.getElementById('route-upload-status');
+  status.textContent = '읽는 중...';
+  status.style.color = 'var(--dgray)';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+
+      // '노선관리' 시트 찾기
+      const sheetName = wb.SheetNames.find(n =>
+        n.includes('노선') || n.includes('Route') || n.includes('Sheet')
+      ) || wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:true});
+
+      // 헤더 행 찾기 (NO 컬럼 있는 행)
+      let headerRow = -1;
+      for(let i=0; i<Math.min(rows.length,5); i++) {
+        if(String(rows[i][0]||'').trim()==='NO' || rows[i][0]==='NO') {
+          headerRow = i; break;
+        }
+      }
+      if(headerRow < 0) {
+        // NO가 첫 번째 열이 아닌 경우
+        for(let i=0; i<Math.min(rows.length,5); i++) {
+          if(rows[i].some(v => String(v||'').trim()==='NO')) {
+            headerRow = i; break;
+          }
+        }
+      }
+      if(headerRow < 0) headerRow = 2; // 기본값 행3(index2)
+
+      const newRoutes = [];
+      for(let i = headerRow+1; i < rows.length; i++) {
+        const row = rows[i];
+        const no = parseInt(row[0]);
+        if(!no || isNaN(no)) continue;
+
+        const nation  = String(row[1]||'').trim();
+        const site    = String(row[2]||'').trim();
+        const port_o  = String(row[3]||'').trim();
+        const port_i  = String(row[4]||'').trim();
+        const ctnr    = String(row[5]||'').trim();
+        const vol     = parseFloat(row[6]) || 0;
+        const active  = String(row[7]||'Y').trim().toUpperCase() !== 'N';
+        const note    = String(row[8]||'').trim();
+
+        if(!active) continue; // 비딩대상 N이면 제외
+
+        newRoutes.push({ no, nation, site, port_o, port_i, ctnr, vol, note });
+      }
+
+      if(newRoutes.length === 0) {
+        status.textContent = '노선 데이터를 찾지 못했어요. 양식을 확인해주세요.';
+        status.style.color = 'var(--red)';
+        input.value=''; return;
+      }
+
+      // 확인 후 반영
+      if(!confirm(`총 ${newRoutes.length}개 노선을 불러왔어요.\n기존 노선 데이터를 덮어쓸까요?`)) {
+        input.value=''; status.textContent='취소됨'; return;
+      }
+
+      cfgRoutes = newRoutes;
+      renderRouteList();
+      status.textContent = `✓ ${newRoutes.length}개 노선 불러오기 완료! [저장] 버튼을 눌러주세요.`;
+      status.style.color = 'var(--green)';
+
+    } catch(err) {
+      console.error(err);
+      status.textContent = '파일 읽기 실패: ' + err.message;
+      status.style.color = 'var(--red)';
+    }
+    input.value = '';
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 </script>
