@@ -630,7 +630,8 @@ function setRole(role) {
   document.getElementById('admin-form').style.display = role==='admin' ? 'block' : 'none';
 }
 
-function doLogin() {
+async function doLogin() {
+  await loadSettings();
   if(currentRole === 'forwarder') {
     const fw = document.getElementById('fw-select').value;
     const pw = document.getElementById('fw-password').value;
@@ -846,8 +847,9 @@ async function showAdminPage() {
 }
 
 async function refreshData() {
-  // 전체 포워더 제출 데이터 로드
-  for(const fw of FORWARDERS) {
+  // 전체 포워더 제출 데이터 로드 (설정에서 불러온 목록 기준)
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  for(const fw of allFwdrs) {
     const sub = await loadFromStorage(`submission_${fw}`);
     if(sub) allSubmissions[fw] = sub;
     else {
@@ -1072,7 +1074,7 @@ function renderEval() {
     return higher + 1 + '위';
   }
 
-  let tableHtml = \`<table style="width:100%;border-collapse:collapse;font-size:12px;">
+  let tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
     <thead><tr style="background:var(--navy);color:white;">
       <th style="padding:9px;text-align:left;">업체명</th>
       <th style="padding:9px;">안정성<br>(3점)</th>
@@ -1083,7 +1085,7 @@ function renderEval() {
       <th style="padding:9px;">가격점수<br>(90점)</th>
       <th style="padding:9px;background:#375623;">최종점수<br>(100점)</th>
       <th style="padding:9px;background:#375623;">순위</th>
-    </tr></thead><tbody>\`;
+    </tr></thead><tbody>`;
 
   allFwdrs.forEach((fw, fi) => {
     const e = evalScores[fw] || {};
@@ -1095,7 +1097,7 @@ function renderEval() {
     const totalColor = isTop ? '#2E7D32' : (noData ? '#AAAAAA' : '#333');
     const totalBg = isTop ? '#E8F5E9' : (noData ? '#F5F5F5' : (fi%2===0?'#F0F4F0':'#F5FAF5'));
 
-    tableHtml += \`<tr style="background:\${bg};\${noData?'opacity:0.6;':''}">
+    tableHtml += `<tr style="background:\${bg};\${noData?'opacity:0.6;':''}">
       <td style="padding:9px;font-weight:700;\${noData?'color:#aaa;':''}">\${fw}</td>
       <td style="padding:9px;text-align:center;"><input type="number" value="\${e.stability||0}" min="0" max="3" step="1"
         onchange="updateEval('\${fw}','stability',this.value)"
@@ -1111,13 +1113,13 @@ function renderEval() {
       <td style="padding:9px;text-align:center;\${noData?'color:#aaa;':''}">\${noData ? '-' : f.priceScore.toFixed(1)}</td>
       <td style="padding:9px;text-align:center;font-weight:700;font-size:14px;background:\${totalBg};color:\${totalColor};">\${noData ? '-' : f.total.toFixed(1)}</td>
       <td style="padding:9px;text-align:center;font-weight:700;background:\${isTop?'#E8F5E9':totalBg};color:\${isTop?'#2E7D32':totalColor};">\${rankStr}</td>
-    </tr>\`;
+    </tr>`;
   });
 
   tableHtml += '</tbody></table>';
-  tableHtml += \`<div style="margin-top:10px;padding:10px;background:#F0F4FF;border-radius:7px;font-size:11px;color:#555;">
+  tableHtml += `<div style="margin-top:10px;padding:10px;background:#F0F4FF;border-radius:7px;font-size:11px;color:#555;">
     💡 가격점수 기준: 노선별 1위=3점, 2위=2점, 3위=1점 누적 → 최고점자 기준 90점 만점 환산 | 동점 시 공동 순위 처리 | 역량·가격 모두 0인 업체는 순위 제외
-  </div>\`;
+  </div>`;
 
   document.getElementById('eval-content').innerHTML = tableHtml;
 }
