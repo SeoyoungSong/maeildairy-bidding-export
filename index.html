@@ -306,7 +306,6 @@
       <div class="tab" onclick="showTab('report')">보고자료</div>
       <div class="tab" onclick="showTab('eval')">종합평가</div>
       <div class="tab" onclick="showTab('settings')">⚙ 설정</div>
-      <div class="tab" onclick="showTab('history')">📈 회차비교</div>
     </div>
 
     <!-- 현황 탭 -->
@@ -395,7 +394,10 @@
 
     <!-- 종합평가 탭 -->
     <div id="tab-eval" class="tab-content" style="display:none;">
-      <div class="sec-title"><h3>업체 종합평가</h3></div>
+      <div class="sec-title">
+        <h3>업체 종합평가</h3>
+        <button class="btn-sm btn-primary" onclick="saveEvalScores()">💾 평가점수 저장</button>
+      </div>
       <div class="report-section">
         <p style="font-size:12px;color:var(--dgray);margin-bottom:16px;">역량평가 점수를 입력하세요. 가격평가는 순위 데이터에서 자동 계산됩니다.</p>
         <div id="eval-content"></div>
@@ -473,20 +475,6 @@
       </div>
     </div>
 
-    <!-- 회차비교 탭 -->
-    <div id="tab-history" class="tab-content" style="display:none;">
-      <div class="sec-title">
-        <h3>비딩 회차별 비교</h3>
-        <button class="btn-sm btn-primary" onclick="saveHistory()">💾 현재 회차 저장</button>
-      </div>
-      <div class="report-section">
-        <p style="font-size:11px;color:var(--dgray);margin-bottom:14px;">현재 비딩 결과를 저장하면 다음 비딩 시 비교할 수 있어요. 최대 8개 회차 보관.</p>
-        <div id="history-content"></div>
-      </div>
-      <div class="report-section" style="margin-top:16px;">
-        <h3 style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px;">회차별 물류비 추이</h3>
-        <div id="history-chart" style="overflow-x:auto;"></div>
-      </div>
     </div>
   </div>
 </div>
@@ -1020,14 +1008,20 @@ function renderReport() {
   let grandTotal=0;
   countries.forEach(c=>{
     const routes=cfgRoutes.filter(r=>r.nation===c);
+    if(routes.length===0) return; // 해당 국가 노선 없으면 스킵
     let tot=0;
+    let hasData=false;
     routes.forEach(r=>{
       const ranked=getRanked(r.no);
       const vol=r.vol||0;
-      if(ranked[0]&&vol) tot+=ranked[0].total*vol;
+      if(ranked[0]) {
+        hasData=true;
+        if(vol) tot+=ranked[0].total*vol;
+      }
     });
     grandTotal+=tot;
-    ctRows+=`<tr><td>${c}</td><td>${routes.length}</td><td>${fmt(tot)}</td></tr>`;
+    const totDisplay = tot>0 ? fmt(tot) : (hasData ? '(물량 미입력)' : '-');
+    ctRows+=`<tr><td>${c}</td><td>${routes.length}</td><td style="text-align:right;">${totDisplay}</td></tr>`;
   });
   ctRows+=`<tr class="total"><td>합 계</td><td></td><td>${fmt(grandTotal)}</td></tr></tbody>`;
   document.getElementById('country-table').innerHTML=ctRows;
@@ -1042,8 +1036,9 @@ function renderEval() {
   allFwdrs.forEach(fw => counts[fw] = 0);
   cfgRoutes.filter(r => r.nation && r.nation !== '국내').forEach(route => {
     const ranked = getRanked(route.no);
-    if(ranked[0]) counts[ranked[0].fw] = (counts[ranked[0].fw]||0) + 1;
-    if(ranked[1]) counts[ranked[1].fw] = (counts[ranked[1].fw]||0) + 1;
+    if(ranked[0]) counts[ranked[0].fw] = (counts[ranked[0].fw]||0) + 3; // 1위: 3점
+    if(ranked[1]) counts[ranked[1].fw] = (counts[ranked[1].fw]||0) + 2; // 2위: 2점
+    if(ranked[2]) counts[ranked[2].fw] = (counts[ranked[2].fw]||0) + 1; // 3위: 1점
   });
 
   let html = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
@@ -1106,7 +1101,6 @@ function showTab(name) {
   if(name==='report') renderReport();
   if(name==='eval') renderEval();
   if(name==='settings') showSettingsTab();
-  if(name==='history') renderHistory();
 }
 
 function printReport() {
@@ -1462,128 +1456,6 @@ async function saveEvalScores() {
   const ok = await saveToStorage('eval_scores', evalScores);
   if(ok) showToast('평가점수가 저장됐어요!');
   else showToast('저장 실패. 다시 시도해주세요.');
-}
-
-// ══════════════════════════════════════════
-// 회차비교
-// ══════════════════════════════════════════
-async function saveHistory() {
-  // 현재 비딩 결과 스냅샷
-  let bidTotal = 0;
-  cfgRoutes.filter(r=>r.nation&&r.nation!=='국내').forEach(route=>{
-    const ranked = getRanked(route.no);
-    const vol = route.vol || 0;
-    if(ranked[0] && vol) bidTotal += ranked[0].total * vol;
-  });
-
-  const snapshot = {
-    label: prompt('이 회차의 이름을 입력하세요 (예: 26년 상반기)', new Date().toLocaleDateString('ko-KR')),
-    date: new Date().toISOString(),
-    bidTotal,
-    planLogistics: cfgPlanLogistics || PLAN_LOGISTICS,
-    planSales: cfgPlanSales || PLAN_SALES,
-    topRoutes: cfgRoutes
-      .filter(r=>r.nation&&r.nation!=='국내')
-      .slice(0, 10)
-      .map(r => {
-        const ranked = getRanked(r.no);
-        return { no: r.no, nation: r.nation, port_i: r.port_i, ctnr: r.ctnr,
-                 winner: ranked[0]?.fw||'-', price: ranked[0]?.total||0 };
-      })
-  };
-
-  if(!snapshot.label) return;
-
-  // 기존 히스토리 로드
-  const existing = await loadFromStorage('bidding_history') || [];
-  existing.push(snapshot);
-  // 최대 8개 보관
-  if(existing.length > 8) existing.shift();
-
-  const ok = await saveToStorage('bidding_history', existing);
-  if(ok) {
-    showToast('회차가 저장됐어요!');
-    renderHistory();
-  }
-}
-
-async function renderHistory() {
-  const history = await loadFromStorage('bidding_history') || [];
-  const el = document.getElementById('history-content');
-  const chartEl = document.getElementById('history-chart');
-
-  if(history.length === 0) {
-    el.innerHTML = '<p style="color:var(--dgray);font-size:12px;">저장된 회차가 없어요. [현재 회차 저장] 버튼을 눌러 첫 회차를 저장하세요.</p>';
-    chartEl.innerHTML = '';
-    return;
-  }
-
-  // 회차별 요약 테이블
-  let tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
-    <thead><tr style="background:var(--navy);color:white;">
-      <th style="padding:8px;">회차</th>
-      <th style="padding:8px;">날짜</th>
-      <th style="padding:8px;">비딩 물류비(원)</th>
-      <th style="padding:8px;">사업계획 대비</th>
-      <th style="padding:8px;">물류비율</th>
-      <th style="padding:8px;width:30px;"></th>
-    </tr></thead><tbody>`;
-
-  history.forEach((h, i) => {
-    const savings = h.planLogistics - h.bidTotal;
-    const rate = h.bidTotal / h.planSales;
-    const bg = i%2===0 ? '#F9F9F9' : 'white';
-    tableHtml += `<tr style="background:${bg};">
-      <td style="padding:8px;font-weight:700;">${h.label}</td>
-      <td style="padding:8px;color:var(--dgray);font-size:11px;">${new Date(h.date).toLocaleDateString('ko-KR')}</td>
-      <td style="padding:8px;text-align:right;font-weight:700;">${fmt(h.bidTotal)}</td>
-      <td style="padding:8px;text-align:right;color:${savings>0?'var(--green)':'var(--red)'};">${savings>0?'+':''}${fmt(savings)}</td>
-      <td style="padding:8px;text-align:center;">${pct(rate)}</td>
-      <td style="padding:8px;text-align:center;"><button onclick="deleteHistory(${i})" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;">✕</button></td>
-    </tr>`;
-  });
-  tableHtml += '</tbody></table>';
-  el.innerHTML = tableHtml;
-
-  // 바 차트 (SVG)
-  const maxVal = Math.max(...history.map(h=>h.bidTotal), ...history.map(h=>h.planLogistics));
-  const W = Math.max(400, history.length * 120);
-  const H = 200;
-  const barW = 40;
-  const gap = (W - history.length * barW * 2) / (history.length + 1);
-
-  let svg = `<svg width="${W}" height="${H+60}" viewBox="0 0 ${W} ${H+60}" xmlns="http://www.w3.org/2000/svg" style="min-width:${W}px;">`;
-
-  history.forEach((h, i) => {
-    const x = gap + i * (barW*2 + gap);
-    const planH = (h.planLogistics / maxVal) * H;
-    const bidH  = (h.bidTotal / maxVal) * H;
-
-    // 계획 바
-    svg += `<rect x="${x}" y="${H-planH+10}" width="${barW}" height="${planH}" fill="#BDD7EE" rx="3"/>`;
-    // 비딩 바
-    svg += `<rect x="${x+barW+2}" y="${H-bidH+10}" width="${barW}" height="${bidH}" fill="#70AD47" rx="3"/>`;
-    // 레이블
-    svg += `<text x="${x+barW}" y="${H+28}" text-anchor="middle" font-size="10" fill="#595959">${h.label.length>6?h.label.substring(0,6)+'..':h.label}</text>`;
-    svg += `<text x="${x+barW}" y="${H-planH+6}" text-anchor="middle" font-size="9" fill="#2E75B6">${(h.planLogistics/1e8).toFixed(1)}억</text>`;
-    svg += `<text x="${x+barW+2}" y="${H-bidH+6}" text-anchor="middle" font-size="9" fill="#375623">${(h.bidTotal/1e8).toFixed(1)}억</text>`;
-  });
-
-  // 범례
-  svg += `<rect x="10" y="${H+45}" width="12" height="12" fill="#BDD7EE" rx="2"/>`;
-  svg += `<text x="26" y="${H+55}" font-size="10" fill="#595959">사업계획</text>`;
-  svg += `<rect x="90" y="${H+45}" width="12" height="12" fill="#70AD47" rx="2"/>`;
-  svg += `<text x="106" y="${H+55}" font-size="10" fill="#595959">비딩 결과</text>`;
-  svg += '</svg>';
-
-  chartEl.innerHTML = svg;
-}
-
-async function deleteHistory(idx) {
-  const history = await loadFromStorage('bidding_history') || [];
-  history.splice(idx, 1);
-  await saveToStorage('bidding_history', history);
-  renderHistory();
 }
 
 </script>
