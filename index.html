@@ -378,6 +378,8 @@
                   <th>NO</th><th>도착국가</th><th>작업지</th><th>출발PORT</th><th>도착PORT</th><th>CTNR</th><th>예상물량</th>
                   <th class="rank-1">선정업체</th><th class="rank-1">선정 견적가(원)</th>
                   <th class="rank-2">2위 업체</th><th class="rank-2">2위 금액(원)</th>
+                  <th class="rank-3">3위 업체</th><th class="rank-3">3위 금액(원)</th>
+                  <th>4위 업체</th><th>4위 금액(원)</th>
                   <th>절감여력(원)</th>
                 </tr>
               </thead>
@@ -443,6 +445,14 @@
             <div>
               <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">사업계획 물류비 (C조건, 원)</label>
               <input type="number" id="cfg-plan-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">사업계획 매출 (F조건, 원)</label>
+              <input type="number" id="cfg-f-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">사업계획 물류비 (F조건, 원)</label>
+              <input type="number" id="cfg-f-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
             </div>
             <div>
               <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">공통 비밀번호 (개별 미설정 시 적용)</label>
@@ -961,9 +971,9 @@ function renderReport() {
   const savings = PLAN_LOGISTICS - bidTotal;
   const planRate = PLAN_LOGISTICS / PLAN_SALES;
   const bidRate  = bidTotal / PLAN_SALES;
-  const fBidTot  = bidTotal + F_LOGISTICS;
-  const fPlanTot = PLAN_LOGISTICS + F_LOGISTICS;
-  const fSales   = PLAN_SALES + F_SALES;
+  const fBidTot  = bidTotal + cfgFLogistics;
+  const fPlanTot = (cfgPlanLogistics||PLAN_LOGISTICS) + cfgFLogistics;
+  const fSales   = (cfgPlanSales||PLAN_SALES) + cfgFSales;
 
   // 요약 테이블
   document.getElementById('summary-table').innerHTML = `
@@ -982,8 +992,8 @@ function renderReport() {
       </tr>
       <tr>
         <td>F조건 (비딩 미대상)</td>
-        <td>${fmt(F_SALES)}</td><td>${fmt(F_LOGISTICS)}</td><td>${fmt(F_LOGISTICS)}</td>
-        <td>0</td><td>${pct(F_LOGISTICS/F_SALES)}</td><td>${pct(F_LOGISTICS/F_SALES)}</td><td>0.00%</td>
+        <td>${fmt(cfgFSales)}</td><td>${fmt(cfgFLogistics)}</td><td>${fmt(cfgFLogistics)}</td>
+        <td>0</td><td>${pct(cfgFLogistics/cfgFSales)}</td><td>${pct(cfgFLogistics/cfgFSales)}</td><td>0.00%</td>
       </tr>
       <tr class="total">
         <td>합 계</td>
@@ -1001,13 +1011,15 @@ function renderReport() {
   cfgRoutes.filter(r=>r.nation).forEach(route => {
     const ranked = getRanked(route.no);
     const vol = route.vol || '';
-    const r1=ranked[0],r2=ranked[1];
+    const r1=ranked[0],r2=ranked[1],r3=ranked[2],r4=ranked[3];
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td>${route.no}</td><td>${route.nation}</td><td>${route.site}</td>
       <td>${route.port_o}</td><td>${route.port_i}</td><td>${route.ctnr}</td><td>${vol}</td>
       <td class="rank-1">${r1?r1.fw:'-'}</td><td class="rank-1">${r1?fmt(r1.total):''}</td>
       <td class="rank-2">${r2?r2.fw:'-'}</td><td class="rank-2">${r2?fmt(r2.total):''}</td>
+      <td class="rank-3">${r3?r3.fw:'-'}</td><td class="rank-3">${r3?fmt(r3.total):''}</td>
+      <td>${r4?r4.fw:'-'}</td><td>${r4?fmt(r4.total):''}</td>
       <td>${r1&&r2?fmt(r2.total-r1.total):''}</td>
     `;
     rtbody.appendChild(tr);
@@ -1015,7 +1027,9 @@ function renderReport() {
 
   // 국가별 소계
   const countries=['중국','대만','미국','싱가폴','말레이시아','홍콩'];
-  let ctRows='<thead><tr><th>도착국가</th><th>노선 수</th><th>선정 물류비 합계(원)</th></tr></thead><tbody>';
+  // C조건 사업계획 물류비 기준으로 국가별 배분 (비율 기준)
+  const cPlanLogistics = cfgPlanLogistics || PLAN_LOGISTICS;
+  let ctRows='<thead><tr><th>도착국가</th><th>노선 수</th><th>예상물량(CTN)</th><th>비딩 물류비(원)</th><th>사업계획 대비</th><th>절감률</th></tr></thead><tbody>';
   let grandTotal=0;
   countries.forEach(c=>{
     const routes=cfgRoutes.filter(r=>r.nation===c);
@@ -1031,10 +1045,16 @@ function renderReport() {
       }
     });
     grandTotal+=tot;
+    const totalVol = routes.reduce((s,r)=>s+(r.vol||0),0);
+    // 국가별 사업계획 물류비: 전체 C조건 물류비를 물량 비율로 배분
     const totDisplay = tot>0 ? fmt(tot) : (hasData ? '(물량 미입력)' : '-');
-    ctRows+=`<tr><td>${c}</td><td>${routes.length}</td><td style="text-align:right;">${totDisplay}</td></tr>`;
+    // 사업계획 대비: 선정된 노선의 사업계획물류비 = 없으므로 표시 생략, 대신 절감률만
+    ctRows+=`<tr><td>${c}</td><td>${routes.length}</td><td style="text-align:right;">${totalVol||'-'}</td><td style="text-align:right;">${totDisplay}</td><td style="text-align:right;">-</td><td style="text-align:right;">-</td></tr>`;
   });
-  ctRows+=`<tr class="total"><td>합 계</td><td></td><td>${fmt(grandTotal)}</td></tr></tbody>`;
+  const totalAllVol = cfgRoutes.filter(r=>r.nation&&r.nation!=='국내').reduce((s,r)=>s+(r.vol||0),0);
+  const savings_c = cPlanLogistics - grandTotal;
+  const savingsPct = cPlanLogistics > 0 ? ((savings_c/cPlanLogistics)*100).toFixed(1)+'%' : '-';
+  ctRows+=`<tr class="total"><td>합 계</td><td></td><td style="text-align:right;">${totalAllVol}</td><td style="text-align:right;">${fmt(grandTotal)}</td><td style="text-align:right;" class="${savings_c>0?'highlight':'negative'}">${savings_c>0?'+':''}${fmt(savings_c)}</td><td style="text-align:right;" class="${savings_c>0?'highlight':'negative'}">${savingsPct} 절감</td></tr></tbody>`;
   document.getElementById('country-table').innerHTML=ctRows;
 }
 
@@ -1093,7 +1113,7 @@ function renderEval() {
     const f = finals[fw];
     const rankStr = getrank(fw);
     const isTop = rankStr === '1위';
-    const noData = f.total === 0 && f.raw === 0;
+    const noData = f.qual === 0 && f.raw === 0;
     const bg = noData ? '#F5F5F5' : (fi%2===0 ? '#F9F9F9' : 'white');
     const totalColor = isTop ? '#2E7D32' : (noData ? '#AAAAAA' : '#333');
     const totalBg = isTop ? '#E8F5E9' : (noData ? '#F5F5F5' : (fi%2===0 ? '#F0F4F0' : '#F5FAF5'));
@@ -1213,6 +1233,8 @@ let cfgRoutes = ROUTES.map(r=>({...r}));
 let cfgExRate = EXCHANGE_RATE;
 let cfgPlanSales = PLAN_SALES;
 let cfgPlanLogistics = PLAN_LOGISTICS;
+let cfgFSales = F_SALES;
+let cfgFLogistics = F_LOGISTICS;
 let cfgFwPw = FW_PW;
 
 // 설정 로드 (앱 시작 시)
@@ -1228,6 +1250,8 @@ async function loadSettings() {
     if(cfgSaved.exRate) cfgExRate = cfgSaved.exRate;
     if(cfgSaved.planSales) cfgPlanSales = cfgSaved.planSales;
     if(cfgSaved.planLogistics) cfgPlanLogistics = cfgSaved.planLogistics;
+    if(cfgSaved.fSales) cfgFSales = cfgSaved.fSales;
+    if(cfgSaved.fLogistics) cfgFLogistics = cfgSaved.fLogistics;
     if(cfgSaved.fwPw) cfgFwPw = cfgSaved.fwPw;
   }
 
@@ -1259,6 +1283,8 @@ function showSettingsTab() {
   document.getElementById('cfg-exrate').value = cfgExRate;
   document.getElementById('cfg-plan-sales').value = cfgPlanSales;
   document.getElementById('cfg-plan-logistics').value = cfgPlanLogistics;
+  document.getElementById('cfg-f-sales').value = cfgFSales;
+  document.getElementById('cfg-f-logistics').value = cfgFLogistics;
   document.getElementById('cfg-fw-pw').value = cfgFwPw;
 }
 
@@ -1397,6 +1423,8 @@ async function saveConfig() {
     exRate:        parseFloat(document.getElementById('cfg-exrate').value) || EXCHANGE_RATE,
     planSales:     parseFloat(document.getElementById('cfg-plan-sales').value) || PLAN_SALES,
     planLogistics: parseFloat(document.getElementById('cfg-plan-logistics').value) || PLAN_LOGISTICS,
+    fSales:        parseFloat(document.getElementById('cfg-f-sales').value) || F_SALES,
+    fLogistics:    parseFloat(document.getElementById('cfg-f-logistics').value) || F_LOGISTICS,
     fwPw:          document.getElementById('cfg-fw-pw').value || FW_PW,
   };
   const ok = await saveToStorage('cfg_basic', cfg);
@@ -1404,6 +1432,8 @@ async function saveConfig() {
     cfgExRate = cfg.exRate;
     cfgPlanSales = cfg.planSales;
     cfgPlanLogistics = cfg.planLogistics;
+    cfgFSales = cfg.fSales;
+    cfgFLogistics = cfg.fLogistics;
     cfgFwPw = cfg.fwPw;
     showSettingsBanner();
     showToast('기본 설정이 저장됐어요!');
