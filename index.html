@@ -1042,61 +1042,39 @@ function renderEval() {
   const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
 
   const rawCounts = {};
-  allFwdrs.forEach(fw => rawCounts[fw] = 0);
-  cfgRoutes.filter(r => r.nation && r.nation !== '국내').forEach(route => {
+  allFwdrs.forEach(function(fw){ rawCounts[fw] = 0; });
+  cfgRoutes.filter(function(r){ return r.nation && r.nation !== '국내'; }).forEach(function(route){
     const ranked = getRanked(route.no);
     if(ranked[0]) rawCounts[ranked[0].fw] = (rawCounts[ranked[0].fw]||0) + 3;
     if(ranked[1]) rawCounts[ranked[1].fw] = (rawCounts[ranked[1].fw]||0) + 2;
     if(ranked[2]) rawCounts[ranked[2].fw] = (rawCounts[ranked[2].fw]||0) + 1;
   });
 
-  const maxRaw = Math.max(...allFwdrs.map(fw => rawCounts[fw]||0));
+  const maxRaw = Math.max.apply(null, allFwdrs.map(function(fw){ return rawCounts[fw]||0; }));
 
   const finals = {};
-  allFwdrs.forEach(fw => {
+  allFwdrs.forEach(function(fw){
     const e = evalScores[fw] || {};
     const qual = (e.stability||0) + (e.network||0) + (e.response||0);
     const priceScore = maxRaw > 0 ? Math.round((rawCounts[fw]||0) / maxRaw * 90 * 10) / 10 : 0;
-    finals[fw] = { qual, priceScore, total: qual + priceScore, raw: rawCounts[fw]||0 };
+    finals[fw] = { qual: qual, priceScore: priceScore, total: qual + priceScore, raw: rawCounts[fw]||0 };
   });
 
   function getrank(fw) {
     const f = finals[fw];
     if(f.total === 0 && f.raw === 0) return '-';
-    const higher = allFwdrs.filter(x => finals[x].total > f.total && (finals[x].total > 0 || finals[x].raw > 0)).length;
+    let higher = 0;
+    allFwdrs.forEach(function(x){
+      if(finals[x].total > f.total && (finals[x].total > 0 || finals[x].raw > 0)) higher++;
+    });
     return (higher + 1) + '위';
   }
 
-  let rows = '';
-  allFwdrs.forEach((fw, fi) => {
-    const e = evalScores[fw] || {};
-    const f = finals[fw];
-    const rankStr = getrank(fw);
-    const isTop = rankStr === '1위';
-    const noData = f.total === 0 && f.raw === 0;
-    const bg = noData ? '#F5F5F5' : (fi%2===0 ? '#F9F9F9' : 'white');
-    const totalColor = isTop ? '#2E7D32' : (noData ? '#AAAAAA' : '#333');
-    const totalBg = isTop ? '#E8F5E9' : (noData ? '#F5F5F5' : (fi%2===0 ? '#F0F4F0' : '#F5FAF5'));
-    const opacity = noData ? 'opacity:0.5;' : '';
+  const el = document.getElementById('eval-content');
+  const tbl = document.createElement('table');
+  tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:12px;';
 
-    rows += '<tr style="background:' + bg + ';' + opacity + '">';
-    rows += '<td style="padding:9px;font-weight:700;' + (noData?'color:#aaa;':'') + '">' + fw + '</td>';
-    rows += '<td style="padding:9px;text-align:center;"><input type="number" value="' + (e.stability||0) + '" min="0" max="3" step="1" onchange="updateEval('' + fw + '','stability',this.value)" style="width:46px;text-align:center;padding:3px;border:1.5px solid var(--border);border-radius:4px;font-size:12px;"></td>';
-    rows += '<td style="padding:9px;text-align:center;"><input type="number" value="' + (e.network||0) + '" min="0" max="2" step="1" onchange="updateEval('' + fw + '','network',this.value)" style="width:46px;text-align:center;padding:3px;border:1.5px solid var(--border);border-radius:4px;font-size:12px;"></td>';
-    rows += '<td style="padding:9px;text-align:center;"><input type="number" value="' + (e.response||0) + '" min="0" max="5" step="1" onchange="updateEval('' + fw + '','response',this.value)" style="width:46px;text-align:center;padding:3px;border:1.5px solid var(--border);border-radius:4px;font-size:12px;"></td>';
-    rows += '<td style="padding:9px;text-align:center;font-weight:700;background:#EEF2F7;">' + f.qual + '</td>';
-    rows += '<td style="padding:9px;text-align:center;' + (noData?'color:#aaa;':'') + '">' + (noData ? '-' : f.raw + '점') + '</td>';
-    rows += '<td style="padding:9px;text-align:center;' + (noData?'color:#aaa;':'') + '">' + (noData ? '-' : f.priceScore.toFixed(1)) + '</td>';
-    rows += '<td style="padding:9px;text-align:center;font-weight:700;font-size:14px;background:' + totalBg + ';color:' + totalColor + ';">' + (noData ? '-' : f.total.toFixed(1)) + '</td>';
-    rows += '<td style="padding:9px;text-align:center;font-weight:700;background:' + (isTop?'#E8F5E9':totalBg) + ';color:' + (isTop?'#2E7D32':totalColor) + ';">' + rankStr + '</td>';
-    rows += '</tr>';
-  });
-
-  const note = '<div style="margin-top:10px;padding:10px;background:#F0F4FF;border-radius:7px;font-size:11px;color:#555;">💡 가격점수: 노선별 1위=3점·2위=2점·3위=1점 누적 → 최고점자 기준 90점 환산 | 동점 공동순위 | 역량·가격 모두 0이면 순위 제외</div>';
-
-  document.getElementById('eval-content').innerHTML =
-    '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
-    '<thead><tr style="background:var(--navy);color:white;">' +
+  tbl.innerHTML = '<thead><tr style="background:#1F4E79;color:white;">' +
     '<th style="padding:9px;text-align:left;">업체명</th>' +
     '<th style="padding:9px;">안정성<br>(3점)</th>' +
     '<th style="padding:9px;">네트워크<br>(2점)</th>' +
@@ -1106,7 +1084,93 @@ function renderEval() {
     '<th style="padding:9px;">가격점수<br>(90점)</th>' +
     '<th style="padding:9px;background:#375623;">최종점수<br>(100점)</th>' +
     '<th style="padding:9px;background:#375623;">순위</th>' +
-    '</tr></thead><tbody>' + rows + '</tbody></table>' + note;
+    '</tr></thead><tbody></tbody>';
+
+  const tbody = tbl.querySelector('tbody');
+
+  allFwdrs.forEach(function(fw, fi){
+    const e = evalScores[fw] || {};
+    const f = finals[fw];
+    const rankStr = getrank(fw);
+    const isTop = rankStr === '1위';
+    const noData = f.total === 0 && f.raw === 0;
+    const bg = noData ? '#F5F5F5' : (fi%2===0 ? '#F9F9F9' : 'white');
+    const totalColor = isTop ? '#2E7D32' : (noData ? '#AAAAAA' : '#333');
+    const totalBg = isTop ? '#E8F5E9' : (noData ? '#F5F5F5' : (fi%2===0 ? '#F0F4F0' : '#F5FAF5'));
+
+    const tr = document.createElement('tr');
+    tr.style.background = bg;
+    if(noData) tr.style.opacity = '0.5';
+
+    // 업체명
+    const tdName = document.createElement('td');
+    tdName.style.cssText = 'padding:9px;font-weight:700;' + (noData ? 'color:#aaa;' : '');
+    tdName.textContent = fw;
+    tr.appendChild(tdName);
+
+    // 역량평가 입력 3개
+    const fields = [
+      {key:'stability', max:3},
+      {key:'network',   max:2},
+      {key:'response',  max:5}
+    ];
+    fields.forEach(function(field){
+      const td = document.createElement('td');
+      td.style.cssText = 'padding:9px;text-align:center;';
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.value = e[field.key] || 0;
+      inp.min = 0; inp.max = field.max; inp.step = 1;
+      inp.style.cssText = 'width:46px;text-align:center;padding:3px;border:1.5px solid #D9D9D9;border-radius:4px;font-size:12px;';
+      inp.dataset.fw = fw;
+      inp.dataset.field = field.key;
+      inp.addEventListener('change', function(){
+        updateEval(this.dataset.fw, this.dataset.field, this.value);
+      });
+      td.appendChild(inp);
+      tr.appendChild(td);
+    });
+
+    // 역량 소계
+    const tdQual = document.createElement('td');
+    tdQual.style.cssText = 'padding:9px;text-align:center;font-weight:700;background:#EEF2F7;';
+    tdQual.textContent = f.qual;
+    tr.appendChild(tdQual);
+
+    // 누적점수
+    const tdRaw = document.createElement('td');
+    tdRaw.style.cssText = 'padding:9px;text-align:center;' + (noData ? 'color:#aaa;' : '');
+    tdRaw.textContent = noData ? '-' : f.raw + '점';
+    tr.appendChild(tdRaw);
+
+    // 가격점수
+    const tdPrice = document.createElement('td');
+    tdPrice.style.cssText = 'padding:9px;text-align:center;' + (noData ? 'color:#aaa;' : '');
+    tdPrice.textContent = noData ? '-' : f.priceScore.toFixed(1);
+    tr.appendChild(tdPrice);
+
+    // 최종점수
+    const tdTotal = document.createElement('td');
+    tdTotal.style.cssText = 'padding:9px;text-align:center;font-weight:700;font-size:14px;background:' + totalBg + ';color:' + totalColor + ';';
+    tdTotal.textContent = noData ? '-' : f.total.toFixed(1);
+    tr.appendChild(tdTotal);
+
+    // 순위
+    const tdRank = document.createElement('td');
+    tdRank.style.cssText = 'padding:9px;text-align:center;font-weight:700;background:' + (isTop ? '#E8F5E9' : totalBg) + ';color:' + (isTop ? '#2E7D32' : totalColor) + ';';
+    tdRank.textContent = rankStr;
+    tr.appendChild(tdRank);
+
+    tbody.appendChild(tr);
+  });
+
+  const note = document.createElement('div');
+  note.style.cssText = 'margin-top:10px;padding:10px;background:#F0F4FF;border-radius:7px;font-size:11px;color:#555;';
+  note.textContent = '💡 가격점수: 1위=3점·2위=2점·3위=1점 누적 → 최고점자 기준 90점 환산 | 동점 공동순위 | 역량·가격 모두 0이면 순위 제외';
+
+  el.innerHTML = '';
+  el.appendChild(tbl);
+  el.appendChild(note);
 }
 
 function showTab(name) {
