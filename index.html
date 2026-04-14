@@ -1041,7 +1041,6 @@ function renderReport() {
 function renderEval() {
   const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
 
-  // 가격점수: 1위=3점, 2위=2점, 3위=1점 누적
   const rawCounts = {};
   allFwdrs.forEach(fw => rawCounts[fw] = 0);
   cfgRoutes.filter(r => r.nation && r.nation !== '국내').forEach(route => {
@@ -1051,10 +1050,8 @@ function renderEval() {
     if(ranked[2]) rawCounts[ranked[2].fw] = (rawCounts[ranked[2].fw]||0) + 1;
   });
 
-  // 가격점수: 최고 누적점자 기준 90점 환산
   const maxRaw = Math.max(...allFwdrs.map(fw => rawCounts[fw]||0));
 
-  // 최종점수 계산 (역량 + 가격)
   const finals = {};
   allFwdrs.forEach(fw => {
     const e = evalScores[fw] || {};
@@ -1063,30 +1060,14 @@ function renderEval() {
     finals[fw] = { qual, priceScore, total: qual + priceScore, raw: rawCounts[fw]||0 };
   });
 
-  // 동점 처리 순위 계산
-  // 역량+가격 모두 0인 업체는 순위 제외 (미참여)
   function getrank(fw) {
-    const myTotal = finals[fw].total;
-    // 역량도 0이고 가격도 0이면 미참여
-    if(myTotal === 0 && finals[fw].raw === 0) return '-';
-    // 나보다 높은 점수가 몇 개인지 세기 (동점은 같은 순위)
-    const higher = allFwdrs.filter(f => finals[f].total > myTotal && (finals[f].total > 0 || finals[f].raw > 0)).length;
-    return higher + 1 + '위';
+    const f = finals[fw];
+    if(f.total === 0 && f.raw === 0) return '-';
+    const higher = allFwdrs.filter(x => finals[x].total > f.total && (finals[x].total > 0 || finals[x].raw > 0)).length;
+    return (higher + 1) + '위';
   }
 
-  let tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
-    <thead><tr style="background:var(--navy);color:white;">
-      <th style="padding:9px;text-align:left;">업체명</th>
-      <th style="padding:9px;">안정성<br>(3점)</th>
-      <th style="padding:9px;">네트워크<br>(2점)</th>
-      <th style="padding:9px;">대응력<br>(5점)</th>
-      <th style="padding:9px;">역량 소계<br>(10점)</th>
-      <th style="padding:9px;">1~3위<br>누적점수</th>
-      <th style="padding:9px;">가격점수<br>(90점)</th>
-      <th style="padding:9px;background:#375623;">최종점수<br>(100점)</th>
-      <th style="padding:9px;background:#375623;">순위</th>
-    </tr></thead><tbody>`;
-
+  let rows = '';
   allFwdrs.forEach((fw, fi) => {
     const e = evalScores[fw] || {};
     const f = finals[fw];
@@ -1095,33 +1076,37 @@ function renderEval() {
     const noData = f.total === 0 && f.raw === 0;
     const bg = noData ? '#F5F5F5' : (fi%2===0 ? '#F9F9F9' : 'white');
     const totalColor = isTop ? '#2E7D32' : (noData ? '#AAAAAA' : '#333');
-    const totalBg = isTop ? '#E8F5E9' : (noData ? '#F5F5F5' : (fi%2===0?'#F0F4F0':'#F5FAF5'));
+    const totalBg = isTop ? '#E8F5E9' : (noData ? '#F5F5F5' : (fi%2===0 ? '#F0F4F0' : '#F5FAF5'));
+    const opacity = noData ? 'opacity:0.5;' : '';
 
-    tableHtml += `<tr style="background:\${bg};\${noData?'opacity:0.6;':''}">
-      <td style="padding:9px;font-weight:700;\${noData?'color:#aaa;':''}">\${fw}</td>
-      <td style="padding:9px;text-align:center;"><input type="number" value="\${e.stability||0}" min="0" max="3" step="1"
-        onchange="updateEval('\${fw}','stability',this.value)"
-        style="width:46px;text-align:center;padding:3px;border:1.5px solid var(--border);border-radius:4px;font-size:12px;"></td>
-      <td style="padding:9px;text-align:center;"><input type="number" value="\${e.network||0}" min="0" max="2" step="1"
-        onchange="updateEval('\${fw}','network',this.value)"
-        style="width:46px;text-align:center;padding:3px;border:1.5px solid var(--border);border-radius:4px;font-size:12px;"></td>
-      <td style="padding:9px;text-align:center;"><input type="number" value="\${e.response||0}" min="0" max="5" step="1"
-        onchange="updateEval('\${fw}','response',this.value)"
-        style="width:46px;text-align:center;padding:3px;border:1.5px solid var(--border);border-radius:4px;font-size:12px;"></td>
-      <td style="padding:9px;text-align:center;font-weight:700;background:#EEF2F7;">\${f.qual}</td>
-      <td style="padding:9px;text-align:center;\${noData?'color:#aaa;':''}">\${noData ? '-' : f.raw + '점'}</td>
-      <td style="padding:9px;text-align:center;\${noData?'color:#aaa;':''}">\${noData ? '-' : f.priceScore.toFixed(1)}</td>
-      <td style="padding:9px;text-align:center;font-weight:700;font-size:14px;background:\${totalBg};color:\${totalColor};">\${noData ? '-' : f.total.toFixed(1)}</td>
-      <td style="padding:9px;text-align:center;font-weight:700;background:\${isTop?'#E8F5E9':totalBg};color:\${isTop?'#2E7D32':totalColor};">\${rankStr}</td>
-    </tr>`;
+    rows += '<tr style="background:' + bg + ';' + opacity + '">';
+    rows += '<td style="padding:9px;font-weight:700;' + (noData?'color:#aaa;':'') + '">' + fw + '</td>';
+    rows += '<td style="padding:9px;text-align:center;"><input type="number" value="' + (e.stability||0) + '" min="0" max="3" step="1" onchange="updateEval('' + fw + '','stability',this.value)" style="width:46px;text-align:center;padding:3px;border:1.5px solid var(--border);border-radius:4px;font-size:12px;"></td>';
+    rows += '<td style="padding:9px;text-align:center;"><input type="number" value="' + (e.network||0) + '" min="0" max="2" step="1" onchange="updateEval('' + fw + '','network',this.value)" style="width:46px;text-align:center;padding:3px;border:1.5px solid var(--border);border-radius:4px;font-size:12px;"></td>';
+    rows += '<td style="padding:9px;text-align:center;"><input type="number" value="' + (e.response||0) + '" min="0" max="5" step="1" onchange="updateEval('' + fw + '','response',this.value)" style="width:46px;text-align:center;padding:3px;border:1.5px solid var(--border);border-radius:4px;font-size:12px;"></td>';
+    rows += '<td style="padding:9px;text-align:center;font-weight:700;background:#EEF2F7;">' + f.qual + '</td>';
+    rows += '<td style="padding:9px;text-align:center;' + (noData?'color:#aaa;':'') + '">' + (noData ? '-' : f.raw + '점') + '</td>';
+    rows += '<td style="padding:9px;text-align:center;' + (noData?'color:#aaa;':'') + '">' + (noData ? '-' : f.priceScore.toFixed(1)) + '</td>';
+    rows += '<td style="padding:9px;text-align:center;font-weight:700;font-size:14px;background:' + totalBg + ';color:' + totalColor + ';">' + (noData ? '-' : f.total.toFixed(1)) + '</td>';
+    rows += '<td style="padding:9px;text-align:center;font-weight:700;background:' + (isTop?'#E8F5E9':totalBg) + ';color:' + (isTop?'#2E7D32':totalColor) + ';">' + rankStr + '</td>';
+    rows += '</tr>';
   });
 
-  tableHtml += '</tbody></table>';
-  tableHtml += `<div style="margin-top:10px;padding:10px;background:#F0F4FF;border-radius:7px;font-size:11px;color:#555;">
-    💡 가격점수 기준: 노선별 1위=3점, 2위=2점, 3위=1점 누적 → 최고점자 기준 90점 만점 환산 | 동점 시 공동 순위 처리 | 역량·가격 모두 0인 업체는 순위 제외
-  </div>`;
+  const note = '<div style="margin-top:10px;padding:10px;background:#F0F4FF;border-radius:7px;font-size:11px;color:#555;">💡 가격점수: 노선별 1위=3점·2위=2점·3위=1점 누적 → 최고점자 기준 90점 환산 | 동점 공동순위 | 역량·가격 모두 0이면 순위 제외</div>';
 
-  document.getElementById('eval-content').innerHTML = tableHtml;
+  document.getElementById('eval-content').innerHTML =
+    '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+    '<thead><tr style="background:var(--navy);color:white;">' +
+    '<th style="padding:9px;text-align:left;">업체명</th>' +
+    '<th style="padding:9px;">안정성<br>(3점)</th>' +
+    '<th style="padding:9px;">네트워크<br>(2점)</th>' +
+    '<th style="padding:9px;">대응력<br>(5점)</th>' +
+    '<th style="padding:9px;">역량 소계<br>(10점)</th>' +
+    '<th style="padding:9px;">1~3위<br>누적점수</th>' +
+    '<th style="padding:9px;">가격점수<br>(90점)</th>' +
+    '<th style="padding:9px;background:#375623;">최종점수<br>(100점)</th>' +
+    '<th style="padding:9px;background:#375623;">순위</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>' + note;
 }
 
 function showTab(name) {
