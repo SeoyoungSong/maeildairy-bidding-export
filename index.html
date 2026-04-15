@@ -270,8 +270,10 @@
             <th>PSC<br>(원)</th>
             <th>PSM<br>(원)</th>
             <th>적하보험요율<br>(%)</th>
-            <th style="min-width:100px;">스케줄</th>
-            <th style="min-width:180px;">비고</th>
+            <th style="min-width:120px;">주당항차수/<br>출항요일</th>
+            <th style="min-width:80px;">기타비용<br>(원)</th>
+            <th style="min-width:80px;">기타비용<br>(USD)</th>
+            <th style="min-width:160px;">비고</th>
             <th>★합계(원)</th>
           </tr>
         </thead>
@@ -478,6 +480,14 @@
             </div>
             <button class="btn-sm btn-primary" onclick="saveConfig()">저장</button>
           </div>
+        </div>
+
+        <!-- 작업지 주소 설정 -->
+        <div class="settings-section" style="margin-top:16px;">
+          <h4>작업지 주소</h4>
+          <p style="font-size:11px;color:var(--dgray);margin-bottom:12px;">포워더 비딩 조건 화면에 표시됩니다.</p>
+          <div style="display:flex;flex-direction:column;gap:8px;" id="worksite-list"></div>
+          <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="saveWorksites()">저장</button>
         </div>
       </div>
 
@@ -755,6 +765,8 @@ function buildFwTable() {
       ${inp(route.no,'psm',d.psm,'number','0')}
       ${inp(route.no,'ins',d.ins,'number','0.000')}
       ${inp(route.no,'sch',d.sch,'text','')}
+      ${inp(route.no,'etc_krw',d.etc_krw,'number','0')}
+      ${inp(route.no,'etc_usd',d.etc_usd,'number','0.00')}
       ${inp(route.no,'note',d.note,'text','')}
       <td class="total" id="total-${route.no}">${total ? fmt(total) : ''}</td>
     `;
@@ -1124,7 +1136,7 @@ function renderReport() {
   const countries=['중국','대만','미국','싱가폴','말레이시아','홍콩'];
   // C조건 사업계획 물류비 기준으로 국가별 배분 (비율 기준)
   const cPlanLogistics = cfgPlanLogistics || PLAN_LOGISTICS;
-  let ctRows='<thead><tr><th>도착국가</th><th>노선 수</th><th>예상물량(CTN)</th><th>비딩 물류비(원)</th><th>사업계획 대비</th><th>절감률</th></tr></thead><tbody>';
+  let ctRows='<thead><tr><th>도착국가</th><th>노선 수</th><th>예상물량(CTN)</th><th>사업계획 물류비(원)</th><th>비딩 물류비(원)</th><th>절감금액(원)</th><th>절감율</th></tr></thead><tbody>';
   let grandTotal=0;
   countries.forEach(c=>{
     const routes=cfgRoutes.filter(r=>r.nation===c);
@@ -1145,13 +1157,21 @@ function renderReport() {
     const totalVol = routes.reduce((s,r)=>s+(r.vol||0),0);
     // 국가별 사업계획 물류비: 전체 C조건 물류비를 물량 비율로 배분
     const totDisplay = tot>0 ? fmt(tot) : (hasData ? '(물량 미입력)' : '-');
-    // 사업계획 대비: 선정된 노선의 사업계획물류비 = 없으므로 표시 생략, 대신 절감률만
-    ctRows+=`<tr><td>${c}</td><td>${routes.length}</td><td style="text-align:right;">${totalVol||'-'}</td><td style="text-align:right;">${totDisplay}</td><td style="text-align:right;">-</td><td style="text-align:right;">-</td></tr>`;
+    // 국가별 사업계획 물류비: 전체 C조건 물류비를 국가 물량 비율로 배분
+    const totalVol_all = cfgRoutes.filter(function(r){ return r.nation && r.nation !== '국내'; }).reduce(function(s,r){ return s+(r.vol||0); }, 0);
+    const nationPlan = totalVol_all > 0 && totalVol > 0 ? Math.round(cPlanLogistics * totalVol / totalVol_all) : 0;
+    const savingsAmt = nationPlan > 0 && tot > 0 ? nationPlan - tot : 0;
+    const savingsPctNation = nationPlan > 0 && tot > 0 ? ((savingsAmt/nationPlan)*100).toFixed(1)+'%' : '-';
+    const planDisplay = nationPlan > 0 ? fmt(nationPlan) : '-';
+    const savingsDisplay = savingsAmt !== 0 ? fmt(savingsAmt) : '-';
+    const savColor = savingsAmt > 0 ? 'color:#375623;font-weight:700;' : (savingsAmt < 0 ? 'color:#C00000;font-weight:700;' : '');
+    ctRows+=`<tr><td>${c}</td><td>${routes.length}</td><td style="text-align:right;">${totalVol||'-'}</td><td style="text-align:right;color:#2E75B6;">${planDisplay}</td><td style="text-align:right;">${totDisplay}</td><td style="text-align:right;${savColor}">${savingsDisplay}</td><td style="text-align:center;${savColor}">${savingsPctNation}</td></tr>`;
   });
-  const totalAllVol = cfgRoutes.filter(r=>r.nation&&r.nation!=='국내').reduce((s,r)=>s+(r.vol||0),0);
+  const totalAllVol2 = cfgRoutes.filter(function(r){ return r.nation&&r.nation!=='국내'; }).reduce(function(s,r){ return s+(r.vol||0); }, 0);
   const savings_c = cPlanLogistics - grandTotal;
   const savingsPct = cPlanLogistics > 0 ? ((savings_c/cPlanLogistics)*100).toFixed(1)+'%' : '-';
-  ctRows+=`<tr class="total"><td>합 계</td><td></td><td style="text-align:right;">${totalAllVol}</td><td style="text-align:right;">${fmt(grandTotal)}</td><td style="text-align:right;" class="${savings_c>0?'highlight':'negative'}">${savings_c>0?'+':''}${fmt(savings_c)}</td><td style="text-align:right;" class="${savings_c>0?'highlight':'negative'}">${savingsPct} 절감</td></tr></tbody>`;
+  const savCls = savings_c > 0 ? 'color:#375623;font-weight:700;' : 'color:#C00000;font-weight:700;';
+  ctRows+='<tr class="total"><td>합 계</td><td></td><td style="text-align:right;">' + totalAllVol2 + '</td><td style="text-align:right;color:#2E75B6;">' + fmt(cPlanLogistics) + '</td><td style="text-align:right;">' + fmt(grandTotal) + '</td><td style="text-align:right;' + savCls + '">' + fmt(savings_c) + '</td><td style="text-align:center;' + savCls + '">' + savingsPct + '</td></tr></tbody>';
   document.getElementById('country-table').innerHTML=ctRows;
 }
 
@@ -1167,7 +1187,7 @@ function renderEval() {
     if(ranked[2]) rawCounts[ranked[2].fw] = (rawCounts[ranked[2].fw]||0) + 1;
   });
 
-  const maxRaw = Math.max.apply(null, allFwdrs.map(function(fw){ return rawCounts[fw]||0; }));
+  const maxRaw = Math.max.apply(null, allFwdrs.map(function(fw){ return rawCounts[fw]||0; }).concat([0]));
 
   const finals = {};
   allFwdrs.forEach(function(fw){
@@ -1179,10 +1199,10 @@ function renderEval() {
 
   function getrank(fw) {
     const f = finals[fw];
-    if(f.total === 0 && f.raw === 0) return '-';
+    if(f.total === 0) return '-';
     let higher = 0;
     allFwdrs.forEach(function(x){
-      if(finals[x].total > f.total && (finals[x].total > 0 || finals[x].raw > 0)) higher++;
+      if(finals[x].total > f.total) higher++;
     });
     return (higher + 1) + '위';
   }
@@ -1210,22 +1230,18 @@ function renderEval() {
     const f = finals[fw];
     const rankStr = getrank(fw);
     const isTop = rankStr === '1위';
-    const noData = f.qual === 0 && f.raw === 0;
-    const bg = noData ? '#F5F5F5' : (fi%2===0 ? '#F9F9F9' : 'white');
-    const totalColor = isTop ? '#2E7D32' : (noData ? '#AAAAAA' : '#333');
-    const totalBg = isTop ? '#E8F5E9' : (noData ? '#F5F5F5' : (fi%2===0 ? '#F0F4F0' : '#F5FAF5'));
+    const bg = fi%2===0 ? '#F9F9F9' : 'white';
+    const totalColor = isTop ? '#2E7D32' : '#333';
+    const totalBg = isTop ? '#E8F5E9' : (fi%2===0 ? '#F0F4F0' : '#F5FAF5');
 
     const tr = document.createElement('tr');
     tr.style.background = bg;
-    if(noData) tr.style.opacity = '0.5';
 
-    // 업체명
     const tdName = document.createElement('td');
-    tdName.style.cssText = 'padding:9px;font-weight:700;' + (noData ? 'color:#aaa;' : '');
+    tdName.style.cssText = 'padding:9px;font-weight:700;';
     tdName.textContent = fw;
     tr.appendChild(tdName);
 
-    // 역량평가 입력 3개
     const fields = [
       {key:'stability', max:3},
       {key:'network',   max:2},
@@ -1248,33 +1264,28 @@ function renderEval() {
       tr.appendChild(td);
     });
 
-    // 역량 소계
     const tdQual = document.createElement('td');
     tdQual.style.cssText = 'padding:9px;text-align:center;font-weight:700;background:#EEF2F7;';
     tdQual.textContent = f.qual;
     tr.appendChild(tdQual);
 
-    // 누적점수
     const tdRaw = document.createElement('td');
-    tdRaw.style.cssText = 'padding:9px;text-align:center;' + (noData ? 'color:#aaa;' : '');
-    tdRaw.textContent = noData ? '-' : f.raw + '점';
+    tdRaw.style.cssText = 'padding:9px;text-align:center;';
+    tdRaw.textContent = f.raw + '점';
     tr.appendChild(tdRaw);
 
-    // 가격점수
     const tdPrice = document.createElement('td');
-    tdPrice.style.cssText = 'padding:9px;text-align:center;' + (noData ? 'color:#aaa;' : '');
-    tdPrice.textContent = noData ? '-' : f.priceScore.toFixed(1);
+    tdPrice.style.cssText = 'padding:9px;text-align:center;';
+    tdPrice.textContent = f.priceScore.toFixed(1);
     tr.appendChild(tdPrice);
 
-    // 최종점수
     const tdTotal = document.createElement('td');
     tdTotal.style.cssText = 'padding:9px;text-align:center;font-weight:700;font-size:14px;background:' + totalBg + ';color:' + totalColor + ';';
-    tdTotal.textContent = noData ? '-' : f.total.toFixed(1);
+    tdTotal.textContent = f.total.toFixed(1);
     tr.appendChild(tdTotal);
 
-    // 순위
     const tdRank = document.createElement('td');
-    tdRank.style.cssText = 'padding:9px;text-align:center;font-weight:700;background:' + (isTop ? '#E8F5E9' : totalBg) + ';color:' + (isTop ? '#2E7D32' : totalColor) + ';';
+    tdRank.style.cssText = 'padding:9px;text-align:center;font-weight:700;background:' + (isTop?'#E8F5E9':totalBg) + ';color:' + (isTop?'#2E7D32':totalColor) + ';';
     tdRank.textContent = rankStr;
     tr.appendChild(tdRank);
 
@@ -1283,7 +1294,7 @@ function renderEval() {
 
   const note = document.createElement('div');
   note.style.cssText = 'margin-top:10px;padding:10px;background:#F0F4FF;border-radius:7px;font-size:11px;color:#555;';
-  note.textContent = '💡 가격점수: 1위=3점·2위=2점·3위=1점 누적 → 최고점자 기준 90점 환산 | 동점 공동순위 | 역량·가격 모두 0이면 순위 제외';
+  note.textContent = '💡 가격점수: 1위=3점·2위=2점·3위=1점 누적 → 최고점자 기준 90점 환산 | 동점 공동순위';
 
   el.innerHTML = '';
   el.appendChild(tbl);
@@ -1354,6 +1365,7 @@ async function loadSettings() {
 
   const pwSaved = await loadFromStorage('cfg_fw_passwords');
   if(pwSaved) cfgFwPasswords = pwSaved;
+  await loadWorksites();
 
   // 포워더 선택 드롭다운 업데이트
   updateFwDropdown();
@@ -1382,6 +1394,7 @@ function showSettingsTab() {
   document.getElementById('cfg-plan-logistics').value = cfgPlanLogistics;
   document.getElementById('cfg-f-sales').value = cfgFSales;
   document.getElementById('cfg-f-logistics').value = cfgFLogistics;
+  renderWorksiteList();
   document.getElementById('cfg-fw-pw').value = cfgFwPw;
 }
 
@@ -1793,56 +1806,68 @@ function renderFwSelectionSummary() {
 
   const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
   const fwRoutes = {};
-  allFwdrs.forEach(function(fw) { fwRoutes[fw] = { routes: [], total: 0, vol: 0 }; });
+  allFwdrs.forEach(function(fw) { fwRoutes[fw] = { routes: [], nations: [], total: 0, vol: 0 }; });
 
   cfgRoutes.forEach(function(route) {
     const sel = selectedFw[route.no];
     if(!sel || !sel.fw) return;
-    if(!fwRoutes[sel.fw]) fwRoutes[sel.fw] = { routes: [], total: 0, vol: 0 };
+    if(!fwRoutes[sel.fw]) fwRoutes[sel.fw] = { routes: [], nations: [], total: 0, vol: 0 };
     const vol = route.vol || 0;
-    fwRoutes[sel.fw].routes.push(route.nation || '');
+    fwRoutes[sel.fw].routes.push(route.port_i || '');
+    if(route.nation) fwRoutes[sel.fw].nations.push(route.nation);
     fwRoutes[sel.fw].total += sel.total * vol;
     fwRoutes[sel.fw].vol += vol;
   });
+
+  // 종합평가 순위 계산
+  const rawCounts = {};
+  allFwdrs.forEach(function(fw){ rawCounts[fw] = 0; });
+  cfgRoutes.filter(function(r){ return r.nation && r.nation !== '국내'; }).forEach(function(route){
+    const ranked = getRanked(route.no);
+    if(ranked[0]) rawCounts[ranked[0].fw] = (rawCounts[ranked[0].fw]||0) + 3;
+    if(ranked[1]) rawCounts[ranked[1].fw] = (rawCounts[ranked[1].fw]||0) + 2;
+    if(ranked[2]) rawCounts[ranked[2].fw] = (rawCounts[ranked[2].fw]||0) + 1;
+  });
+  const maxRaw = Math.max.apply(null, allFwdrs.map(function(fw){ return rawCounts[fw]||0; }).concat([0]));
+  const evalFinals = {};
+  allFwdrs.forEach(function(fw){
+    const e = evalScores[fw] || {};
+    const qual = (e.stability||0) + (e.network||0) + (e.response||0);
+    const priceScore = maxRaw > 0 ? Math.round((rawCounts[fw]||0) / maxRaw * 90 * 10) / 10 : 0;
+    evalFinals[fw] = qual + priceScore;
+  });
+  function getEvalRank(fw) {
+    const myScore = evalFinals[fw];
+    if(myScore === 0) return '';
+    const higher = allFwdrs.filter(function(x){ return evalFinals[x] > myScore; }).length;
+    return '종합평가 ' + (higher+1) + '위';
+  }
 
   const fwdrsWithData = allFwdrs.filter(function(fw) {
     return fwRoutes[fw] && fwRoutes[fw].routes.length > 0;
   });
 
   if(fwdrsWithData.length === 0) {
-    el.innerHTML = '<p style="color:var(--dgray);font-size:12px;">아직 선정된 포워더가 없어요. 위 테이블에서 ✓ 선정 포워더 드롭다운을 클릭해 선정하세요.</p>';
+    el.innerHTML = '<p style="color:var(--dgray);font-size:12px;">아직 선정된 포워더가 없어요. 위 테이블의 <strong>✓ 선정 포워더</strong> 드롭다운에서 선정하세요.</p>';
     return;
   }
 
-  const colors = ['#2E75B6','#70AD47','#ED7D31','#C00000','#7030A0','#00B0F0','#FF0000'];
-  let html = '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+  const colors = ['#2E75B6','#70AD47','#ED7D31','#C00000','#7030A0','#00B0F0','#FF6600'];
+  let htmlStr = '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
   fwdrsWithData.forEach(function(fw, i) {
     const d = fwRoutes[fw];
-    const nations = [...new Set(d.routes)].join(', ');
+    const nations = [...new Set(d.nations)].join(', ');
+    const evalRank = getEvalRank(fw);
     const color = colors[i % colors.length];
-    html += '<div style="background:' + color + ';color:white;border-radius:8px;padding:12px 16px;min-width:140px;">';
-    html += '<div style="font-weight:700;font-size:13px;">' + fw + '</div>';
-    html += '<div style="font-size:11px;opacity:0.85;margin:4px 0;">' + nations + '</div>';
-    html += '<div style="font-size:11px;opacity:0.85;">' + d.vol + 'CTN</div>';
-    html += '<div style="font-weight:700;font-size:12px;margin-top:4px;">' + fmt(Math.round(d.total)) + '원</div>';
-    html += '</div>';
+    htmlStr += '<div style="background:' + color + ';color:white;border-radius:8px;padding:14px 18px;min-width:150px;">';
+    htmlStr += '<div style="font-weight:700;font-size:14px;">' + fw + '</div>';
+    if(evalRank) htmlStr += '<div style="font-size:10px;opacity:0.85;margin-top:2px;background:rgba(255,255,255,0.2);border-radius:4px;padding:2px 6px;display:inline-block;">' + evalRank + '</div>';
+    htmlStr += '<div style="font-size:11px;opacity:0.9;margin-top:6px;">' + nations + '</div>';
+    htmlStr += '<div style="font-size:11px;opacity:0.85;">' + d.vol + ' CTN · ' + d.routes.length + '개 구간</div>';
+    htmlStr += '<div style="font-weight:700;font-size:13px;margin-top:6px;">' + fmt(Math.round(d.total)) + '원</div>';
+    htmlStr += '</div>';
   });
-  html += '</div>';
-  el.innerHTML = html;
+  htmlStr += '</div>';
+  el.innerHTML = htmlStr;
 }
 
-
-function switchFwTab(tab) {
-  document.getElementById('fw-panel-input').style.display = tab === 'input' ? 'block' : 'none';
-  document.getElementById('fw-panel-conditions').style.display = tab === 'conditions' ? 'block' : 'none';
-  document.getElementById('fw-tab-input').style.cssText = tab === 'input' ?
-    'padding:9px 20px;font-size:13px;font-weight:700;color:var(--navy);border-bottom:2px solid var(--navy);margin-bottom:-2px;cursor:pointer;' :
-    'padding:9px 20px;font-size:13px;font-weight:600;color:var(--dgray);cursor:pointer;';
-  document.getElementById('fw-tab-conditions').style.cssText = tab === 'conditions' ?
-    'padding:9px 20px;font-size:13px;font-weight:700;color:var(--navy);border-bottom:2px solid var(--navy);margin-bottom:-2px;cursor:pointer;' :
-    'padding:9px 20px;font-size:13px;font-weight:600;color:var(--dgray);cursor:pointer;';
-}
-
-</script>
-</body>
-</html>
