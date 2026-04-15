@@ -167,7 +167,7 @@
   .add-row input:focus { border-color:var(--blue); }
   .btn-add { background:var(--blue); color:white; border:none; padding:7px 16px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
   .btn-add:hover { background:#1a5fa8; }
-  .route-row { display:grid; grid-template-columns:40px 75px 65px 85px 85px 65px 55px 90px 80px 100px 30px; gap:5px; align-items:center; padding:6px 10px; background:var(--gray); border-radius:6px; }
+  .route-row { display:grid; grid-template-columns:40px 75px 65px 85px 85px 65px 55px 80px 80px 80px 80px 75px 95px 30px; gap:5px; align-items:center; padding:6px 10px; background:var(--gray); border-radius:6px; }
   .route-row input { padding:4px 6px; border:1.5px solid var(--border); border-radius:4px; font-size:11px; outline:none; width:100%; }
   .route-row input:focus { border-color:var(--blue); }
   .route-row .no-label { font-weight:700; color:var(--dgray); font-size:12px; text-align:center; }
@@ -398,7 +398,10 @@
                   <th class="rank-1">1위 업체</th><th class="rank-1">1위 견적가(원)</th>
                   <th style="background:#375623;color:white;">선정업체</th><th style="background:#375623;color:white;">선정 견적가(원)</th>
                   <th>1위↔선정 차액(원)</th>
-                  <th style="background:#2E75B6;color:white;">사업계획<br>물류비(원)</th>
+                  <th style="background:#AAAAAA;color:white;font-size:9px;">직전반기<br>매출(원)</th>
+                  <th style="background:#AAAAAA;color:white;font-size:9px;">직전반기<br>물류비(원)</th>
+                  <th style="background:#2E75B6;color:white;font-size:9px;">이번반기<br>매출(원)</th>
+                  <th style="background:#2E75B6;color:white;">이번반기<br>물류비(원)</th>
                   <th style="background:#2E75B6;color:white;">비딩 물류비(원)</th>
                   <th style="background:#2E75B6;color:white;">절감금액(원)</th>
                   <th style="background:#2E75B6;color:white;">절감율</th>
@@ -459,21 +462,51 @@
               <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">기준 환율 (KRW/USD)</label>
               <input type="number" id="cfg-exrate" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
             </div>
-            <div>
-              <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">사업계획 매출 (C조건, 원)</label>
-              <input type="number" id="cfg-plan-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+
+            <!-- 직전반기 -->
+            <div style="font-size:11px;font-weight:700;color:var(--navy);padding:6px 10px;background:#EEF4FF;border-radius:6px;margin:8px 0 4px;">📅 직전반기 사업계획 (참고용)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — C조건 (원)</label>
+                <input type="number" id="cfg-prev-c-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — C조건 (원)</label>
+                <input type="number" id="cfg-prev-c-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+              </div>
             </div>
-            <div>
-              <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">사업계획 물류비 (C조건, 원)</label>
-              <input type="number" id="cfg-plan-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — F조건 (원)</label>
+                <input type="number" id="cfg-prev-f-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — F조건 (원)</label>
+                <input type="number" id="cfg-prev-f-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+              </div>
             </div>
-            <div>
-              <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">사업계획 매출 (F조건, 원)</label>
-              <input type="number" id="cfg-f-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+
+            <!-- 이번반기 -->
+            <div style="font-size:11px;font-weight:700;color:var(--navy);padding:6px 10px;background:#EEF4FF;border-radius:6px;margin:8px 0 4px;">📅 이번반기 사업계획 (보고자료 기준)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — C조건 (원)</label>
+                <input type="number" id="cfg-plan-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — C조건 (원)</label>
+                <input type="number" id="cfg-plan-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+              </div>
             </div>
-            <div>
-              <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">사업계획 물류비 (F조건, 원)</label>
-              <input type="number" id="cfg-f-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — F조건 (원)</label>
+                <input type="number" id="cfg-f-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — F조건 (원)</label>
+                <input type="number" id="cfg-f-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;">
+              </div>
             </div>
             <div>
               <label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">공통 비밀번호 (개별 미설정 시 적용)</label>
@@ -1071,28 +1104,43 @@ function renderReport() {
       <th>절감액</th><th>물류비율(계획)</th><th>물류비율(비딩후)</th><th>물류비율 절감</th>
     </tr></thead>
     <tbody>
+      ${cfgPrevCSales>0 ? `<tr style="background:#F8F9FA;">
+        <td style="color:#888;font-size:11px;">직전반기 C조건 (참고)</td>
+        <td style="color:#888;font-size:11px;">${fmt(cfgPrevCSales)}</td>
+        <td style="color:#888;font-size:11px;">${fmt(cfgPrevCLogistics)}</td>
+        <td style="color:#888;">-</td><td>-</td>
+        <td style="color:#888;font-size:11px;">${pct(cfgPrevCLogistics/cfgPrevCSales)}</td>
+        <td>-</td><td>-</td>
+      </tr>` : ''}
       <tr>
-        <td>C조건 (비딩 대상)</td>
-        <td>${fmt(PLAN_SALES)}</td><td>${fmt(PLAN_LOGISTICS)}</td>
-        <td class="${bidTotal>PLAN_LOGISTICS?'negative':'highlight'}">${fmt(bidTotal)}</td>
+        <td>이번반기 C조건 (비딩 대상)</td>
+        <td>${fmt(cfgPlanSales||PLAN_SALES)}</td><td>${fmt(cfgPlanLogistics||PLAN_LOGISTICS)}</td>
+        <td class="${bidTotal>(cfgPlanLogistics||PLAN_LOGISTICS)?'negative':'highlight'}">${fmt(bidTotal)}</td>
         <td class="${savings>=0?'highlight':'negative'}">${savings>=0?'-':'+'}${fmt(Math.abs(savings))}</td>
         <td>${pct(planRate)}</td><td>${pct(bidRate)}</td>
         <td class="${planRate>=bidRate?'highlight':'negative'}">${planRate>=bidRate?'-':'+'}${pct(Math.abs(planRate-bidRate))}</td>
       </tr>
+      ${cfgPrevFSales>0 ? `<tr style="background:#F8F9FA;">
+        <td style="color:#888;font-size:11px;">직전반기 F조건 (참고)</td>
+        <td style="color:#888;font-size:11px;">${fmt(cfgPrevFSales)}</td>
+        <td style="color:#888;font-size:11px;">${fmt(cfgPrevFLogistics)}</td>
+        <td style="color:#888;">-</td><td>-</td>
+        <td style="color:#888;font-size:11px;">${pct(cfgPrevFLogistics/cfgPrevFSales)}</td>
+        <td>-</td><td>-</td>
+      </tr>` : ''}
       <tr>
-        <td>F조건 (비딩 미대상)</td>
+        <td>이번반기 F조건 (비딩 미대상)</td>
         <td>${fmt(cfgFSales)}</td><td>${fmt(cfgFLogistics)}</td><td>${fmt(cfgFLogistics)}</td>
         <td>0</td><td>${pct(cfgFLogistics/cfgFSales)}</td><td>${pct(cfgFLogistics/cfgFSales)}</td><td>0.00%</td>
       </tr>
       <tr class="total">
-        <td>합 계</td>
+        <td>이번반기 합 계</td>
         <td>${fmt(fSales)}</td><td>${fmt(fPlanTot)}</td><td>${fmt(fBidTot)}</td>
         <td class="${fPlanTot>=fBidTot?'highlight':'negative'}">${fPlanTot>=fBidTot?'-':'+'}${fmt(Math.abs(fPlanTot-fBidTot))}</td>
         <td>${pct(fPlanTot/fSales)}</td><td>${pct(fBidTot/fSales)}</td>
         <td class="${fPlanTot/fSales>=fBidTot/fSales?'highlight':'negative'}">${fPlanTot/fSales>=fBidTot/fSales?'-':'+'}${pct(Math.abs(fPlanTot/fSales-fBidTot/fSales))}</td>
       </tr>
-    </tbody>
-  `;
+    </tbody>`;
 
   // 노선별 테이블
   const rtbody = document.getElementById('report-route-tbody');
@@ -1110,16 +1158,18 @@ function renderReport() {
     const selPrice = selFw ? selFw.total : 0;
     const selName = selFw ? selFw.fw : '-';
 
-    // 사업계획 물류비: 노선별 직접 입력값 우선, 없으면 전체 배분
     const isDom = route.nation === '국내';
     let routePlan = 0;
     if(!isDom) {
       if(route.plan_cost && route.plan_cost > 0) {
-        routePlan = route.plan_cost;  // 직접 입력값 사용
+        routePlan = route.plan_cost;
       } else if(totalVol_c > 0 && vol > 0) {
-        routePlan = Math.round(cPlan * vol / totalVol_c);  // 배분
+        routePlan = Math.round(cPlan * vol / totalVol_c);
       }
     }
+    const routePrevSales = route.prev_sales || 0;
+    const routePrevPlan  = route.prev_plan_cost || 0;
+    const routeCurrSales = route.curr_sales || 0;
     const bidCost = selPrice * vol;
     const savings = routePlan > 0 ? routePlan - bidCost : 0;
     // 절감율: 사업계획 대비 비율, 부호 포함
@@ -1137,6 +1187,9 @@ function renderReport() {
       '<td style="background:#F0FAF0;font-weight:700;color:#375623;">' + selName + '</td>' +
       '<td style="background:#F0FAF0;font-weight:700;color:#375623;">' + (selPrice?fmt(selPrice):'') + '</td>' +
       '<td style="' + (isSelected?'color:#ED7D31;font-weight:700;':'') + '">' + (r1&&selPrice&&r1.total!==selPrice?fmt(selPrice-r1.total):'') + '</td>' +
+      '<td style="text-align:right;color:#999;font-size:10px;">' + (routePrevSales>0?fmt(routePrevSales):'-') + '</td>' +
+      '<td style="text-align:right;color:#999;font-size:10px;">' + (routePrevPlan>0?fmt(routePrevPlan):'-') + '</td>' +
+      '<td style="text-align:right;color:#2E75B6;font-size:10px;">' + (routeCurrSales>0?fmt(routeCurrSales):'-') + '</td>' +
       '<td style="text-align:right;color:#2E75B6;">' + (routePlan?fmt(routePlan):'-') + '</td>' +
       '<td style="text-align:right;">' + (bidCost?fmt(bidCost):'-') + '</td>' +
       '<td style="text-align:right;' + (savings>=0?'color:#1565C0;font-weight:700;':'color:#C00000;font-weight:700;') + '">' + (routePlan>0?(savings>=0?'-':'+') + fmt(Math.abs(savings)):'-') + '</td>' +
@@ -1149,7 +1202,7 @@ function renderReport() {
   const countries=['중국','대만','미국','싱가폴','말레이시아','홍콩'];
   // C조건 사업계획 물류비 기준으로 국가별 배분 (비율 기준)
   const cPlanLogistics = cfgPlanLogistics || PLAN_LOGISTICS;
-  let ctRows='<thead><tr><th>도착국가</th><th>노선 수</th><th>예상물량(CTN)</th><th>사업계획 물류비(원)</th><th>비딩 물류비(원)</th><th>절감금액(원)</th><th>절감율</th></tr></thead><tbody>';
+  let ctRows='<thead><tr><th>도착국가</th><th>노선 수</th><th>예상물량<br>(CTN)</th><th style="background:#AAAAAA;color:white;font-size:10px;">직전반기<br>매출(원)</th><th style="background:#AAAAAA;color:white;font-size:10px;">직전반기<br>물류비(원)</th><th style="background:#2E75B6;color:white;font-size:10px;">이번반기<br>매출(원)</th><th style="background:#2E75B6;color:white;">이번반기<br>물류비(원)</th><th>비딩<br>물류비(원)</th><th>절감금액(원)</th><th>절감율</th></tr></thead><tbody>';
   let grandTotal=0;
   countries.forEach(c=>{
     const routes=cfgRoutes.filter(r=>r.nation===c);
@@ -1184,7 +1237,19 @@ function renderReport() {
     const savingsDisplaySigned = savingsAmt !== 0 ? savSign + fmt(Math.abs(savingsAmt)) : '-';
     const savingsPctSigned = savingsAmt !== 0 && nationPlan > 0
       ? savSign + ((Math.abs(savingsAmt)/nationPlan)*100).toFixed(1)+'%' : '-';
-    ctRows+=`<tr><td>${c}</td><td>${routes.length}</td><td style="text-align:right;">${totalVol||'-'}</td><td style="text-align:right;color:#2E75B6;">${planDisplay}</td><td style="text-align:right;">${totDisplay}</td><td style="text-align:right;${savColor}">${savingsDisplaySigned}</td><td style="text-align:center;${savColor}">${savingsPctSigned}</td></tr>`;
+    const sumPrevSales    = routes.reduce(function(s,r){ return s+(r.prev_sales||0); }, 0);
+    const sumPrevPlanCost = routes.reduce(function(s,r){ return s+(r.prev_plan_cost||0); }, 0);
+    const sumCurrSales    = routes.reduce(function(s,r){ return s+(r.curr_sales||0); }, 0);
+    ctRows+=`<tr>
+      <td>${c}</td><td>${routes.length}</td><td style="text-align:right;">${totalVol||'-'}</td>
+      <td style="text-align:right;color:#999;font-size:10px;">${sumPrevSales>0?fmt(sumPrevSales):'-'}</td>
+      <td style="text-align:right;color:#999;font-size:10px;">${sumPrevPlanCost>0?fmt(sumPrevPlanCost):'-'}</td>
+      <td style="text-align:right;color:#2E75B6;font-size:10px;">${sumCurrSales>0?fmt(sumCurrSales):'-'}</td>
+      <td style="text-align:right;color:#2E75B6;">${planDisplay}</td>
+      <td style="text-align:right;">${totDisplay}</td>
+      <td style="text-align:right;${savColor}">${savingsDisplaySigned}</td>
+      <td style="text-align:center;${savColor}">${savingsPctSigned}</td>
+    </tr>`;
   });
   const totalAllVol2 = cfgRoutes.filter(function(r){ return r.nation&&r.nation!=='국내'; }).reduce(function(s,r){ return s+(r.vol||0); }, 0);
   const savings_c = cPlanLogistics - grandTotal;
@@ -1193,7 +1258,18 @@ function renderReport() {
   const savCls = savings_c > 0 ? 'color:#1565C0;font-weight:700;' : 'color:#C00000;font-weight:700;';
   const totalSign = savings_c > 0 ? '-' : '+';
   const totalPct = cPlanLogistics > 0 ? totalSign + ((Math.abs(savings_c)/cPlanLogistics)*100).toFixed(1)+'%' : '-';
-  ctRows+='<tr class="total"><td>합 계</td><td></td><td style="text-align:right;">' + totalAllVol2 + '</td><td style="text-align:right;color:#2E75B6;">' + fmt(cPlanLogistics) + '</td><td style="text-align:right;">' + fmt(grandTotal) + '</td><td style="text-align:right;' + savCls + '">' + totalSign + fmt(Math.abs(savings_c)) + '</td><td style="text-align:center;' + savCls + '">' + totalPct + '</td></tr></tbody>';
+  const routes_os = cfgRoutes.filter(function(r){ return r.nation && r.nation!=='국내'; });
+  const totalPrevSales    = routes_os.reduce(function(s,r){ return s+(r.prev_sales||0); }, 0);
+  const totalPrevPlan     = routes_os.reduce(function(s,r){ return s+(r.prev_plan_cost||0); }, 0);
+  const totalCurrSales    = routes_os.reduce(function(s,r){ return s+(r.curr_sales||0); }, 0);
+  ctRows+='<tr class="total"><td>합 계</td><td></td><td style="text-align:right;">' + totalAllVol2 +
+    '</td><td style="text-align:right;color:#888;">' + (totalPrevSales>0?fmt(totalPrevSales):'-') +
+    '</td><td style="text-align:right;color:#888;">' + (totalPrevPlan>0?fmt(totalPrevPlan):'-') +
+    '</td><td style="text-align:right;color:#2E75B6;">' + (totalCurrSales>0?fmt(totalCurrSales):'-') +
+    '</td><td style="text-align:right;color:#2E75B6;">' + fmt(cPlanLogistics) +
+    '</td><td style="text-align:right;">' + fmt(grandTotal) +
+    '</td><td style="text-align:right;' + savCls + '">' + totalSign + fmt(Math.abs(savings_c)) +
+    '</td><td style="text-align:center;' + savCls + '">' + totalPct + '</td></tr></tbody>';
   document.getElementById('country-table').innerHTML=ctRows;
 }
 
@@ -1365,6 +1441,10 @@ let cfgPlanSales = PLAN_SALES;
 let cfgPlanLogistics = PLAN_LOGISTICS;
 let cfgFSales = F_SALES;
 let cfgFLogistics = F_LOGISTICS;
+let cfgPrevCSales = 0;
+let cfgPrevCLogistics = 0;
+let cfgPrevFSales = 0;
+let cfgPrevFLogistics = 0;
 let cfgFwPw = FW_PW;
 
 // 설정 로드 (앱 시작 시)
@@ -1382,6 +1462,10 @@ async function loadSettings() {
     if(cfgSaved.planLogistics) cfgPlanLogistics = cfgSaved.planLogistics;
     if(cfgSaved.fSales) cfgFSales = cfgSaved.fSales;
     if(cfgSaved.fLogistics) cfgFLogistics = cfgSaved.fLogistics;
+    if(cfgSaved.prevCSales) cfgPrevCSales = cfgSaved.prevCSales;
+    if(cfgSaved.prevCLogistics) cfgPrevCLogistics = cfgSaved.prevCLogistics;
+    if(cfgSaved.prevFSales) cfgPrevFSales = cfgSaved.prevFSales;
+    if(cfgSaved.prevFLogistics) cfgPrevFLogistics = cfgSaved.prevFLogistics;
     if(cfgSaved.fwPw) cfgFwPw = cfgSaved.fwPw;
   }
 
@@ -1416,6 +1500,10 @@ function showSettingsTab() {
   document.getElementById('cfg-plan-logistics').value = cfgPlanLogistics;
   document.getElementById('cfg-f-sales').value = cfgFSales;
   document.getElementById('cfg-f-logistics').value = cfgFLogistics;
+  document.getElementById('cfg-prev-c-sales').value = cfgPrevCSales || '';
+  document.getElementById('cfg-prev-c-logistics').value = cfgPrevCLogistics || '';
+  document.getElementById('cfg-prev-f-sales').value = cfgPrevFSales || '';
+  document.getElementById('cfg-prev-f-logistics').value = cfgPrevFLogistics || '';
   renderWorksiteList();
   document.getElementById('cfg-fw-pw').value = cfgFwPw;
 }
@@ -1507,7 +1595,10 @@ function renderRouteList() {
       <input type="text" value="${r.port_i||''}" placeholder="도착PORT" onchange="cfgRoutes[${i}].port_i=this.value">
       <input type="text" value="${r.ctnr||''}" placeholder="CTNR" onchange="cfgRoutes[${i}].ctnr=this.value">
       <input type="number" value="${r.vol||''}" placeholder="0" onchange="cfgRoutes[${i}].vol=parseInt(this.value)||0" style="text-align:right;">
-      <input type="number" value="${r.plan_cost||''}" placeholder="사업계획" onchange="cfgRoutes[${i}].plan_cost=parseInt(this.value)||0" style="text-align:right;background:#EBF3FB;">
+      <input type="number" value="${r.prev_sales||''}" placeholder="직전매출" onchange="cfgRoutes[${i}].prev_sales=parseInt(this.value)||0" style="text-align:right;background:#F5F5F5;color:#888;font-size:10px;">
+      <input type="number" value="${r.prev_plan_cost||''}" placeholder="직전물류비" onchange="cfgRoutes[${i}].prev_plan_cost=parseInt(this.value)||0" style="text-align:right;background:#F5F5F5;color:#888;font-size:10px;">
+      <input type="number" value="${r.curr_sales||''}" placeholder="이번매출" onchange="cfgRoutes[${i}].curr_sales=parseInt(this.value)||0" style="text-align:right;background:#EBF3FB;color:#1565C0;font-size:10px;">
+      <input type="number" value="${r.plan_cost||''}" placeholder="이번물류비" onchange="cfgRoutes[${i}].plan_cost=parseInt(this.value)||0" style="text-align:right;background:#EBF3FB;color:#1565C0;font-weight:700;font-size:10px;">
       <input type="text" value="${r.product||''}" placeholder="제품명" onchange="cfgRoutes[${i}].product=this.value">
       <input type="text" value="${r.note||''}" placeholder="비고" onchange="cfgRoutes[${i}].note=this.value">
       <button class="del-btn" onclick="removeRoute(${i})">✕</button>
@@ -1540,10 +1631,13 @@ async function saveRoutes() {
     if(inputs[3]) cfgRoutes[i].port_i  = inputs[3].value.trim();
     if(inputs[4]) cfgRoutes[i].ctnr    = inputs[4].value.trim();
     if(inputs[5]) cfgRoutes[i].vol     = parseInt(inputs[5].value) || 0;
-    if(inputs[5]) cfgRoutes[i].vol      = parseInt(inputs[5].value) || 0;
-    if(inputs[6]) cfgRoutes[i].plan_cost = parseInt(inputs[6].value) || 0;
-    if(inputs[7]) cfgRoutes[i].product   = inputs[7].value.trim();
-    if(inputs[8]) cfgRoutes[i].note      = inputs[8].value.trim();
+    if(inputs[5])  cfgRoutes[i].vol           = parseInt(inputs[5].value)  || 0;
+    if(inputs[6])  cfgRoutes[i].prev_sales    = parseInt(inputs[6].value)  || 0;
+    if(inputs[7])  cfgRoutes[i].prev_plan_cost= parseInt(inputs[7].value)  || 0;
+    if(inputs[8])  cfgRoutes[i].curr_sales    = parseInt(inputs[8].value)  || 0;
+    if(inputs[9])  cfgRoutes[i].plan_cost     = parseInt(inputs[9].value)  || 0;
+    if(inputs[10]) cfgRoutes[i].product       = inputs[10].value.trim();
+    if(inputs[11]) cfgRoutes[i].note          = inputs[11].value.trim();
   });
 
   const ok = await saveToStorage('cfg_routes', cfgRoutes);
@@ -1560,6 +1654,10 @@ async function saveConfig() {
     planLogistics: parseFloat(document.getElementById('cfg-plan-logistics').value) || PLAN_LOGISTICS,
     fSales:        parseFloat(document.getElementById('cfg-f-sales').value) || F_SALES,
     fLogistics:    parseFloat(document.getElementById('cfg-f-logistics').value) || F_LOGISTICS,
+    prevCSales:    parseFloat(document.getElementById('cfg-prev-c-sales').value) || 0,
+    prevCLogistics:parseFloat(document.getElementById('cfg-prev-c-logistics').value) || 0,
+    prevFSales:    parseFloat(document.getElementById('cfg-prev-f-sales').value) || 0,
+    prevFLogistics:parseFloat(document.getElementById('cfg-prev-f-logistics').value) || 0,
     fwPw:          document.getElementById('cfg-fw-pw').value || FW_PW,
   };
   const ok = await saveToStorage('cfg_basic', cfg);
@@ -1569,6 +1667,10 @@ async function saveConfig() {
     cfgPlanLogistics = cfg.planLogistics;
     cfgFSales = cfg.fSales;
     cfgFLogistics = cfg.fLogistics;
+    cfgPrevCSales = cfg.prevCSales || 0;
+    cfgPrevCLogistics = cfg.prevCLogistics || 0;
+    cfgPrevFSales = cfg.prevFSales || 0;
+    cfgPrevFLogistics = cfg.prevFLogistics || 0;
     cfgFwPw = cfg.fwPw;
     showSettingsBanner();
     showToast('기본 설정이 저장됐어요!');
@@ -1772,15 +1874,17 @@ function handleRouteExcelUpload(input) {
         const port_o  = String(row[3]||'').trim();
         const port_i  = String(row[4]||'').trim();
         const ctnr    = String(row[5]||'').trim();
-        const vol       = parseFloat(row[6]) || 0;
-        const plan_cost = parseInt(row[7]) || 0;
-        const active    = String(row[8]||'Y').trim().toUpperCase() !== 'N';
-        const note      = String(row[9]||'').trim();
-        const product   = String(row[10]||'').trim();
+        const vol            = parseFloat(row[6])  || 0;
+        const prev_sales     = parseInt(row[7])   || 0;
+        const prev_plan_cost = parseInt(row[8])   || 0;
+        const curr_sales     = parseInt(row[9])   || 0;
+        const plan_cost      = parseInt(row[10])  || 0;
+        const active         = String(row[11]||'Y').trim().toUpperCase() !== 'N';
+        const note           = String(row[12]||'').trim();
+        const product        = String(row[13]||'').trim();
 
-        if(!active) continue; // 비딩대상 N이면 제외
-
-        newRoutes.push({ no, nation, site, port_o, port_i, ctnr, vol, plan_cost, note, product });
+        if(!active) continue;
+        newRoutes.push({ no, nation, site, port_o, port_i, ctnr, vol, prev_sales, prev_plan_cost, curr_sales, plan_cost, note, product });
       }
 
       if(newRoutes.length === 0) {
