@@ -291,6 +291,9 @@
       <button class="btn-save-draft" onclick="saveDraft()" id="draft-btn">
         💾 임시저장
       </button>
+      <button onclick="clearAllData()" style="background:white;color:#C00000;border:1.5px solid #C00000;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">
+        🗑 전체 초기화
+      </button>
       <div class="submit-divider"></div>
       <button class="btn-submit" onclick="submitQuote()" id="submit-btn">
         ✓ 최종 제출
@@ -1778,25 +1781,36 @@ function handleExcelUpload(input) {
       // 현재 엑셀 열 순서 (H~X):
       // 7=OFRT, 8=LSS, 9=AMS, 10=THC, 11=내륙, 12=DOC, 13=WFG, 14=SEF, 15=PSC, 16=PSM
       // 17=기타비용(원), 18=기타비용(USD), 19=★합계(자동), 20=적하보험, 21=스케줄, 22=프리타임, 23=비고
+      // 열 인덱스 확정 (★합계 열 자동 탐색 후 스킵)
+      const sumCol = colIdx('합계');  // ★합계 열 위치 찾기
+      function ciAfterSum(keyword, fallback) {
+        // ★합계 뒤에서 찾기
+        const kw = keyword.replace(/[\s\n]/g,'');
+        for(let col = (sumCol > 0 ? sumCol+1 : 19); col < hdr.length; col++) {
+          const h2 = String(hdr[col]||'').replace(/[\s\n]/g,'');
+          if(h2.includes(kw)) return col;
+        }
+        return fallback;
+      }
       const CI = {
         no:       0,
-        ofrt:     colIdx('O/FRT')   !== -1 ? colIdx('O/FRT')   : 7,
-        lss:      colIdx('LSS')     !== -1 ? colIdx('LSS')     : 8,
-        ams:      colIdx('AMS')     !== -1 ? colIdx('AMS')     : 9,
-        thc:      colIdx('THC')     !== -1 ? colIdx('THC')     : 10,
-        inland:   colIdx('내륙운송')  !== -1 ? colIdx('내륙운송')  : 11,
-        doc:      colIdx('DOC')     !== -1 ? colIdx('DOC')     : 12,
-        wfg:      colIdx('WFG')     !== -1 ? colIdx('WFG')     : 13,
-        sef:      colIdx('SEF')     !== -1 ? colIdx('SEF')     : 14,
-        psc:      colIdx('PSC')     !== -1 ? colIdx('PSC')     : 15,
-        psm:      colIdx('PSM')     !== -1 ? colIdx('PSM')     : 16,
-        etc_krw:  colIdx('기타비용') !== -1 ? colIdx('기타비용') : 17,
-        etc_usd:  colIdxNth('기타비용', 2) !== -1 ? colIdxNth('기타비용', 2) : 18,
-        // 19=합계(자동계산, 업로드 시 무시)
-        ins:      colIdx('적하보험')  !== -1 ? colIdx('적하보험')  : 20,
-        sch:      colIdx('주당항차')  !== -1 ? colIdx('주당항차')  : 21,
-        freetime: colIdx('프리타임')  !== -1 ? colIdx('프리타임')  : 22,
-        note:     colIdx('비고')      !== -1 ? colIdx('비고')      : 23,
+        ofrt:     colIdx('O/FRT')    !== -1 ? colIdx('O/FRT')    : 7,
+        lss:      colIdx('LSS')      !== -1 ? colIdx('LSS')      : 8,
+        ams:      colIdx('AMS')      !== -1 ? colIdx('AMS')      : 9,
+        thc:      colIdx('THC')      !== -1 ? colIdx('THC')      : 10,
+        inland:   colIdx('내륙운송')   !== -1 ? colIdx('내륙운송')   : 11,
+        doc:      colIdx('DOC')      !== -1 ? colIdx('DOC')      : 12,
+        wfg:      colIdx('WFG')      !== -1 ? colIdx('WFG')      : 13,
+        sef:      colIdx('SEF')      !== -1 ? colIdx('SEF')      : 14,
+        psc:      colIdx('PSC')      !== -1 ? colIdx('PSC')      : 15,
+        psm:      colIdx('PSM')      !== -1 ? colIdx('PSM')      : 16,
+        etc_krw:  colIdx('기타비용')   !== -1 ? colIdx('기타비용')   : 17,
+        etc_usd:  colIdxNth('기타비용',2) !== -1 ? colIdxNth('기타비용',2) : 18,
+        // ★합계(index 19)는 자동계산이므로 읽지 않음
+        ins:      ciAfterSum('적하보험', 20),
+        sch:      ciAfterSum('주당항차', 21),
+        freetime: ciAfterSum('프리타임', 22),
+        note:     ciAfterSum('비고',     23),
       };
 
       let count = 0;
@@ -2450,6 +2464,20 @@ function downloadRouteExcel() {
   var today=new Date().toISOString().slice(0,10).replace(/-/g,'');
   XS.writeFile(wb2,'노선관리_업로드양식_'+today+'.xlsx');
   showToast('노선관리 양식 다운로드 완료!');
+}
+
+
+function clearAllData() {
+  if(!confirm('입력한 모든 데이터를 초기화할까요?\n이 작업은 되돌릴 수 없어요.')) return;
+  fwData = {};
+  buildFwTable();
+  // 저장소에서도 삭제
+  saveToStorage('fw_data_' + currentFw, {});
+  const status = document.getElementById('submit-status');
+  const info = document.getElementById('submit-info');
+  if(status) { status.textContent = ''; status.className = 'save-status'; }
+  if(info) info.textContent = '';
+  showToast('전체 초기화 완료!');
 }
 
 </script>
