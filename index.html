@@ -167,7 +167,7 @@
   .add-row input:focus { border-color:var(--blue); }
   .btn-add { background:var(--blue); color:white; border:none; padding:7px 16px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
   .btn-add:hover { background:#1a5fa8; }
-  .route-row { display:grid; grid-template-columns:40px 75px 65px 85px 85px 65px 55px 80px 100px 30px; gap:5px; align-items:center; padding:6px 10px; background:var(--gray); border-radius:6px; }
+  .route-row { display:grid; grid-template-columns:40px 75px 65px 85px 85px 65px 55px 90px 80px 100px 30px; gap:5px; align-items:center; padding:6px 10px; background:var(--gray); border-radius:6px; }
   .route-row input { padding:4px 6px; border:1.5px solid var(--border); border-radius:4px; font-size:11px; outline:none; width:100%; }
   .route-row input:focus { border-color:var(--blue); }
   .route-row .no-label { font-weight:700; color:var(--dgray); font-size:12px; text-align:center; }
@@ -1110,12 +1110,22 @@ function renderReport() {
     const selPrice = selFw ? selFw.total : 0;
     const selName = selFw ? selFw.fw : '-';
 
-    // 사업계획 물류비 배분: 해외 구간만
+    // 사업계획 물류비: 노선별 직접 입력값 우선, 없으면 전체 배분
     const isDom = route.nation === '국내';
-    const routePlan = (!isDom && totalVol_c > 0 && vol > 0) ? Math.round(cPlan * vol / totalVol_c) : 0;
+    let routePlan = 0;
+    if(!isDom) {
+      if(route.plan_cost && route.plan_cost > 0) {
+        routePlan = route.plan_cost;  // 직접 입력값 사용
+      } else if(totalVol_c > 0 && vol > 0) {
+        routePlan = Math.round(cPlan * vol / totalVol_c);  // 배분
+      }
+    }
     const bidCost = selPrice * vol;
     const savings = routePlan > 0 ? routePlan - bidCost : 0;
-    const savePct = routePlan > 0 && bidCost > 0 ? ((savings / routePlan) * 100).toFixed(1) + '%' : '-';
+    // 절감율: 사업계획 대비 비율, 부호 포함
+    const savePct = routePlan > 0 && bidCost > 0
+      ? (savings >= 0 ? '-' : '+') + ((Math.abs(savings) / routePlan) * 100).toFixed(1) + '%'
+      : '-';
 
     const tr = document.createElement('tr');
     const isSelected = sel && sel.fw && r1 && sel.fw !== r1.fw;
@@ -1130,7 +1140,7 @@ function renderReport() {
       '<td style="text-align:right;color:#2E75B6;">' + (routePlan?fmt(routePlan):'-') + '</td>' +
       '<td style="text-align:right;">' + (bidCost?fmt(bidCost):'-') + '</td>' +
       '<td style="text-align:right;' + (savings>=0?'color:#1565C0;font-weight:700;':'color:#C00000;font-weight:700;') + '">' + (routePlan>0?(savings>=0?'-':'+') + fmt(Math.abs(savings)):'-') + '</td>' +
-      '<td style="text-align:center;' + (savings>=0?'color:#1565C0;font-weight:700;':'color:#C00000;font-weight:700;') + '">' + (routePlan>0?(savings>=0?'-':'+') + savePct:'-') + '</td>';
+      '<td style="text-align:center;' + (savings>=0?'color:#1565C0;font-weight:700;':'color:#C00000;font-weight:700;') + '">' + (routePlan>0?savePct:'-') + '</td>';
 
     rtbody.appendChild(tr);
   });
@@ -1158,23 +1168,32 @@ function renderReport() {
     });
     grandTotal+=tot;
     const totalVol = routes.reduce((s,r)=>s+(r.vol||0),0);
-    // 국가별 사업계획 물류비: 전체 C조건 물류비를 물량 비율로 배분
     const totDisplay = tot>0 ? fmt(tot) : (hasData ? '(물량 미입력)' : '-');
-    // 국가별 사업계획 물류비: 전체 C조건 물류비를 국가 물량 비율로 배분
+    // 국가별 사업계획 물류비: 노선별 직접 입력값 합산 우선, 없으면 물량 비율 배분
     const totalVol_all = cfgRoutes.filter(function(r){ return r.nation && r.nation !== '국내'; }).reduce(function(s,r){ return s+(r.vol||0); }, 0);
-    const nationPlan = totalVol_all > 0 && totalVol > 0 ? Math.round(cPlanLogistics * totalVol / totalVol_all) : 0;
+    const sumPlanCost = routes.reduce(function(s,r){ return s+(r.plan_cost||0); }, 0);
+    const nationPlan = sumPlanCost > 0 ? sumPlanCost
+      : (totalVol_all > 0 && totalVol > 0 ? Math.round(cPlanLogistics * totalVol / totalVol_all) : 0);
     const savingsAmt = nationPlan > 0 && tot > 0 ? nationPlan - tot : 0;
     const savingsPctNation = nationPlan > 0 && tot > 0 ? ((savingsAmt/nationPlan)*100).toFixed(1)+'%' : '-';
     const planDisplay = nationPlan > 0 ? fmt(nationPlan) : '-';
     const savingsDisplay = savingsAmt !== 0 ? fmt(savingsAmt) : '-';
-    const savColor = savingsAmt > 0 ? 'color:#375623;font-weight:700;' : (savingsAmt < 0 ? 'color:#C00000;font-weight:700;' : '');
-    ctRows+=`<tr><td>${c}</td><td>${routes.length}</td><td style="text-align:right;">${totalVol||'-'}</td><td style="text-align:right;color:#2E75B6;">${planDisplay}</td><td style="text-align:right;">${totDisplay}</td><td style="text-align:right;${savColor}">${savingsDisplay}</td><td style="text-align:center;${savColor}">${savingsPctNation}</td></tr>`;
+    // 절감: savings>0 → 파랑(-), 초과: savings<0 → 빨강(+)
+    const savColor = savingsAmt > 0 ? 'color:#1565C0;font-weight:700;' : (savingsAmt < 0 ? 'color:#C00000;font-weight:700;' : '');
+    const savSign = savingsAmt > 0 ? '-' : (savingsAmt < 0 ? '+' : '');
+    const savingsDisplaySigned = savingsAmt !== 0 ? savSign + fmt(Math.abs(savingsAmt)) : '-';
+    const savingsPctSigned = savingsAmt !== 0 && nationPlan > 0
+      ? savSign + ((Math.abs(savingsAmt)/nationPlan)*100).toFixed(1)+'%' : '-';
+    ctRows+=`<tr><td>${c}</td><td>${routes.length}</td><td style="text-align:right;">${totalVol||'-'}</td><td style="text-align:right;color:#2E75B6;">${planDisplay}</td><td style="text-align:right;">${totDisplay}</td><td style="text-align:right;${savColor}">${savingsDisplaySigned}</td><td style="text-align:center;${savColor}">${savingsPctSigned}</td></tr>`;
   });
   const totalAllVol2 = cfgRoutes.filter(function(r){ return r.nation&&r.nation!=='국내'; }).reduce(function(s,r){ return s+(r.vol||0); }, 0);
   const savings_c = cPlanLogistics - grandTotal;
   const savingsPct = cPlanLogistics > 0 ? ((savings_c/cPlanLogistics)*100).toFixed(1)+'%' : '-';
-  const savCls = savings_c > 0 ? 'color:#375623;font-weight:700;' : 'color:#C00000;font-weight:700;';
-  ctRows+='<tr class="total"><td>합 계</td><td></td><td style="text-align:right;">' + totalAllVol2 + '</td><td style="text-align:right;color:#2E75B6;">' + fmt(cPlanLogistics) + '</td><td style="text-align:right;">' + fmt(grandTotal) + '</td><td style="text-align:right;' + savCls + '">' + fmt(savings_c) + '</td><td style="text-align:center;' + savCls + '">' + savingsPct + '</td></tr></tbody>';
+  // 합계: savings_c>0 → 절감(파랑,-), savings_c<0 → 초과(빨강,+)
+  const savCls = savings_c > 0 ? 'color:#1565C0;font-weight:700;' : 'color:#C00000;font-weight:700;';
+  const totalSign = savings_c > 0 ? '-' : '+';
+  const totalPct = cPlanLogistics > 0 ? totalSign + ((Math.abs(savings_c)/cPlanLogistics)*100).toFixed(1)+'%' : '-';
+  ctRows+='<tr class="total"><td>합 계</td><td></td><td style="text-align:right;">' + totalAllVol2 + '</td><td style="text-align:right;color:#2E75B6;">' + fmt(cPlanLogistics) + '</td><td style="text-align:right;">' + fmt(grandTotal) + '</td><td style="text-align:right;' + savCls + '">' + totalSign + fmt(Math.abs(savings_c)) + '</td><td style="text-align:center;' + savCls + '">' + totalPct + '</td></tr></tbody>';
   document.getElementById('country-table').innerHTML=ctRows;
 }
 
@@ -1488,6 +1507,7 @@ function renderRouteList() {
       <input type="text" value="${r.port_i||''}" placeholder="도착PORT" onchange="cfgRoutes[${i}].port_i=this.value">
       <input type="text" value="${r.ctnr||''}" placeholder="CTNR" onchange="cfgRoutes[${i}].ctnr=this.value">
       <input type="number" value="${r.vol||''}" placeholder="0" onchange="cfgRoutes[${i}].vol=parseInt(this.value)||0" style="text-align:right;">
+      <input type="number" value="${r.plan_cost||''}" placeholder="사업계획" onchange="cfgRoutes[${i}].plan_cost=parseInt(this.value)||0" style="text-align:right;background:#EBF3FB;">
       <input type="text" value="${r.product||''}" placeholder="제품명" onchange="cfgRoutes[${i}].product=this.value">
       <input type="text" value="${r.note||''}" placeholder="비고" onchange="cfgRoutes[${i}].note=this.value">
       <button class="del-btn" onclick="removeRoute(${i})">✕</button>
@@ -1520,8 +1540,10 @@ async function saveRoutes() {
     if(inputs[3]) cfgRoutes[i].port_i  = inputs[3].value.trim();
     if(inputs[4]) cfgRoutes[i].ctnr    = inputs[4].value.trim();
     if(inputs[5]) cfgRoutes[i].vol     = parseInt(inputs[5].value) || 0;
-    if(inputs[6]) cfgRoutes[i].product = inputs[6].value.trim();
-    if(inputs[7]) cfgRoutes[i].note    = inputs[7].value.trim();
+    if(inputs[5]) cfgRoutes[i].vol      = parseInt(inputs[5].value) || 0;
+    if(inputs[6]) cfgRoutes[i].plan_cost = parseInt(inputs[6].value) || 0;
+    if(inputs[7]) cfgRoutes[i].product   = inputs[7].value.trim();
+    if(inputs[8]) cfgRoutes[i].note      = inputs[8].value.trim();
   });
 
   const ok = await saveToStorage('cfg_routes', cfgRoutes);
@@ -1750,14 +1772,15 @@ function handleRouteExcelUpload(input) {
         const port_o  = String(row[3]||'').trim();
         const port_i  = String(row[4]||'').trim();
         const ctnr    = String(row[5]||'').trim();
-        const vol     = parseFloat(row[6]) || 0;
-        const active  = String(row[7]||'Y').trim().toUpperCase() !== 'N';
-        const note    = String(row[8]||'').trim();
-        const product = String(row[9]||'').trim();
+        const vol       = parseFloat(row[6]) || 0;
+        const plan_cost = parseInt(row[7]) || 0;
+        const active    = String(row[8]||'Y').trim().toUpperCase() !== 'N';
+        const note      = String(row[9]||'').trim();
+        const product   = String(row[10]||'').trim();
 
         if(!active) continue; // 비딩대상 N이면 제외
 
-        newRoutes.push({ no, nation, site, port_o, port_i, ctnr, vol, note, product });
+        newRoutes.push({ no, nation, site, port_o, port_i, ctnr, vol, plan_cost, note, product });
       }
 
       if(newRoutes.length === 0) {
