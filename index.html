@@ -273,6 +273,7 @@
             <th style="min-width:120px;">주당항차수/<br>출항요일</th>
             <th style="min-width:80px;">기타비용<br>(원)</th>
             <th style="min-width:80px;">기타비용<br>(USD)</th>
+            <th style="min-width:80px;">프리타임<br>(최대/일)</th>
             <th style="min-width:160px;">비고</th>
             <th>★합계(원)</th>
           </tr>
@@ -767,6 +768,7 @@ function buildFwTable() {
       ${inp(route.no,'sch',d.sch,'text','')}
       ${inp(route.no,'etc_krw',d.etc_krw,'number','0')}
       ${inp(route.no,'etc_usd',d.etc_usd,'number','0.00')}
+      ${inp(route.no,'freetime',d.freetime,'number','0')}
       ${inp(route.no,'note',d.note,'text','')}
       <td class="total" id="total-${route.no}">${total ? fmt(total) : ''}</td>
     `;
@@ -1669,13 +1671,26 @@ function handleExcelUpload(input) {
 
     } catch(err) {
       console.error(err);
-      status.textContent = '파일 읽기 실패: ' + err.message;
+      let errMsg = err.message || '';
+      if(errMsg.includes('Encrypted') || errMsg.includes('EncryptionInfo') || errMsg.includes('CFB')) {
+        status.textContent = '❌ 파일이 암호화 또는 구버전입니다. [다른 이름으로 저장] → .xlsx 형식으로 저장 후 다시 업로드하세요.';
+      } else {
+        status.textContent = '파일 읽기 실패: ' + errMsg;
+      }
     }
     input.value = '';
   };
   reader.readAsArrayBuffer(file);
 }
 
+
+
+function updateEval(fw, field, value) {
+  if(!evalScores[fw]) evalScores[fw] = {};
+  evalScores[fw][field] = parseInt(value) || 0;
+  // 점수 바뀌면 합계/순위 즉시 갱신
+  renderEval();
+}
 
 async function saveEvalScores() {
   const ok = await saveToStorage('eval_scores', evalScores);
