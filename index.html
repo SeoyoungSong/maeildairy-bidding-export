@@ -1755,29 +1755,48 @@ function handleExcelUpload(input) {
       // 열 매핑: 헤더행에서 컬럼 위치 동적 파악
       const hdr = rows[headerRow] || [];
       function colIdx(keyword) {
-        for(let c=0; c<hdr.length; c++) {
-          const h = String(hdr[c]||'').replace(/[\s\n]/g,'');
-          if(h.includes(keyword)) return c;
+        // 공백/줄바꿈 제거 후 키워드 탐색
+        const kw = keyword.replace(/[\s\n]/g,'');
+        for(let col=0; col<hdr.length; col++) {
+          const h = String(hdr[col]||'').replace(/[\s\n]/g,'');
+          if(h.includes(kw)) return col;
+        }
+        return -1;
+      }
+      // 기타비용(USD) 구분: 기타비용(원)과 다른 열
+      function colIdxNth(keyword, nth) {
+        const kw = keyword.replace(/[\s\n]/g,'');
+        let found = 0;
+        for(let col=0; col<hdr.length; col++) {
+          const h = String(hdr[col]||'').replace(/[\s\n]/g,'');
+          if(h.includes(kw)) { found++; if(found === nth) return col; }
         }
         return -1;
       }
 
       // 각 필드 컬럼 인덱스 (헤더 키워드로 자동 탐색)
+      // 현재 엑셀 열 순서 (H~X):
+      // 7=OFRT, 8=LSS, 9=AMS, 10=THC, 11=내륙, 12=DOC, 13=WFG, 14=SEF, 15=PSC, 16=PSM
+      // 17=기타비용(원), 18=기타비용(USD), 19=★합계(자동), 20=적하보험, 21=스케줄, 22=프리타임, 23=비고
       const CI = {
-        no:     0,
-        ofrt:   colIdx('O/FRT')   !== -1 ? colIdx('O/FRT')   : 6,
-        lss:    colIdx('LSS')     !== -1 ? colIdx('LSS')     : 7,
-        ams:    colIdx('AMS')     !== -1 ? colIdx('AMS')     : 8,
-        thc:    colIdx('THC')     !== -1 ? colIdx('THC')     : 9,
-        inland: colIdx('내륙운송')  !== -1 ? colIdx('내륙운송')  : 10,
-        doc:    colIdx('DOC')     !== -1 ? colIdx('DOC')     : 11,
-        wfg:    colIdx('WFG')     !== -1 ? colIdx('WFG')     : 12,
-        sef:    colIdx('SEF')     !== -1 ? colIdx('SEF')     : 13,
-        psc:    colIdx('PSC')     !== -1 ? colIdx('PSC')     : 14,
-        psm:    colIdx('PSM')     !== -1 ? colIdx('PSM')     : 15,
-        ins:    colIdx('적하보험')  !== -1 ? colIdx('적하보험')  : 17,
-        sch:    colIdx('스케줄')   !== -1 ? colIdx('스케줄')   : 18,
-        note:   colIdx('비고')     !== -1 ? colIdx('비고')     : 19,
+        no:       0,
+        ofrt:     colIdx('O/FRT')   !== -1 ? colIdx('O/FRT')   : 7,
+        lss:      colIdx('LSS')     !== -1 ? colIdx('LSS')     : 8,
+        ams:      colIdx('AMS')     !== -1 ? colIdx('AMS')     : 9,
+        thc:      colIdx('THC')     !== -1 ? colIdx('THC')     : 10,
+        inland:   colIdx('내륙운송')  !== -1 ? colIdx('내륙운송')  : 11,
+        doc:      colIdx('DOC')     !== -1 ? colIdx('DOC')     : 12,
+        wfg:      colIdx('WFG')     !== -1 ? colIdx('WFG')     : 13,
+        sef:      colIdx('SEF')     !== -1 ? colIdx('SEF')     : 14,
+        psc:      colIdx('PSC')     !== -1 ? colIdx('PSC')     : 15,
+        psm:      colIdx('PSM')     !== -1 ? colIdx('PSM')     : 16,
+        etc_krw:  colIdx('기타비용') !== -1 ? colIdx('기타비용') : 17,
+        etc_usd:  colIdxNth('기타비용', 2) !== -1 ? colIdxNth('기타비용', 2) : 18,
+        // 19=합계(자동계산, 업로드 시 무시)
+        ins:      colIdx('적하보험')  !== -1 ? colIdx('적하보험')  : 20,
+        sch:      colIdx('주당항차')  !== -1 ? colIdx('주당항차')  : 21,
+        freetime: colIdx('프리타임')  !== -1 ? colIdx('프리타임')  : 22,
+        note:     colIdx('비고')      !== -1 ? colIdx('비고')      : 23,
       };
 
       let count = 0;
@@ -1789,23 +1808,26 @@ function handleExcelUpload(input) {
         // 안내문 행 제외
         if(String(row[0]||'').includes('작성 완료')) continue;
 
-        const ofrt   = parseFloat(row[CI.ofrt])   || 0;
-        const lss    = parseFloat(row[CI.lss])    || 0;
-        const ams    = parseFloat(row[CI.ams])    || 0;
-        const thc    = parseFloat(row[CI.thc])    || 0;
-        const inland = parseFloat(row[CI.inland]) || 0;
-        const doc    = parseFloat(row[CI.doc])    || 0;
-        const wfg    = parseFloat(row[CI.wfg])    || 0;
-        const sef    = parseFloat(row[CI.sef])    || 0;
-        const psc    = parseFloat(row[CI.psc])    || 0;
-        const psm    = parseFloat(row[CI.psm])    || 0;
-        const ins    = parseFloat(row[CI.ins])    || 0;
-        const sch    = row[CI.sch]  ? String(row[CI.sch])  : '';
-        const note   = row[CI.note] ? String(row[CI.note]) : '';
+        const ofrt     = parseFloat(row[CI.ofrt])     || 0;
+        const lss      = parseFloat(row[CI.lss])      || 0;
+        const ams      = parseFloat(row[CI.ams])      || 0;
+        const thc      = parseFloat(row[CI.thc])      || 0;
+        const inland   = parseFloat(row[CI.inland])   || 0;
+        const doc      = parseFloat(row[CI.doc])      || 0;
+        const wfg      = parseFloat(row[CI.wfg])      || 0;
+        const sef      = parseFloat(row[CI.sef])      || 0;
+        const psc      = parseFloat(row[CI.psc])      || 0;
+        const psm      = parseFloat(row[CI.psm])      || 0;
+        const etc_krw  = parseFloat(row[CI.etc_krw])  || 0;
+        const etc_usd  = parseFloat(row[CI.etc_usd])  || 0;
+        const ins      = parseFloat(row[CI.ins])      || 0;
+        const sch      = row[CI.sch]      ? String(row[CI.sch])      : '';
+        const freetime = row[CI.freetime] ? String(row[CI.freetime]) : '';
+        const note     = row[CI.note]     ? String(row[CI.note])     : '';
 
-        if(ofrt||lss||ams||thc||inland||doc||wfg||sef||psc||psm||ins||sch||note) {
+        if(ofrt||lss||ams||thc||inland||doc||wfg||sef||psc||psm||etc_krw||etc_usd||ins||sch||freetime||note) {
           if(!fwData[no]) fwData[no] = {};
-          Object.assign(fwData[no], {ofrt,lss,ams,thc,inland,doc,wfg,sef,psc,psm,ins,sch,note});
+          Object.assign(fwData[no], {ofrt,lss,ams,thc,inland,doc,wfg,sef,psc,psm,etc_krw,etc_usd,ins,sch,freetime,note});
           count++;
         }
       }
