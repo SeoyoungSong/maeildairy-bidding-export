@@ -174,6 +174,7 @@
   .save-banner { background:#E8F5E9; border:1px solid #A5D6A7; border-radius:8px; padding:10px 16px; font-size:12px; color:#2E7D32; font-weight:600; display:none; margin-bottom:12px; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
 <body>
 
@@ -2133,78 +2134,164 @@ function updateFwWorksiteDisplay() {
 
 
 
+
 // ══════════════════════════════════════════════════════
-// 포워더 입력양식 실시간 다운로드
-// 현재 설정(환율, 노선, 예상물량) 반영해서 즉시 생성
+// 포워더 입력양식 스타일 포함 다운로드 (xlsx-js-style 사용)
 // ══════════════════════════════════════════════════════
 function downloadFwExcel() {
-  const wb = XLSX.utils.book_new();
-
-  // 스타일 정의
-  const hdrStyle  = { font:{bold:true,color:{rgb:"FFFFFF"},sz:8}, fill:{fgColor:{rgb:"1F4E79"}}, alignment:{horizontal:"center",vertical:"center",wrapText:true}, border:{top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}} };
-  const grpStyle  = { font:{bold:true,color:{rgb:"FFFFFF"},sz:8}, fill:{fgColor:{rgb:"2E75B6"}}, alignment:{horizontal:"center",vertical:"center"} };
-  const sumStyle  = { font:{bold:true,color:{rgb:"FFFFFF"},sz:8}, fill:{fgColor:{rgb:"375623"}}, alignment:{horizontal:"center",vertical:"center"} };
-  const lockStyle = { fill:{fgColor:{rgb:"EBEBEB"}}, alignment:{horizontal:"center",vertical:"center"}, border:{top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}} };
-  const inpStyle1 = { fill:{fgColor:{rgb:"FFF2CC"}}, alignment:{horizontal:"right",vertical:"center"}, border:{top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}} };
-  const inpStyle2 = { fill:{fgColor:{rgb:"FFFACD"}}, alignment:{horizontal:"right",vertical:"center"}, border:{top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}} };
-  const totStyle1 = { font:{bold:true,color:{rgb:"FFFFFF"},sz:9}, fill:{fgColor:{rgb:"70AD47"}}, alignment:{horizontal:"center",vertical:"center"}, border:{top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}} };
-  const totStyle2 = { font:{bold:true,color:{rgb:"FFFFFF"},sz:9}, fill:{fgColor:{rgb:"A9D18E"}}, alignment:{horizontal:"center",vertical:"center"}, border:{top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}} };
+  // xlsx-js-style의 XLSXStyle 사용
+  const XS = (typeof XLSXStyle !== 'undefined') ? XLSXStyle : XLSX;
 
   const exRate = cfgExRate || 1450;
-  const routes = cfgRoutes.filter(function(r){ return r.nation || r.no <= 45; });
+  const routes = cfgRoutes;
 
-  // AOA 데이터 구성
-  const aoa = [];
+  // 스타일 정의
+  const border = {
+    top:{style:"thin",color:{rgb:"BFBFBF"}},
+    bottom:{style:"thin",color:{rgb:"BFBFBF"}},
+    left:{style:"thin",color:{rgb:"BFBFBF"}},
+    right:{style:"thin",color:{rgb:"BFBFBF"}}
+  };
+  const st = {
+    title:  {font:{bold:true,color:{rgb:"FFFFFF"},sz:12,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"1F4E79"}},alignment:{horizontal:"center",vertical:"center"},border},
+    notice: {font:{italic:true,color:{rgb:"7F3F00"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FCE4D6"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpBlue:{font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"2E75B6"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpNvy: {font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"1F4E79"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpGrn: {font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"375623"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpSky: {font:{bold:true,color:{rgb:"1F4E79"},sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"DAEEF3"}},alignment:{horizontal:"center",vertical:"center"},border},
+    hdr:    {font:{bold:true,color:{rgb:"FFFFFF"},sz:7,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"1F4E79"}},alignment:{horizontal:"center",vertical:"center",wrapText:true},border},
+    lbl:    {font:{bold:true,color:{rgb:"1F4E79"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"BDD7EE"}},alignment:{horizontal:"center",vertical:"center"},border},
+    lock1:  {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"EBEBEB"}},alignment:{horizontal:"center",vertical:"center"},border},
+    lock2:  {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"F5F5F5"}},alignment:{horizontal:"center",vertical:"center"},border},
+    inp1:   {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FFF2CC"}},alignment:{horizontal:"right",vertical:"center"},border},
+    inp2:   {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FFFACD"}},alignment:{horizontal:"right",vertical:"center"},border},
+    inpL1:  {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FFF2CC"}},alignment:{horizontal:"left",vertical:"center"},border},
+    inpL2:  {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FFFACD"}},alignment:{horizontal:"left",vertical:"center"},border},
+    sum1:   {font:{bold:true,color:{rgb:"FFFFFF"},sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"70AD47"}},alignment:{horizontal:"center",vertical:"center"},border},
+    sum2:   {font:{bold:true,color:{rgb:"FFFFFF"},sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"A9D18E"}},alignment:{horizontal:"center",vertical:"center"},border},
+    foot:   {font:{bold:true,color:{rgb:"1F4E79"},sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"BDD7EE"}},alignment:{horizontal:"center",vertical:"center"},border},
+  };
 
-  // 행1: 제목
-  aoa.push(['2026년 하반기 포워딩 비딩 — 견적 제출 양식  (' + currentFw + ')', ...Array(23).fill(null)]);
+  // 셀 헬퍼
+  function c(v, s, fmt) {
+    var cell = {v: v, s: s};
+    if(v === null || v === undefined || v === '') { cell.v = ''; cell.t = 's'; }
+    else if(typeof v === 'number') { cell.t = 'n'; if(fmt) cell.z = fmt; }
+    else if(typeof v === 'object' && v.f) { cell.f = v.f; cell.v = 0; cell.t = 'n'; if(fmt) cell.z = fmt; }
+    else { cell.t = 's'; }
+    return cell;
+  }
 
-  // 행2: 업체명/제출일/환율
-  aoa.push(['업체명', currentFw, null, null, '제출일', new Date().toLocaleDateString('ko-KR'), null, null, '기준환율', exRate, null, null, null, null, null, null, null, null, null, null, null, null, null, null]);
+  const ws = {};
+  const enc = XS.utils.encode_cell;
+  const R = function(r,col) { return enc({r:r,c:col}); };
 
-  // 행3: 안내
-  aoa.push(['※ 노란색 셀만 입력  |  기타비용 무슨 비용인지 비고란 기재  |  저장 후 담당자에게 자동 반영', ...Array(23).fill(null)]);
+  // 열 수 24
+  const COLS = 24;
 
-  // 행4: 그룹헤더
-  aoa.push(['노선 정보', null, null, null, null, null, null, 'USD 항목', null, null, 'KRW 항목', null, null, null, null, null, null, '기타비용', null, '★합계', '스케줄·참고', null, null, null]);
+  // 행0: 제목
+  ws[R(0,0)] = c('2026년 하반기 포워딩 비딩 — 견적 제출 양식  (' + currentFw + ')', st.title);
+  for(var ci=1;ci<COLS;ci++) ws[R(0,ci)] = c('', st.title);
 
-  // 행5: 컬럼 헤더 (24열)
-  aoa.push([
-    'NO','도착국가','작업지','출발PORT','도착PORT','CTNR','예상물량\n(CTN)',
+  // 행1: 업체명/제출일/환율
+  ws[R(1,0)] = c('업체명', st.lbl);
+  ws[R(1,1)] = c(currentFw, {...st.inp1, font:{bold:true,color:{rgb:"1F4E79"},sz:11,name:"맑은 고딕"}});
+  ws[R(1,2)] = c('', st.inp1); ws[R(1,3)] = c('', st.inp1);
+  ws[R(1,4)] = c('제출일', st.lbl);
+  ws[R(1,5)] = c(new Date().toLocaleDateString('ko-KR'), st.inp1);
+  ws[R(1,6)] = c('', st.inp1); ws[R(1,7)] = c('', st.inp1);
+  ws[R(1,8)] = c('기준환율\n(USD/KRW)', {...st.lbl, alignment:{horizontal:"center",vertical:"center",wrapText:true}});
+  ws[R(1,9)] = c(exRate, {...st.grpSky, font:{bold:true,color:{rgb:"1F4E79"},sz:11,name:"맑은 고딕"}});
+  for(var ci=10;ci<COLS;ci++) ws[R(1,ci)] = c('', st.lock1);
+
+  // 행2: 안내
+  ws[R(2,0)] = c('※ 노란색 셀만 입력  |  기타비용 무슨 비용인지 비고란에 기재  |  저장 후 📤 업로드', st.notice);
+  for(var ci=1;ci<COLS;ci++) ws[R(2,ci)] = c('', st.notice);
+
+  // 행3: 그룹헤더
+  const grp3 = [
+    [0,6,'노선 정보',st.grpNvy],[7,9,'💵 USD 항목',st.grpBlue],
+    [10,16,'🪙 KRW 항목',st.grpBlue],[17,18,'기타비용',st.grpBlue],
+    [19,19,'★합계',st.grpGrn],[20,23,'스케줄·비고',st.grpBlue]
+  ];
+  grp3.forEach(function(g){
+    ws[R(3,g[0])] = c(g[2], g[3]);
+    for(var ci=g[0]+1;ci<=g[1];ci++) ws[R(3,ci)] = c('', g[3]);
+  });
+
+  // 행4: 컬럼 헤더
+  var hdrs = [
+    'NO','도착국가','작업지','출발PORT','도착PORT','CTNR','예상물량\n(CTN/참고)',
     'O/FRT\n(USD/CTNR)','LSS\n(USD/CTNR)','AMS/AFR\n(USD/CTNR)',
     'THC\n(원)','내륙운송료\n(원)','DOC\n(원)','WFG\n(원)','SEF\n(원)','PSC\n(원)','PSM\n(원)',
     '기타비용\n(원)','기타비용\n(USD)','★합계(원)',
-    '적하보험요율\n(%)','주당항차수/출항요일','프리타임\n(최대/일)','비고·특이사항'
-  ]);
+    '적하보험요율\n(%)','주당항차수/\n출항요일','프리타임\n(최대/일)','비고·특이사항'
+  ];
+  hdrs.forEach(function(h,ci){ ws[R(4,ci)] = c(h, st.hdr); });
 
-  // 행6~: 노선 데이터
+  // 행5~: 노선 데이터
   routes.forEach(function(r, idx) {
-    var row6 = 6 + idx;
-    // 합계 수식: (H+I+J+S)*환율 + K~Q + R
-    var sumFormula = 'IFERROR((H' + row6 + '+I' + row6 + '+IF(OR(J' + row6 + '="",J' + row6 + '=0),0,J' + row6 + ')+IF(OR(S' + row6 + '="",S' + row6 + '=0),0,S' + row6 + '))*J2+SUM(K' + row6 + ':Q' + row6 + ')+IF(ISNUMBER(R' + row6 + '),R' + row6 + ',0),0)';
+    var row = 5 + idx;
+    var isEven = idx % 2 === 0;
+    var lk = isEven ? st.lock1 : st.lock2;
+    var ip = isEven ? st.inp1 : st.inp2;
+    var ipL = isEven ? st.inpL1 : st.inpL2;
+    var sm = isEven ? st.sum1 : st.sum2;
+    var exRow = row + 1; // Excel 행번호 (1-based)
 
-    aoa.push([
-      r.no, r.nation||'', r.site||'', r.port_o||'', r.port_i||'', r.ctnr||'',
-      r.vol||'',
-      '', '', '',          // H~J: USD 입력
-      '', '', '', '', '', '', '',  // K~Q: KRW 입력
-      '', '',              // R~S: 기타비용
-      {f: sumFormula},     // T: 합계 수식
-      '', '', '', ''       // U~X: 적하보험/스케줄/프리타임/비고
-    ]);
+    // A~F: 고정 노선 정보
+    ws[R(row,0)] = c(r.no||'', {...lk,font:{bold:true,sz:9,name:"맑은 고딕"}});
+    ws[R(row,1)] = c(r.nation||'', lk);
+    ws[R(row,2)] = c(r.site||'', lk);
+    ws[R(row,3)] = c(r.port_o||'', lk);
+    ws[R(row,4)] = c(r.port_i||'', lk);
+    ws[R(row,5)] = c(r.ctnr||'', lk);
+    // G: 예상물량
+    ws[R(row,6)] = c(r.vol||'', {...lk, alignment:{horizontal:"right",vertical:"center"}});
+
+    // H~J: USD 입력
+    [7,8,9].forEach(function(ci){ ws[R(row,ci)] = c('', {...ip, z:'#,##0.00'}); });
+    // K~Q: KRW 입력
+    [10,11,12,13,14,15,16].forEach(function(ci){ ws[R(row,ci)] = c('', {...ip, z:'#,##0'}); });
+    // R: 기타비용(원)
+    ws[R(row,17)] = c('', {...ip, z:'#,##0'});
+    // S: 기타비용(USD)
+    ws[R(row,18)] = c('', {...ip, z:'#,##0.00'});
+    // T: 합계 수식
+    ws[R(row,19)] = c({f:'IFERROR((H'+exRow+'+I'+exRow+'+IF(OR(J'+exRow+'="",J'+exRow+'=0),0,J'+exRow+')+IF(OR(S'+exRow+'="",S'+exRow+'=0),0,S'+exRow+'))*J2+SUM(K'+exRow+':Q'+exRow+')+IF(ISNUMBER(R'+exRow+'),R'+exRow+',0),0)'}, {...sm, z:'#,##0'});
+    // U: 적하보험요율
+    ws[R(row,20)] = c('', {...ip, z:'0.00000%'});
+    // V: 스케줄
+    ws[R(row,21)] = c('', ipL);
+    // W: 프리타임
+    ws[R(row,22)] = c('', {...ip, z:'0'});
+    // X: 비고
+    ws[R(row,23)] = c('', ipL);
   });
 
-  // 안내 행
-  var lastRow = [
-    '✅ 작성 완료 후 이 파일을 저장하세요. 담당자에게 자동 반영됩니다.',
-    ...Array(23).fill(null)
+  // 마지막 안내행
+  var lastRow = 5 + routes.length;
+  ws[R(lastRow,0)] = c('✅ 작성 완료 후 저장 → 홈페이지에서 📤 엑셀 업로드 버튼 클릭', st.foot);
+  for(var ci=1;ci<COLS;ci++) ws[R(lastRow,ci)] = c('', st.foot);
+
+  // 범위 설정
+  ws['!ref'] = XS.utils.encode_range({r:0,c:0},{r:lastRow,c:COLS-1});
+
+  // 병합
+  ws['!merges'] = [
+    {s:{r:0,c:0},e:{r:0,c:COLS-1}},
+    {s:{r:1,c:1},e:{r:1,c:3}},
+    {s:{r:1,c:5},e:{r:1,c:7}},
+    {s:{r:2,c:0},e:{r:2,c:COLS-1}},
+    {s:{r:3,c:0},e:{r:3,c:6}},
+    {s:{r:3,c:7},e:{r:3,c:9}},
+    {s:{r:3,c:10},e:{r:3,c:16}},
+    {s:{r:3,c:17},e:{r:3,c:18}},
+    {s:{r:3,c:20},e:{r:3,c:23}},
+    {s:{r:lastRow,c:0},e:{r:lastRow,c:COLS-1}}
   ];
-  aoa.push(lastRow);
 
-  // 시트 생성
-  var ws = XLSX.utils.aoa_to_sheet(aoa);
-
-  // 열 너비 설정
+  // 열 너비
   ws['!cols'] = [
     {wch:4},{wch:8},{wch:7},{wch:9},{wch:8},{wch:7},{wch:8},
     {wch:8},{wch:8},{wch:8},
@@ -2216,102 +2303,131 @@ function downloadFwExcel() {
 
   // 행 높이
   ws['!rows'] = [{hpt:32},{hpt:24},{hpt:18},{hpt:22},{hpt:45}];
-  for(var i=0; i<routes.length; i++) ws['!rows'].push({hpt:20});
+  for(var i=0;i<routes.length;i++) ws['!rows'].push({hpt:20});
   ws['!rows'].push({hpt:22});
 
-  // 병합
-  ws['!merges'] = [
-    {s:{r:0,c:0},e:{r:0,c:23}},   // 제목
-    {s:{r:1,c:1},e:{r:1,c:3}},    // 업체명값
-    {s:{r:1,c:5},e:{r:1,c:7}},    // 제출일값
-    {s:{r:2,c:0},e:{r:2,c:23}},   // 안내
-    {s:{r:3,c:0},e:{r:3,c:6}},    // 노선정보
-    {s:{r:3,c:7},e:{r:3,c:9}},    // USD
-    {s:{r:3,c:10},e:{r:3,c:16}},  // KRW
-    {s:{r:3,c:17},e:{r:3,c:18}},  // 기타비용
-    {s:{r:3,c:20},e:{r:3,c:23}},  // 스케줄
-    {s:{r:routes.length+5,c:0},e:{r:routes.length+5,c:23}} // 안내
-  ];
+  // 틀 고정 (G열 이후, 6행 이후)
+  ws['!freeze'] = {xSplit:7, ySplit:5, state:'frozen'};
 
-  // 시트 동결
-  ws['!freeze'] = {xSplit:7, ySplit:5};
+  var wb = XS.utils.book_new();
+  XS.utils.book_append_sheet(wb, ws, '견적입력');
 
-  XLSX.utils.book_append_sheet(wb, ws, '견적입력');
-
-  // 파일명: 업체명_포워더입력양식_날짜.xlsx
   var today = new Date().toISOString().slice(0,10).replace(/-/g,'');
-  var fname = '포워딩비딩_26하반기_' + currentFw + '_' + today + '.xlsx';
-  XLSX.writeFile(wb, fname);
+  XS.writeFile(wb, '포워딩비딩_26하반기_' + currentFw + '_' + today + '.xlsx');
   showToast('양식 다운로드 완료! 노란 셀에 입력 후 업로드하세요.');
 }
 
 // ══════════════════════════════════════════════════════
-// 노선관리 업로드 양식 다운로드 (설정 탭)
+// 노선관리 양식 다운로드
 // ══════════════════════════════════════════════════════
 function downloadRouteExcel() {
-  const wb = XLSX.utils.book_new();
+  const XS = (typeof XLSXStyle !== 'undefined') ? XLSXStyle : XLSX;
 
-  const aoa = [];
+  const border = {
+    top:{style:"thin",color:{rgb:"BFBFBF"}},bottom:{style:"thin",color:{rgb:"BFBFBF"}},
+    left:{style:"thin",color:{rgb:"BFBFBF"}},right:{style:"thin",color:{rgb:"BFBFBF"}}
+  };
+  const st = {
+    title: {font:{bold:true,color:{rgb:"FFFFFF"},sz:12,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"1F4E79"}},alignment:{horizontal:"center",vertical:"center"},border},
+    notice:{font:{italic:true,color:{rgb:"7F3F00"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FCE4D6"}},alignment:{horizontal:"center",vertical:"center"},border},
+    hdr:   {font:{bold:true,color:{rgb:"FFFFFF"},sz:7,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"1F4E79"}},alignment:{horizontal:"center",vertical:"center",wrapText:true},border},
+    hdrGr: {font:{bold:true,color:{rgb:"FFFFFF"},sz:7,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"777777"}},alignment:{horizontal:"center",vertical:"center",wrapText:true},border},
+    hdrBl: {font:{bold:true,color:{rgb:"FFFFFF"},sz:7,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"2E75B6"}},alignment:{horizontal:"center",vertical:"center",wrapText:true},border},
+    hdrGn: {font:{bold:true,color:{rgb:"FFFFFF"},sz:7,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"375623"}},alignment:{horizontal:"center",vertical:"center",wrapText:true},border},
+    grpNv: {font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"1F4E79"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpGr: {font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"777777"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpBl: {font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"2E75B6"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpGn: {font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"375623"}},alignment:{horizontal:"center",vertical:"center"},border},
+    lock1: {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"EBEBEB"}},alignment:{horizontal:"center",vertical:"center"},border},
+    lock2: {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"F5F5F5"}},alignment:{horizontal:"center",vertical:"center"},border},
+    inp1:  {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FFF2CC"}},alignment:{horizontal:"right",vertical:"center"},border},
+    inp2:  {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FFFACD"}},alignment:{horizontal:"right",vertical:"center"},border},
+    prev1: {font:{sz:9,color:{rgb:"666666"},name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"F0F0F0"}},alignment:{horizontal:"right",vertical:"center"},border},
+    prev2: {font:{sz:9,color:{rgb:"666666"},name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"E8E8E8"}},alignment:{horizontal:"right",vertical:"center"},border},
+    curr1: {font:{sz:9,color:{rgb:"1565C0"},name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"EBF3FB"}},alignment:{horizontal:"right",vertical:"center"},border},
+    curr2: {font:{sz:9,color:{rgb:"1565C0"},name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"DCE9F5"}},alignment:{horizontal:"right",vertical:"center"},border},
+    info1: {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"E8F5E9"}},alignment:{horizontal:"left",vertical:"center"},border},
+    info2: {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"D0EDD4"}},alignment:{horizontal:"left",vertical:"center"},border},
+    foot:  {font:{italic:true,color:{rgb:"1F4E79"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"BDD7EE"}},alignment:{horizontal:"center",vertical:"center"},border},
+  };
 
-  // 행1: 제목
-  aoa.push(['매일유업 포워딩 비딩 — 노선관리 업로드 양식', ...Array(14).fill(null)]);
+  function c(v, s, fmt) {
+    var cell = {v: v===null||v===undefined?'':v, s: s};
+    if(typeof v === 'number') { cell.t='n'; if(fmt) cell.z=fmt; }
+    else { cell.t='s'; }
+    return cell;
+  }
 
-  // 행2: 안내
-  aoa.push(['※ 이 파일 작성 후 웹사이트 [설정 > 노선관리]에서 업로드하세요. NO·도착국가 필수. 비딩대상 N이면 업로드 시 제외.', ...Array(14).fill(null)]);
+  const ws = {};
+  const COLS = 15;
+  const enc = XS.utils.encode_cell;
+  const R = function(r,col) { return enc({r:r,c:col}); };
 
-  // 행3: 그룹헤더
-  aoa.push(['노선 정보', null, null, null, null, null, null,
-    '📅 직전반기 사업계획', null, '📅 이번반기 사업계획', null,
-    '추가 정보', null, null, null]);
+  // 행0: 제목
+  ws[R(0,0)] = c('매일유업 포워딩 비딩 — 노선관리 업로드 양식', st.title);
+  for(var ci=1;ci<COLS;ci++) ws[R(0,ci)] = c('', st.title);
 
-  // 행4: 컬럼 헤더 (15열)
-  aoa.push([
-    'NO','도착국가','작업지','출발PORT','도착PORT',
-    'CTNR\n(20DRY/40DRY/20RF/40RF)','예상물량\n(CTN/반기)',
-    '직전반기\n매출(원)','직전반기\n물류비(원)',
-    '이번반기\n매출(원)','이번반기\n물류비(원)',
-    '비딩대상\n(Y/N)','제품명','거래처','비고'
-  ]);
+  // 행1: 안내
+  ws[R(1,0)] = c('※ 이 파일 작성 후 웹사이트 [설정 > 노선관리]에서 업로드하세요. NO·도착국가 필수. 비딩대상 N이면 제외.', st.notice);
+  for(var ci=1;ci<COLS;ci++) ws[R(1,ci)] = c('', st.notice);
 
-  // 행5~: 현재 노선 데이터 반영
-  cfgRoutes.forEach(function(r) {
-    aoa.push([
-      r.no, r.nation||'', r.site||'', r.port_o||'', r.port_i||'', r.ctnr||'',
-      r.vol||'',
-      r.prev_sales||'', r.prev_plan_cost||'',
-      r.curr_sales||'', r.plan_cost||'',
-      'Y',
-      r.product||'', r.customer||'', r.note||''
-    ]);
+  // 행2: 그룹헤더
+  var grp2 = [[0,6,'노선 정보',st.grpNv],[7,8,'📅 직전반기',st.grpGr],[9,10,'📅 이번반기',st.grpBl],[11,14,'추가 정보',st.grpGn]];
+  grp2.forEach(function(g){ ws[R(2,g[0])]=c(g[2],g[3]); for(var ci=g[0]+1;ci<=g[1];ci++) ws[R(2,ci)]=c('',g[3]); });
+
+  // 행3: 헤더
+  var hdrs=['NO','도착국가','작업지','출발PORT','도착PORT','CTNR\n(20DRY/40DRY/20RF/40RF)','예상물량\n(CTN/반기)',
+    '직전반기\n매출(원)','직전반기\n물류비(원)','이번반기\n매출(원)','이번반기\n물류비(원)',
+    '비딩대상\n(Y/N)','제품명','거래처','비고'];
+  var hdrSts=[st.hdr,st.hdr,st.hdr,st.hdr,st.hdr,st.hdr,st.hdr,st.hdrGr,st.hdrGr,st.hdrBl,st.hdrBl,st.hdrGn,st.hdrGn,st.hdrGn,st.hdrGn];
+  hdrs.forEach(function(h,ci){ ws[R(3,ci)]=c(h,hdrSts[ci]); });
+
+  // 행4~: 노선 데이터
+  cfgRoutes.forEach(function(r,idx){
+    var row=4+idx; var isEven=idx%2===0;
+    var lk=isEven?st.lock1:st.lock2;
+    var pr=isEven?st.prev1:st.prev2;
+    var cu=isEven?st.curr1:st.curr2;
+    var ip=isEven?st.inp1:st.inp2;
+    var inf=isEven?st.info1:st.info2;
+
+    ws[R(row,0)]=c(r.no||'',{...lk,font:{bold:true,sz:9,name:"맑은 고딕"}});
+    [r.nation,r.site,r.port_o,r.port_i,r.ctnr].forEach(function(v,i){ ws[R(row,1+i)]=c(v||'',lk); });
+    ws[R(row,6)]=c(r.vol||'',{...ip,z:'#,##0'});
+    ws[R(row,7)]=c(r.prev_sales||'',{...pr,z:'#,##0'});
+    ws[R(row,8)]=c(r.prev_plan_cost||'',{...pr,z:'#,##0'});
+    ws[R(row,9)]=c(r.curr_sales||'',{...cu,z:'#,##0'});
+    ws[R(row,10)]=c(r.plan_cost||'',{...cu,z:'#,##0'});
+    ws[R(row,11)]=c('Y',lk);
+    ws[R(row,12)]=c(r.product||'',inf);
+    ws[R(row,13)]=c(r.customer||'',inf);
+    ws[R(row,14)]=c(r.note||'',inf);
   });
 
   // 안내행
-  aoa.push(['H=직전반기매출 | I=직전반기물류비 | J=이번반기매출 | K=이번반기물류비 | M=제품명 | N=거래처 | O=비고', ...Array(14).fill(null)]);
+  var lastRow=4+cfgRoutes.length;
+  ws[R(lastRow,0)]=c('H=직전반기매출 | I=직전반기물류비 | J=이번반기매출 | K=이번반기물류비 | 비워두면 C조건 물류비 물량비율 자동배분',st.foot);
+  for(var ci=1;ci<COLS;ci++) ws[R(lastRow,ci)]=c('',st.foot);
 
-  var ws = XLSX.utils.aoa_to_sheet(aoa);
-
-  ws['!cols'] = [{wch:4},{wch:8},{wch:7},{wch:9},{wch:8},{wch:12},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:7},{wch:14},{wch:14},{wch:18}];
-  ws['!rows'] = [{hpt:28},{hpt:18},{hpt:22},{hpt:45}];
-  for(var i=0; i<cfgRoutes.length; i++) ws['!rows'].push({hpt:18});
-  ws['!rows'].push({hpt:20});
-
-  ws['!merges'] = [
-    {s:{r:0,c:0},e:{r:0,c:14}},
-    {s:{r:1,c:0},e:{r:1,c:14}},
-    {s:{r:2,c:0},e:{r:2,c:6}},
-    {s:{r:2,c:7},e:{r:2,c:8}},
-    {s:{r:2,c:9},e:{r:2,c:10}},
-    {s:{r:2,c:11},e:{r:2,c:14}},
-    {s:{r:cfgRoutes.length+4,c:0},e:{r:cfgRoutes.length+4,c:14}}
+  ws['!ref']=XS.utils.encode_range({r:0,c:0},{r:lastRow,c:COLS-1});
+  ws['!merges']=[
+    {s:{r:0,c:0},e:{r:0,c:COLS-1}},{s:{r:1,c:0},e:{r:1,c:COLS-1}},
+    {s:{r:2,c:0},e:{r:2,c:6}},{s:{r:2,c:7},e:{r:2,c:8}},
+    {s:{r:2,c:9},e:{r:2,c:10}},{s:{r:2,c:11},e:{r:2,c:14}},
+    {s:{r:lastRow,c:0},e:{r:lastRow,c:COLS-1}}
   ];
+  ws['!cols']=[{wch:4},{wch:8},{wch:7},{wch:9},{wch:8},{wch:12},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:7},{wch:14},{wch:14},{wch:18}];
+  ws['!rows']=[{hpt:28},{hpt:18},{hpt:22},{hpt:45}];
+  for(var i=0;i<cfgRoutes.length;i++) ws['!rows'].push({hpt:18});
+  ws['!rows'].push({hpt:20});
+  ws['!freeze']={xSplit:0,ySplit:4,state:'frozen'};
 
-  ws['!freeze'] = {xSplit:0, ySplit:4};
+  var wb2=XS.utils.book_new();
+  XS.utils.book_append_sheet(wb2,ws,'노선관리');
 
-  XLSX.utils.book_append_sheet(wb, ws, '노선관리');
-
-  var today = new Date().toISOString().slice(0,10).replace(/-/g,'');
-  XLSX.writeFile(wb, '노선관리_업로드양식_' + today + '.xlsx');
-  showToast('노선관리 양식 다운로드 완료! 현재 설정이 반영됐어요.');
+  var today=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  XS.writeFile(wb2,'노선관리_업로드양식_'+today+'.xlsx');
+  showToast('노선관리 양식 다운로드 완료!');
 }
 
 </script>
