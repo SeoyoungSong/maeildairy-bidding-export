@@ -127,7 +127,7 @@
   .summary-table td { padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right; }
   .summary-table td:first-child { text-align: left; font-weight: 600; }
   .summary-table tr.total { background: var(--lblue); font-weight: 700; }
-  .highlight { color: var(--green); font-weight: 700; }
+  .highlight { color: #1565C0; font-weight: 700; }  /* 절감: 파랑 */
   .negative { color: var(--red); font-weight: 700; }
 
   /* 탭 */
@@ -905,9 +905,9 @@ async function refreshData() {
 }
 
 function renderDash() {
-  // 통계 카드
-  const submitted = FORWARDERS.filter(fw => allSubmissions[fw]?.submitted).length;
-  const drafted   = FORWARDERS.filter(fw => allSubmissions[fw] && !allSubmissions[fw].submitted).length;
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  const submitted = allFwdrs.filter(fw => allSubmissions[fw]?.submitted).length;
+  const drafted   = allFwdrs.filter(fw => allSubmissions[fw] && !allSubmissions[fw].submitted).length;
   const totalRoutes = cfgRoutes.filter(r=>r.nation).length;
 
   document.getElementById('stat-cards').innerHTML = `
@@ -918,7 +918,7 @@ function renderDash() {
   `;
 
   // 포워더별 현황
-  document.getElementById('fw-status-grid').innerHTML = FORWARDERS.map(fw => {
+  document.getElementById('fw-status-grid').innerHTML = allFwdrs.map(fw => {
     const sub = allSubmissions[fw];
     const submitted = sub?.submitted;
     const count = sub ? Object.keys(sub.data||{}).filter(k=>calcTotal(sub.data[k])>0).length : 0;
@@ -932,7 +932,7 @@ function renderDash() {
   }).join('');
 
   // 제출 로그
-  document.getElementById('submission-log').innerHTML = FORWARDERS
+  document.getElementById('submission-log').innerHTML = allFwdrs
     .filter(fw => allSubmissions[fw])
     .map(fw => {
       const sub = allSubmissions[fw];
@@ -949,7 +949,8 @@ function renderDash() {
 
 function getRanked(no) {
   const quotes = [];
-  FORWARDERS.forEach(fw => {
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  allFwdrs.forEach(fw => {
     const sub = allSubmissions[fw];
     if(!sub?.data?.[no]) return;
     const total = calcTotal(sub.data[no]);
@@ -1054,9 +1055,9 @@ function renderReport() {
     if(ranked[0] && vol) bidTotal += ranked[0].total * vol;
   });
 
-  const savings = PLAN_LOGISTICS - bidTotal;
-  const planRate = PLAN_LOGISTICS / PLAN_SALES;
-  const bidRate  = bidTotal / PLAN_SALES;
+  const savings = (cfgPlanLogistics||PLAN_LOGISTICS) - bidTotal;
+  const planRate = (cfgPlanLogistics||PLAN_LOGISTICS) / (cfgPlanSales||PLAN_SALES);
+  const bidRate  = bidTotal / (cfgPlanSales||PLAN_SALES);
   const fBidTot  = bidTotal + cfgFLogistics;
   const fPlanTot = (cfgPlanLogistics||PLAN_LOGISTICS) + cfgFLogistics;
   const fSales   = (cfgPlanSales||PLAN_SALES) + cfgFSales;
@@ -1072,9 +1073,9 @@ function renderReport() {
         <td>C조건 (비딩 대상)</td>
         <td>${fmt(PLAN_SALES)}</td><td>${fmt(PLAN_LOGISTICS)}</td>
         <td class="${bidTotal>PLAN_LOGISTICS?'negative':'highlight'}">${fmt(bidTotal)}</td>
-        <td class="${savings>0?'highlight':'negative'}">${savings>0?'+':''}${fmt(savings)}</td>
+        <td class="${savings>=0?'highlight':'negative'}">${savings>=0?'-':'+'}${fmt(Math.abs(savings))}</td>
         <td>${pct(planRate)}</td><td>${pct(bidRate)}</td>
-        <td class="${planRate>bidRate?'highlight':'negative'}">${pct(planRate-bidRate)}</td>
+        <td class="${planRate>=bidRate?'highlight':'negative'}">${planRate>=bidRate?'-':'+'}${pct(Math.abs(planRate-bidRate))}</td>
       </tr>
       <tr>
         <td>F조건 (비딩 미대상)</td>
@@ -1084,9 +1085,9 @@ function renderReport() {
       <tr class="total">
         <td>합 계</td>
         <td>${fmt(fSales)}</td><td>${fmt(fPlanTot)}</td><td>${fmt(fBidTot)}</td>
-        <td class="${fPlanTot>fBidTot?'highlight':'negative'}">${fmt(fPlanTot-fBidTot)}</td>
+        <td class="${fPlanTot>=fBidTot?'highlight':'negative'}">${fPlanTot>=fBidTot?'-':'+'}${fmt(Math.abs(fPlanTot-fBidTot))}</td>
         <td>${pct(fPlanTot/fSales)}</td><td>${pct(fBidTot/fSales)}</td>
-        <td class="${fPlanTot/fSales>fBidTot/fSales?'highlight':'negative'}">${pct(fPlanTot/fSales-fBidTot/fSales)}</td>
+        <td class="${fPlanTot/fSales>=fBidTot/fSales?'highlight':'negative'}">${fPlanTot/fSales>=fBidTot/fSales?'-':'+'}${pct(Math.abs(fPlanTot/fSales-fBidTot/fSales))}</td>
       </tr>
     </tbody>
   `;
@@ -1126,8 +1127,8 @@ function renderReport() {
       '<td style="' + (isSelected?'color:#ED7D31;font-weight:700;':'') + '">' + (r1&&selPrice&&r1.total!==selPrice?fmt(selPrice-r1.total):'') + '</td>' +
       '<td style="text-align:right;color:#2E75B6;">' + (routePlan?fmt(routePlan):'-') + '</td>' +
       '<td style="text-align:right;">' + (bidCost?fmt(bidCost):'-') + '</td>' +
-      '<td style="text-align:right;' + (savings>0?'color:#375623;font-weight:700;':'color:#C00000;') + '">' + (routePlan>0?fmt(savings):'-') + '</td>' +
-      '<td style="text-align:center;' + (savings>0?'color:#375623;font-weight:700;':'color:#C00000;') + '">' + savePct + '</td>';
+      '<td style="text-align:right;' + (savings>=0?'color:#1565C0;font-weight:700;':'color:#C00000;font-weight:700;') + '">' + (routePlan>0?(savings>=0?'-':'+') + fmt(Math.abs(savings)):'-') + '</td>' +
+      '<td style="text-align:center;' + (savings>=0?'color:#1565C0;font-weight:700;':'color:#C00000;font-weight:700;') + '">' + (routePlan>0?(savings>=0?'-':'+') + savePct:'-') + '</td>';
 
     rtbody.appendChild(tr);
   });
@@ -1872,24 +1873,9 @@ function renderFwSelectionSummary() {
 }
 
 
-async function saveSelections() {
-  const ok = await saveToStorage('selected_fw', selectedFw);
-  if(ok) {
-    showToast('선정 결과가 저장됐어요! 보고자료에 반영됩니다.');
-    renderReport();
-  } else {
-    showToast('저장 실패. 다시 시도해주세요.');
-  }
-}
 
-function onSelectFw(no, fw, total) {
-  if(!fw || fw === '') {
-    delete selectedFw[no];
-  } else {
-    selectedFw[no] = { fw: fw, total: parseFloat(total) || 0 };
-  }
-  renderFwSelectionSummary();
-}
+
+
 
 function switchFwTab(tab) {
   document.getElementById('fw-panel-input').style.display = tab === 'input' ? 'block' : 'none';
@@ -1919,34 +1905,64 @@ function renderWorksiteList() {
   el.innerHTML = '';
   cfgWorksites.forEach(function(ws, i) {
     const row = document.createElement('div');
-    row.style.cssText = 'display:grid;grid-template-columns:80px 1fr;gap:8px;align-items:center;margin-bottom:6px;';
-    const nameEl = document.createElement('div');
-    nameEl.style.cssText = 'font-weight:700;font-size:12px;color:var(--navy);';
-    nameEl.textContent = ws.name;
-    const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.value = ws.addr;
-    inp.style.cssText = 'padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;outline:none;';
-    inp.dataset.idx = i;
-    inp.addEventListener('input', function() {
-      cfgWorksites[parseInt(this.dataset.idx)].addr = this.value;
+    row.style.cssText = 'display:grid;grid-template-columns:100px 1fr 28px;gap:8px;align-items:center;margin-bottom:6px;';
+
+    const nameInp = document.createElement('input');
+    nameInp.type = 'text';
+    nameInp.value = ws.name;
+    nameInp.placeholder = '작업지명';
+    nameInp.style.cssText = 'padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-weight:700;color:var(--navy);outline:none;';
+    nameInp.addEventListener('input', function() { cfgWorksites[i].name = this.value; });
+
+    const addrInp = document.createElement('input');
+    addrInp.type = 'text';
+    addrInp.value = ws.addr;
+    addrInp.placeholder = '주소 입력';
+    addrInp.style.cssText = 'padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;outline:none;';
+    addrInp.addEventListener('input', function() { cfgWorksites[i].addr = this.value; });
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'del-btn';
+    delBtn.textContent = '✕';
+    delBtn.addEventListener('click', function() {
+      cfgWorksites.splice(i, 1);
+      renderWorksiteList();
     });
-    row.appendChild(nameEl);
-    row.appendChild(inp);
+
+    row.appendChild(nameInp);
+    row.appendChild(addrInp);
+    row.appendChild(delBtn);
     el.appendChild(row);
   });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn-add';
+  addBtn.textContent = '+ 작업지 추가';
+  addBtn.style.marginTop = '8px';
+  addBtn.addEventListener('click', function() {
+    cfgWorksites.push({ name: '', addr: '' });
+    renderWorksiteList();
+  });
+  el.appendChild(addBtn);
 }
 
 async function saveWorksites() {
   const ok = await saveToStorage('cfg_worksites', cfgWorksites);
-  if(ok) showToast('작업지 주소가 저장됐어요!');
+  if(ok) {
+    showToast('작업지 주소가 저장됐어요!');
+    updateFwWorksiteDisplay();
+  }
 }
 
-async function saveEvalScores() {
-  const ok = await saveToStorage('eval_scores', evalScores);
-  if(ok) showToast('평가점수가 저장됐어요!');
-  else showToast('저장 실패. 다시 시도해주세요.');
+function updateFwWorksiteDisplay() {
+  const el = document.getElementById('fw-worksite-list');
+  if(!el) return;
+  el.innerHTML = cfgWorksites.map(function(ws) {
+    return '<div style="margin-bottom:3px;"><strong>' + ws.name + ':</strong> ' + ws.addr + '</div>';
+  }).join('');
 }
+
+
 
 </script>
 </body>
