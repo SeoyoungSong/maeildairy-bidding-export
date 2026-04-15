@@ -241,9 +241,10 @@
       노란색 셀에만 운임을 입력하세요. 입력한 내용은 실시간으로 저장됩니다. 모든 구간 입력 완료 후 하단의 <strong>[견적 제출]</strong> 버튼을 눌러주세요.
       기준환율: <strong id="fw-exrate-display">1,450 KRW/USD</strong>
     </div>
-    <div style="background:white;border:1.5px dashed #90CAF9;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-      <div style="font-size:13px;color:var(--navy);font-weight:700;">📂 엑셀 파일로 일괄 입력</div>
-      <div style="font-size:11px;color:var(--dgray);">포워더 입력양식 엑셀을 작성 후 업로드하면 자동으로 채워드려요.</div>
+    <div style="background:white;border:1.5px dashed #90CAF9;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="font-size:13px;color:var(--navy);font-weight:700;">📂 엑셀 일괄 입력</div>
+      <button onclick="downloadFwExcel()" style="background:#1F4E79;color:white;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;">⬇ 양식 다운로드</button>
+      <div style="font-size:11px;color:var(--dgray);">① 다운로드 → ② 노란 셀 입력 → ③ 업로드</div>
       <label for="excel-upload" style="background:var(--blue);color:white;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📤 엑셀 업로드</label>
       <input type="file" id="excel-upload" accept=".xlsx,.xls" style="display:none;" onchange="handleExcelUpload(this)">
       <span id="upload-status" style="font-size:12px;color:var(--green);font-weight:600;"></span>
@@ -531,6 +532,7 @@
         <div style="background:#EEF4FF;border:1.5px dashed #90CAF9;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
           <div style="font-size:12px;color:var(--navy);font-weight:700;">📂 엑셀로 일괄 업로드</div>
           <div style="font-size:11px;color:var(--dgray);">노선관리 양식 엑셀을 업로드하면 전체 노선이 자동으로 반영됩니다.</div>
+          <button onclick="downloadRouteExcel()" style="background:#1F4E79;color:white;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:none;white-space:nowrap;">⬇ 양식 다운로드</button>
           <label for="route-excel-upload" style="background:var(--blue);color:white;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📤 엑셀 업로드</label>
           <input type="file" id="route-excel-upload" accept=".xlsx,.xls" style="display:none;" onchange="handleRouteExcelUpload(this)">
           <span id="route-upload-status" style="font-size:11px;color:var(--green);font-weight:600;"></span>
@@ -817,13 +819,13 @@ function buildFwTable() {
       ${inp(route.no,'sef',d.sef,'number','0')}
       ${inp(route.no,'psc',d.psc,'number','0')}
       ${inp(route.no,'psm',d.psm,'number','0')}
-      ${inp(route.no,'ins',d.ins,'number','0.000')}
-      ${inp(route.no,'sch',d.sch,'text','')}
       ${inp(route.no,'etc_krw',d.etc_krw,'number','0')}
       ${inp(route.no,'etc_usd',d.etc_usd,'number','0.00')}
+      <td class="total" id="total-${route.no}">${total ? fmt(total) : ''}</td>
+      ${inp(route.no,'ins',d.ins,'number','0.00000')}
+      ${inp(route.no,'sch',d.sch,'text','')}
       ${inp(route.no,'freetime',d.freetime,'number','0')}
       ${inp(route.no,'note',d.note,'text','')}
-      <td class="total" id="total-${route.no}">${total ? fmt(total) : ''}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -2129,6 +2131,188 @@ function updateFwWorksiteDisplay() {
 }
 
 
+
+
+// ══════════════════════════════════════════════════════
+// 포워더 입력양식 실시간 다운로드
+// 현재 설정(환율, 노선, 예상물량) 반영해서 즉시 생성
+// ══════════════════════════════════════════════════════
+function downloadFwExcel() {
+  const wb = XLSX.utils.book_new();
+
+  // 스타일 정의
+  const hdrStyle  = { font:{bold:true,color:{rgb:"FFFFFF"},sz:8}, fill:{fgColor:{rgb:"1F4E79"}}, alignment:{horizontal:"center",vertical:"center",wrapText:true}, border:{top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}} };
+  const grpStyle  = { font:{bold:true,color:{rgb:"FFFFFF"},sz:8}, fill:{fgColor:{rgb:"2E75B6"}}, alignment:{horizontal:"center",vertical:"center"} };
+  const sumStyle  = { font:{bold:true,color:{rgb:"FFFFFF"},sz:8}, fill:{fgColor:{rgb:"375623"}}, alignment:{horizontal:"center",vertical:"center"} };
+  const lockStyle = { fill:{fgColor:{rgb:"EBEBEB"}}, alignment:{horizontal:"center",vertical:"center"}, border:{top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}} };
+  const inpStyle1 = { fill:{fgColor:{rgb:"FFF2CC"}}, alignment:{horizontal:"right",vertical:"center"}, border:{top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}} };
+  const inpStyle2 = { fill:{fgColor:{rgb:"FFFACD"}}, alignment:{horizontal:"right",vertical:"center"}, border:{top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}} };
+  const totStyle1 = { font:{bold:true,color:{rgb:"FFFFFF"},sz:9}, fill:{fgColor:{rgb:"70AD47"}}, alignment:{horizontal:"center",vertical:"center"}, border:{top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}} };
+  const totStyle2 = { font:{bold:true,color:{rgb:"FFFFFF"},sz:9}, fill:{fgColor:{rgb:"A9D18E"}}, alignment:{horizontal:"center",vertical:"center"}, border:{top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}} };
+
+  const exRate = cfgExRate || 1450;
+  const routes = cfgRoutes.filter(function(r){ return r.nation || r.no <= 45; });
+
+  // AOA 데이터 구성
+  const aoa = [];
+
+  // 행1: 제목
+  aoa.push(['2026년 하반기 포워딩 비딩 — 견적 제출 양식  (' + currentFw + ')', ...Array(23).fill(null)]);
+
+  // 행2: 업체명/제출일/환율
+  aoa.push(['업체명', currentFw, null, null, '제출일', new Date().toLocaleDateString('ko-KR'), null, null, '기준환율', exRate, null, null, null, null, null, null, null, null, null, null, null, null, null, null]);
+
+  // 행3: 안내
+  aoa.push(['※ 노란색 셀만 입력  |  기타비용 무슨 비용인지 비고란 기재  |  저장 후 담당자에게 자동 반영', ...Array(23).fill(null)]);
+
+  // 행4: 그룹헤더
+  aoa.push(['노선 정보', null, null, null, null, null, null, 'USD 항목', null, null, 'KRW 항목', null, null, null, null, null, null, '기타비용', null, '★합계', '스케줄·참고', null, null, null]);
+
+  // 행5: 컬럼 헤더 (24열)
+  aoa.push([
+    'NO','도착국가','작업지','출발PORT','도착PORT','CTNR','예상물량\n(CTN)',
+    'O/FRT\n(USD/CTNR)','LSS\n(USD/CTNR)','AMS/AFR\n(USD/CTNR)',
+    'THC\n(원)','내륙운송료\n(원)','DOC\n(원)','WFG\n(원)','SEF\n(원)','PSC\n(원)','PSM\n(원)',
+    '기타비용\n(원)','기타비용\n(USD)','★합계(원)',
+    '적하보험요율\n(%)','주당항차수/출항요일','프리타임\n(최대/일)','비고·특이사항'
+  ]);
+
+  // 행6~: 노선 데이터
+  routes.forEach(function(r, idx) {
+    var row6 = 6 + idx;
+    // 합계 수식: (H+I+J+S)*환율 + K~Q + R
+    var sumFormula = 'IFERROR((H' + row6 + '+I' + row6 + '+IF(OR(J' + row6 + '="",J' + row6 + '=0),0,J' + row6 + ')+IF(OR(S' + row6 + '="",S' + row6 + '=0),0,S' + row6 + '))*J2+SUM(K' + row6 + ':Q' + row6 + ')+IF(ISNUMBER(R' + row6 + '),R' + row6 + ',0),0)';
+
+    aoa.push([
+      r.no, r.nation||'', r.site||'', r.port_o||'', r.port_i||'', r.ctnr||'',
+      r.vol||'',
+      '', '', '',          // H~J: USD 입력
+      '', '', '', '', '', '', '',  // K~Q: KRW 입력
+      '', '',              // R~S: 기타비용
+      {f: sumFormula},     // T: 합계 수식
+      '', '', '', ''       // U~X: 적하보험/스케줄/프리타임/비고
+    ]);
+  });
+
+  // 안내 행
+  var lastRow = [
+    '✅ 작성 완료 후 이 파일을 저장하세요. 담당자에게 자동 반영됩니다.',
+    ...Array(23).fill(null)
+  ];
+  aoa.push(lastRow);
+
+  // 시트 생성
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // 열 너비 설정
+  ws['!cols'] = [
+    {wch:4},{wch:8},{wch:7},{wch:9},{wch:8},{wch:7},{wch:8},
+    {wch:8},{wch:8},{wch:8},
+    {wch:9},{wch:9},{wch:7},{wch:7},{wch:7},{wch:7},{wch:7},
+    {wch:10},{wch:10},
+    {wch:13},
+    {wch:16},{wch:14},{wch:8},{wch:18}
+  ];
+
+  // 행 높이
+  ws['!rows'] = [{hpt:32},{hpt:24},{hpt:18},{hpt:22},{hpt:45}];
+  for(var i=0; i<routes.length; i++) ws['!rows'].push({hpt:20});
+  ws['!rows'].push({hpt:22});
+
+  // 병합
+  ws['!merges'] = [
+    {s:{r:0,c:0},e:{r:0,c:23}},   // 제목
+    {s:{r:1,c:1},e:{r:1,c:3}},    // 업체명값
+    {s:{r:1,c:5},e:{r:1,c:7}},    // 제출일값
+    {s:{r:2,c:0},e:{r:2,c:23}},   // 안내
+    {s:{r:3,c:0},e:{r:3,c:6}},    // 노선정보
+    {s:{r:3,c:7},e:{r:3,c:9}},    // USD
+    {s:{r:3,c:10},e:{r:3,c:16}},  // KRW
+    {s:{r:3,c:17},e:{r:3,c:18}},  // 기타비용
+    {s:{r:3,c:20},e:{r:3,c:23}},  // 스케줄
+    {s:{r:routes.length+5,c:0},e:{r:routes.length+5,c:23}} // 안내
+  ];
+
+  // 시트 동결
+  ws['!freeze'] = {xSplit:7, ySplit:5};
+
+  XLSX.utils.book_append_sheet(wb, ws, '견적입력');
+
+  // 파일명: 업체명_포워더입력양식_날짜.xlsx
+  var today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  var fname = '포워딩비딩_26하반기_' + currentFw + '_' + today + '.xlsx';
+  XLSX.writeFile(wb, fname);
+  showToast('양식 다운로드 완료! 노란 셀에 입력 후 업로드하세요.');
+}
+
+// ══════════════════════════════════════════════════════
+// 노선관리 업로드 양식 다운로드 (설정 탭)
+// ══════════════════════════════════════════════════════
+function downloadRouteExcel() {
+  const wb = XLSX.utils.book_new();
+
+  const aoa = [];
+
+  // 행1: 제목
+  aoa.push(['매일유업 포워딩 비딩 — 노선관리 업로드 양식', ...Array(14).fill(null)]);
+
+  // 행2: 안내
+  aoa.push(['※ 이 파일 작성 후 웹사이트 [설정 > 노선관리]에서 업로드하세요. NO·도착국가 필수. 비딩대상 N이면 업로드 시 제외.', ...Array(14).fill(null)]);
+
+  // 행3: 그룹헤더
+  aoa.push(['노선 정보', null, null, null, null, null, null,
+    '📅 직전반기 사업계획', null, '📅 이번반기 사업계획', null,
+    '추가 정보', null, null, null]);
+
+  // 행4: 컬럼 헤더 (15열)
+  aoa.push([
+    'NO','도착국가','작업지','출발PORT','도착PORT',
+    'CTNR\n(20DRY/40DRY/20RF/40RF)','예상물량\n(CTN/반기)',
+    '직전반기\n매출(원)','직전반기\n물류비(원)',
+    '이번반기\n매출(원)','이번반기\n물류비(원)',
+    '비딩대상\n(Y/N)','제품명','거래처','비고'
+  ]);
+
+  // 행5~: 현재 노선 데이터 반영
+  cfgRoutes.forEach(function(r) {
+    aoa.push([
+      r.no, r.nation||'', r.site||'', r.port_o||'', r.port_i||'', r.ctnr||'',
+      r.vol||'',
+      r.prev_sales||'', r.prev_plan_cost||'',
+      r.curr_sales||'', r.plan_cost||'',
+      'Y',
+      r.product||'', r.customer||'', r.note||''
+    ]);
+  });
+
+  // 안내행
+  aoa.push(['H=직전반기매출 | I=직전반기물류비 | J=이번반기매출 | K=이번반기물류비 | M=제품명 | N=거래처 | O=비고', ...Array(14).fill(null)]);
+
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  ws['!cols'] = [{wch:4},{wch:8},{wch:7},{wch:9},{wch:8},{wch:12},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:7},{wch:14},{wch:14},{wch:18}];
+  ws['!rows'] = [{hpt:28},{hpt:18},{hpt:22},{hpt:45}];
+  for(var i=0; i<cfgRoutes.length; i++) ws['!rows'].push({hpt:18});
+  ws['!rows'].push({hpt:20});
+
+  ws['!merges'] = [
+    {s:{r:0,c:0},e:{r:0,c:14}},
+    {s:{r:1,c:0},e:{r:1,c:14}},
+    {s:{r:2,c:0},e:{r:2,c:6}},
+    {s:{r:2,c:7},e:{r:2,c:8}},
+    {s:{r:2,c:9},e:{r:2,c:10}},
+    {s:{r:2,c:11},e:{r:2,c:14}},
+    {s:{r:cfgRoutes.length+4,c:0},e:{r:cfgRoutes.length+4,c:14}}
+  ];
+
+  ws['!freeze'] = {xSplit:0, ySplit:4};
+
+  XLSX.utils.book_append_sheet(wb, ws, '노선관리');
+
+  var today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  XLSX.writeFile(wb, '노선관리_업로드양식_' + today + '.xlsx');
+  showToast('노선관리 양식 다운로드 완료! 현재 설정이 반영됐어요.');
+}
 
 </script>
 </body>
