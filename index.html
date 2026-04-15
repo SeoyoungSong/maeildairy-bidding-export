@@ -1871,3 +1871,83 @@ function renderFwSelectionSummary() {
   el.innerHTML = htmlStr;
 }
 
+
+async function saveSelections() {
+  const ok = await saveToStorage('selected_fw', selectedFw);
+  if(ok) {
+    showToast('선정 결과가 저장됐어요! 보고자료에 반영됩니다.');
+    renderReport();
+  } else {
+    showToast('저장 실패. 다시 시도해주세요.');
+  }
+}
+
+function onSelectFw(no, fw, total) {
+  if(!fw || fw === '') {
+    delete selectedFw[no];
+  } else {
+    selectedFw[no] = { fw: fw, total: parseFloat(total) || 0 };
+  }
+  renderFwSelectionSummary();
+}
+
+function switchFwTab(tab) {
+  document.getElementById('fw-panel-input').style.display = tab === 'input' ? 'block' : 'none';
+  document.getElementById('fw-panel-conditions').style.display = tab === 'conditions' ? 'block' : 'none';
+  const activeStyle = 'padding:9px 20px;font-size:13px;font-weight:700;color:var(--navy);border-bottom:2px solid var(--navy);margin-bottom:-2px;cursor:pointer;';
+  const inactiveStyle = 'padding:9px 20px;font-size:13px;font-weight:600;color:var(--dgray);cursor:pointer;';
+  document.getElementById('fw-tab-input').style.cssText = tab === 'input' ? activeStyle : inactiveStyle;
+  document.getElementById('fw-tab-conditions').style.cssText = tab === 'conditions' ? activeStyle : inactiveStyle;
+}
+
+const DEFAULT_WORKSITES = [
+  { name: '켄달', addr: '안성시 원곡면 지문로 393 지상 1층 JP로지스틱스 상온창고 (켄달센터)' },
+  { name: '도곡', addr: '경기도 안성시 양성면 도곡리 40-6 (양성로 376-92) 지하 2층' },
+  { name: '경산', addr: '경북 경산시 진량읍 대학로 1090 매일유업 경산공장' },
+  { name: '우성월드', addr: '경상북도 영천시 대창면 금박로 945' }
+];
+let cfgWorksites = DEFAULT_WORKSITES.map(function(w){ return Object.assign({}, w); });
+
+async function loadWorksites() {
+  const saved = await loadFromStorage('cfg_worksites');
+  if(saved && saved.length > 0) cfgWorksites = saved;
+}
+
+function renderWorksiteList() {
+  const el = document.getElementById('worksite-list');
+  if(!el) return;
+  el.innerHTML = '';
+  cfgWorksites.forEach(function(ws, i) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:80px 1fr;gap:8px;align-items:center;margin-bottom:6px;';
+    const nameEl = document.createElement('div');
+    nameEl.style.cssText = 'font-weight:700;font-size:12px;color:var(--navy);';
+    nameEl.textContent = ws.name;
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.value = ws.addr;
+    inp.style.cssText = 'padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;outline:none;';
+    inp.dataset.idx = i;
+    inp.addEventListener('input', function() {
+      cfgWorksites[parseInt(this.dataset.idx)].addr = this.value;
+    });
+    row.appendChild(nameEl);
+    row.appendChild(inp);
+    el.appendChild(row);
+  });
+}
+
+async function saveWorksites() {
+  const ok = await saveToStorage('cfg_worksites', cfgWorksites);
+  if(ok) showToast('작업지 주소가 저장됐어요!');
+}
+
+async function saveEvalScores() {
+  const ok = await saveToStorage('eval_scores', evalScores);
+  if(ok) showToast('평가점수가 저장됐어요!');
+  else showToast('저장 실패. 다시 시도해주세요.');
+}
+
+</script>
+</body>
+</html>
