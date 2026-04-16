@@ -875,8 +875,9 @@ async function autoSave() {
 
 function calcTotal(d) {
   if(!d) return 0;
-  const usd = ((d.ofrt||0)+(d.lss||0)+(d.ams||0)) * EXCHANGE_RATE;
-  const krw = (d.thc||0)+(d.inland||0)+(d.doc||0)+(d.wfg||0)+(d.sef||0)+(d.psc||0)+(d.psm||0);
+  const er = cfgExRate || EXCHANGE_RATE;
+  const usd = ((d.ofrt||0)+(d.lss||0)+(d.ams||0)+(d.etc_usd||0)) * er;
+  const krw = (d.thc||0)+(d.inland||0)+(d.doc||0)+(d.wfg||0)+(d.sef||0)+(d.psc||0)+(d.psm||0)+(d.etc_krw||0);
   return usd + krw;
 }
 
