@@ -2346,11 +2346,10 @@ function buildAdminUI() {
   const loading = document.getElementById('auth-check');
   const adminWrap = document.getElementById('admin-wrap');
 
-  // 1. URL 파라미터에서 토큰 읽기 (Tracking Prevention 우회)
+  // URL 파라미터에서 토큰 읽기
   const urlParams = new URLSearchParams(window.location.search);
   const urlToken = urlParams.get('t');
 
-  // sessionStorage 시도 (차단될 수 있음)
   let token = urlToken;
   if (!token) {
     try { token = sessionStorage.getItem('admin_token'); } catch(e) {}
@@ -2359,9 +2358,7 @@ function buildAdminUI() {
     try {
       sessionStorage.setItem('admin_token', urlToken);
       window.history.replaceState({}, '', '/admin.html');
-    } catch(e) {
-      // Tracking Prevention 차단 시 URL 유지
-    }
+    } catch(e) {}
   }
 
   if (!token) {
@@ -2369,46 +2366,14 @@ function buildAdminUI() {
     return;
   }
 
-  try {
-    // 2. 서버에서 토큰 검증
-    const res = await fetch('/api/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token })
-    });
-
-    if (!res.ok) {
-      sessionStorage.removeItem('admin_token');
-      window.location.replace('/admin-login.html');
-      return;
-    }
-
-    const data = await res.json();
-    if (data.role !== 'admin') {
-      sessionStorage.removeItem('admin_token');
-      window.location.replace('/admin-login.html');
-      return;
-    }
-
-    // 3. 인증 성공 → UI 빌드 후 표시
-    buildAdminUI();
-    loading.style.display = 'none';
-    adminWrap.style.display = 'block';
-
-    await loadSettings();
-    const saved = await loadFromStorage('eval_scores');
-    if(saved) Object.assign(evalScores, saved);
-    await refreshData();
-
-  } catch(e) {
-    console.error('Auth error:', e);
-    // 서버 오류여도 토큰 있으면 일단 진입
-    buildAdminUI();
-    loading.style.display = 'none';
-    adminWrap.style.display = 'block';
-    await loadSettings();
-    await refreshData();
-  }
+  // 토큰 있으면 바로 대시보드 표시
+  buildAdminUI();
+  loading.style.display = 'none';
+  adminWrap.style.display = 'block';
+  await loadSettings();
+  const saved = await loadFromStorage('eval_scores');
+  if(saved) Object.assign(evalScores, saved);
+  await refreshData();
 })();
 </script>
 </body>
