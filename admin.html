@@ -217,56 +217,10 @@ const PLAN_LOGISTICS = 282110000;
 const F_SALES = 23423904724;
 const F_LOGISTICS = 1470281964;
 
-const FORWARDERS = ['람세스','원스탑','판토스','태웅','JPI','솔트랜스','오리엔트'];
+// FORWARDERS/ROUTES/WORKSITES는 서버에서만 관리 (api/config.js)
 const VOL = {2:81,3:40,4:2,5:24,6:18,8:90,10:20,12:10,14:5,16:6,17:3,18:6,19:5,20:6,22:2,24:4,26:4,28:2,29:7};
 
-const ROUTES = [
-  {no:1,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'상해',ctnr:'20DRY'},
-  {no:2,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'상해',ctnr:'40DRY'},
-  {no:3,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'상해',ctnr:'40RF'},
-  {no:4,nation:'중국',site:'도곡',port_o:'평택',port_i:'상해',ctnr:'40RF'},
-  {no:5,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'천진',ctnr:'40RF'},
-  {no:6,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'심천',ctnr:'40RF'},
-  {no:7,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'닝보',ctnr:'20DRY'},
-  {no:8,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'닝보',ctnr:'40DRY'},
-  {no:9,nation:'중국',site:'켄달',port_o:'평택',port_i:'닝보',ctnr:'20DRY'},
-  {no:10,nation:'중국',site:'켄달',port_o:'평택',port_i:'닝보',ctnr:'40DRY'},
-  {no:11,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'심양',ctnr:'20DRY'},
-  {no:12,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'심양',ctnr:'40DRY'},
-  {no:13,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'청도',ctnr:'20RF'},
-  {no:14,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'청도',ctnr:'40RF'},
-  {no:15,nation:'대만',site:'켄달',port_o:'인천(경인)',port_i:'타이중',ctnr:'20DRY'},
-  {no:16,nation:'대만',site:'켄달',port_o:'인천(경인)',port_i:'타이중',ctnr:'40DRY'},
-  {no:17,nation:'미국',site:'경산/우성',port_o:'부산',port_i:'LA',ctnr:'40RF'},
-  {no:18,nation:'미국',site:'도곡',port_o:'부산',port_i:'LA',ctnr:'40RF'},
-  {no:19,nation:'미국',site:'경산/우성',port_o:'부산',port_i:'NY',ctnr:'40RF'},
-  {no:20,nation:'미국',site:'도곡',port_o:'부산',port_i:'NY',ctnr:'40RF'},
-  {no:21,nation:'싱가폴',site:'켄달',port_o:'부산',port_i:'싱가폴',ctnr:'20DRY'},
-  {no:22,nation:'싱가폴',site:'켄달',port_o:'부산',port_i:'싱가폴',ctnr:'40DRY'},
-  {no:23,nation:'싱가폴',site:'도곡',port_o:'부산',port_i:'싱가폴',ctnr:'20RF'},
-  {no:24,nation:'싱가폴',site:'도곡',port_o:'부산',port_i:'싱가폴',ctnr:'40RF'},
-  {no:25,nation:'싱가폴',site:'도곡',port_o:'인천',port_i:'싱가폴',ctnr:'20RF'},
-  {no:26,nation:'싱가폴',site:'도곡',port_o:'인천',port_i:'싱가폴',ctnr:'40RF'},
-  {no:27,nation:'말레이시아',site:'도곡',port_o:'부산',port_i:'포트켈랑(W)',ctnr:'20DRY'},
-  {no:28,nation:'말레이시아',site:'도곡',port_o:'부산',port_i:'포트켈랑(W)',ctnr:'40DRY'},
-  {no:29,nation:'홍콩',site:'경산/우성',port_o:'부산',port_i:'홍콩',ctnr:'20RF'},
-  {no:30,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
-  {no:31,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
-  {no:32,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
-  {no:33,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
-  {no:34,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
-  {no:35,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
-  {no:36,nation:'국내',site:'경산/우성',port_o:'부산',port_i:'국내',ctnr:'20RF'},
-  {no:37,nation:'국내',site:'경산/우성',port_o:'부산',port_i:'국내',ctnr:'40RF'},
-  {no:38,nation:'국내',site:'도곡',port_o:'부산',port_i:'국내',ctnr:'20RF'},
-  {no:39,nation:'국내',site:'도곡',port_o:'부산',port_i:'국내',ctnr:'40RF'},
-  {no:40,nation:'국내',site:'도곡',port_o:'인천',port_i:'국내',ctnr:'20RF'},
-  {no:41,nation:'국내',site:'도곡',port_o:'인천',port_i:'국내',ctnr:'40RF'},
-  {no:42,nation:'국내',site:'켄달',port_o:'부산',port_i:'국내',ctnr:'20DRY'},
-  {no:43,nation:'국내',site:'켄달',port_o:'부산',port_i:'국내',ctnr:'40DRY'},
-  {no:44,nation:'국내',site:'켄달',port_o:'인천',port_i:'국내',ctnr:'20DRY'},
-  {no:45,nation:'국내',site:'켄달',port_o:'인천',port_i:'국내',ctnr:'40DRY'},
-];
+
 
 let currentFw = null;
 
@@ -1445,9 +1399,9 @@ function exportExcel() {
 // ══════════════════════════════════════════
 
 // 현재 설정값 (스토리지에서 로드, 없으면 기본값)
-let cfgForwarders = [...FORWARDERS];
-let cfgFwPasswords = {};  // {업체명: 비밀번호}
-let cfgRoutes = ROUTES.map(r=>({...r}));
+let cfgForwarders = [];
+let cfgFwPasswords = {};
+let cfgRoutes = [];
 let cfgExRate = EXCHANGE_RATE;
 let cfgPlanSales = PLAN_SALES;
 let cfgPlanLogistics = PLAN_LOGISTICS;
@@ -1461,32 +1415,48 @@ let cfgFwPw = '';
 
 // 설정 로드 (앱 시작 시)
 async function loadSettings() {
-  const fwSaved = await loadFromStorage('cfg_forwarders');
-  if(fwSaved && fwSaved.length > 0) cfgForwarders = fwSaved;
+  const token = sessionStorage.getItem('admin_token');
+  if (!token) { window.location.replace('/admin-login.html'); return; }
 
-  const rtSaved = await loadFromStorage('cfg_routes');
-  if(rtSaved && rtSaved.length > 0) cfgRoutes = rtSaved;
+  try {
+    const res = await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
+    if (res.status === 401) {
+      sessionStorage.removeItem('admin_token');
+      window.location.replace('/admin-login.html');
+      return;
+    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
 
-  const cfgSaved = await loadFromStorage('cfg_basic');
-  if(cfgSaved) {
-    if(cfgSaved.exRate) cfgExRate = cfgSaved.exRate;
-    if(cfgSaved.planSales) cfgPlanSales = cfgSaved.planSales;
-    if(cfgSaved.planLogistics) cfgPlanLogistics = cfgSaved.planLogistics;
-    if(cfgSaved.fSales) cfgFSales = cfgSaved.fSales;
-    if(cfgSaved.fLogistics) cfgFLogistics = cfgSaved.fLogistics;
-    if(cfgSaved.prevCSales) cfgPrevCSales = cfgSaved.prevCSales;
-    if(cfgSaved.prevCLogistics) cfgPrevCLogistics = cfgSaved.prevCLogistics;
-    if(cfgSaved.prevFSales) cfgPrevFSales = cfgSaved.prevFSales;
-    if(cfgSaved.prevFLogistics) cfgPrevFLogistics = cfgSaved.prevFLogistics;
-    if(cfgSaved.fwPw) cfgFwPw = cfgSaved.fwPw;
+    if (data.routes     && data.routes.length > 0)     cfgRoutes     = data.routes;
+    if (data.forwarders && data.forwarders.length > 0) cfgForwarders = data.forwarders;
+    if (data.worksites  && data.worksites.length > 0)  cfgWorksites  = data.worksites;
+
+    if (data.basic) {
+      if (data.basic.exRate)         cfgExRate         = data.basic.exRate;
+      if (data.basic.planSales)      cfgPlanSales      = data.basic.planSales;
+      if (data.basic.planLogistics)  cfgPlanLogistics  = data.basic.planLogistics;
+      if (data.basic.fSales)         cfgFSales         = data.basic.fSales;
+      if (data.basic.fLogistics)     cfgFLogistics     = data.basic.fLogistics;
+      if (data.basic.prevCSales)     cfgPrevCSales     = data.basic.prevCSales;
+      if (data.basic.prevCLogistics) cfgPrevCLogistics = data.basic.prevCLogistics;
+      if (data.basic.prevFSales)     cfgPrevFSales     = data.basic.prevFSales;
+      if (data.basic.prevFLogistics) cfgPrevFLogistics = data.basic.prevFLogistics;
+      if (data.basic.fwPw)           cfgFwPw           = data.basic.fwPw;
+    }
+
+    // 비밀번호는 관리자만 별도 로드
+    const pwSaved = await loadFromStorage('cfg_fw_passwords');
+    if (pwSaved) cfgFwPasswords = pwSaved;
+
+    updateFwDropdown();
+  } catch(e) {
+    console.error('loadSettings 오류:', e);
   }
-
-  const pwSaved = await loadFromStorage('cfg_fw_passwords');
-  if(pwSaved) cfgFwPasswords = pwSaved;
-  await loadWorksites();
-
-  // 포워더 선택 드롭다운 업데이트
-  updateFwDropdown();
 }
 
 function updateFwDropdown() {
@@ -2077,13 +2047,8 @@ function switchFwTab(tab) {
   document.getElementById('fw-tab-conditions').style.cssText = tab === 'conditions' ? activeStyle : inactiveStyle;
 }
 
-const DEFAULT_WORKSITES = [
-  { name: '켄달', addr: '안성시 원곡면 지문로 393 지상 1층 JP로지스틱스 상온창고 (켄달센터)' },
-  { name: '도곡', addr: '경기도 안성시 양성면 도곡리 40-6 (양성로 376-92) 지하 2층' },
-  { name: '경산', addr: '경북 경산시 진량읍 대학로 1090 매일유업 경산공장' },
-  { name: '우성월드', addr: '경상북도 영천시 대창면 금박로 945' }
-];
-let cfgWorksites = DEFAULT_WORKSITES.map(function(w){ return Object.assign({}, w); });
+
+let cfgWorksites = [];
 
 async function loadWorksites() {
   const saved = await loadFromStorage('cfg_worksites');
