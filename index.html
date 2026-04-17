@@ -542,6 +542,29 @@ async function doLogin() {
 const fwPwEl = document.getElementById('fw-password');
 if(fwPwEl) fwPwEl.addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 
+function switchFwTab(tab) {
+  const panelInput = document.getElementById('fw-panel-input');
+  const panelCond = document.getElementById('fw-panel-conditions');
+  const tabInput = document.getElementById('fw-tab-input');
+  const tabCond = document.getElementById('fw-tab-conditions');
+
+  if(tab === 'input') {
+    panelInput.style.display = '';
+    panelCond.style.display = 'none';
+    tabInput.style.color = 'var(--navy)';
+    tabInput.style.borderBottom = '2px solid var(--navy)';
+    tabCond.style.color = 'var(--dgray)';
+    tabCond.style.borderBottom = 'none';
+  } else {
+    panelInput.style.display = 'none';
+    panelCond.style.display = 'block';
+    tabInput.style.color = 'var(--dgray)';
+    tabInput.style.borderBottom = 'none';
+    tabCond.style.color = 'var(--navy)';
+    tabCond.style.borderBottom = '2px solid var(--navy)';
+  }
+}
+
 function showLoginErr(msg) {
   const el = document.getElementById('login-err');
   el.textContent = msg; el.style.display = 'block';
