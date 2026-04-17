@@ -2,6 +2,19 @@ import { Redis } from '@upstash/redis';
 
 const redis = Redis.fromEnv();
 
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://maeildairy-bidding-export.vercel.app';
+
+function setCors(req, res) {
+  const origin = req.headers.origin || '';
+  if (origin === ALLOWED_ORIGIN || origin.endsWith('.vercel.app')) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Vary', 'Origin');
+}
+
+
 function ensureObject(v) {
   if (!v) return null;
   if (typeof v === 'string') { try { return JSON.parse(v); } catch { return null; } }
@@ -9,9 +22,7 @@ function ensureObject(v) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
