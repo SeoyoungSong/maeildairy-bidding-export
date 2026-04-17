@@ -185,37 +185,30 @@
       <div class="title">포워딩 비딩 시스템</div>
       <div class="period">2026년 하반기 (2026.07 ~ 2026.12)</div>
     </div>
+    <div class="form-group">
+      <label>업체 선택</label>
+      <select id="fw-select">
+        <option value="">-- 업체를 선택하세요 --</option>
+        <option value="람세스">람세스</option>
+        <option value="원스탑">원스탑</option>
+        <option value="판토스">판토스</option>
+        <option value="태웅">태웅</option>
+        <option value="JPI">JPI</option>
+        <option value="솔트랜스">솔트랜스</option>
+        <option value="오리엔트">오리엔트</option>
+      </select>
     </div>
-    <div id="forwarder-form">
-      <div class="form-group">
-        <label>업체 선택</label>
-        <select id="fw-select">
-          <option value="">-- 업체를 선택하세요 --</option>
-          <option value="람세스">람세스</option>
-          <option value="원스탑">원스탑</option>
-          <option value="판토스">판토스</option>
-          <option value="태웅">태웅</option>
-          <option value="JPI">JPI</option>
-          <option value="솔트랜스">솔트랜스</option>
-          <option value="오리엔트">오리엔트</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>비딩 코드</label>
-        <input type="password" id="fw-password" placeholder="담당자에게 문의하세요">
-      </div>
+    <div class="form-group">
+      <label>비딩 코드</label>
+      <input type="password" id="fw-password" placeholder="담당자에게 문의하세요">
     </div>
-    <div id="admin-form" style="display:none;">
-      <div class="form-group">
-        <label>관리자 비밀번호</label>
-        <input type="password" id="admin-password" placeholder="관리자 비밀번호 입력">
-      </div>
+    <button class="btn-login login-btn" onclick="doLogin()">입장하기</button>
+    <div class="login-err" id="login-err"></div>
+    <div style="margin-top:16px;text-align:center;font-size:12px;color:#aaa;">
+      담당자이신가요? <a href="/admin-login" style="color:#2E75B6;text-decoration:none;">관리자 로그인 →</a>
     </div>
-    <button class="btn-login" onclick="doLogin()">입장하기</button>
-    <div class="login-err" id="login-err">비밀번호가 올바르지 않습니다.</div>
   </div>
 </div>
-
 <!-- 포워더 입력 페이지 -->
 <div id="fw-page" class="page">
   <div class="top-bar">
