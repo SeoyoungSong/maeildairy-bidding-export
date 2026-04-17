@@ -228,7 +228,7 @@ let fwData = {}; // 현재 포워더 입력 데이터
 let allSubmissions = {}; // 전체 제출 데이터 (admin용)
 let evalScores = {}; // 종합평가 점수
 
-FORWARDERS.forEach(fw => { evalScores[fw] = {stability:0, network:0, response:0}; });
+// evalScores는 loadSettings 후 cfgForwarders 기준으로 초기화됨
 evalScores['람세스'] = {stability:3, network:2, response:5};
 evalScores['원스탑'] = {stability:3, network:2, response:5};
 evalScores['판토스'] = {stability:3, network:2, response:4};
@@ -577,7 +577,7 @@ async function submitQuote() {
 async function refreshData() {
   await loadSelections();
   // 전체 포워더 제출 데이터 로드 (설정에서 불러온 목록 기준)
-  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : [];
   for(const fw of allFwdrs) {
     const sub = await loadFromStorage(`submission_${fw}`);
     if(sub) allSubmissions[fw] = sub;
@@ -906,7 +906,7 @@ function clearAllData() {
 
 // ── 관리자 전용 코드
 function renderDash() {
-  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : [];
   const submitted = allFwdrs.filter(fw => allSubmissions[fw]?.submitted).length;
   const drafted   = allFwdrs.filter(fw => allSubmissions[fw] && !allSubmissions[fw].submitted).length;
   const totalRoutes = cfgRoutes.filter(r=>r.nation).length;
@@ -950,7 +950,7 @@ function renderDash() {
 
 function getRanked(no) {
   const quotes = [];
-  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : [];
   allFwdrs.forEach(fw => {
     const sub = allSubmissions[fw];
     if(!sub?.data?.[no]) return;
@@ -965,7 +965,7 @@ function renderRankTable() {
   const tbody = document.getElementById('rank-tbody');
   tbody.innerHTML = '';
 
-  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : [];
 
   cfgRoutes.filter(function(r) {
     return r.nation && (filter === 'all' || r.nation === filter);
@@ -1240,7 +1240,7 @@ function renderReport() {
 }
 
 function renderEval() {
-  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : [];
 
   const rawCounts = {};
   allFwdrs.forEach(function(fw){ rawCounts[fw] = 0; });
@@ -1966,7 +1966,7 @@ function renderFwSelectionSummary() {
   const el = document.getElementById('fw-selection-summary');
   if(!el) return;
 
-  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : [];
   const fwRoutes = {};
   allFwdrs.forEach(function(fw) { fwRoutes[fw] = { routes: [], nations: [], total: 0, vol: 0 }; });
 
