@@ -465,8 +465,8 @@ async function doLogin() {
     if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = '입장하기'; }
   }
 }
-document.getElementById('admin-password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
-document.getElementById('fw-password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+const fwPwEl = document.getElementById('fw-password');
+if(fwPwEl) fwPwEl.addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 
 function showLoginErr(msg) {
   const el = document.getElementById('login-err');
