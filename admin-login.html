@@ -77,7 +77,9 @@ async function doAdminLogin() {
 
     // 토큰 저장 후 관리자 페이지로 이동
     sessionStorage.setItem('admin_token', data.token);
-    window.location.replace('/admin');
+    console.log('로그인 성공, 토큰:', data.token);
+    console.log('이동:', '/admin');
+    window.location.href = '/admin.html';
 
   } catch(e) {
     showErr('서버 연결 오류. 잠시 후 다시 시도하세요.');
