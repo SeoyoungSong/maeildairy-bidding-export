@@ -210,92 +210,8 @@
     </div>
   </div>
 </div>
-<!-- 포워더 입력 페이지 -->
-<div id="fw-page" class="page">
-  <div class="top-bar">
-    <div>
-      <div style="font-size:15px;font-weight:700;" id="fw-title">견적 입력</div>
-      <div style="font-size:11px;opacity:0.7;">매일유업 포워딩 비딩 2026 하반기</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <span id="fw-save-indicator" style="font-size:12px;opacity:0.8;"></span>
-      <button class="nav-btn" onclick="logout()">로그아웃</button>
-    </div>
-  </div>
-  <div class="container">
-    <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px;">
-      <div id="fw-tab-input" onclick="switchFwTab('input')" style="padding:9px 20px;font-size:13px;font-weight:700;color:var(--navy);border-bottom:2px solid var(--navy);margin-bottom:-2px;cursor:pointer;">견적 입력</div>
-      <div id="fw-tab-conditions" onclick="switchFwTab('conditions')" style="padding:9px 20px;font-size:13px;font-weight:600;color:var(--dgray);cursor:pointer;">📋 비딩 조건</div>
-    </div>
-    <div id="fw-panel-input">
-    <div class="info-bar">
-      노란색 셀에만 운임을 입력하세요. 입력한 내용은 실시간으로 저장됩니다. 모든 구간 입력 완료 후 하단의 <strong>[견적 제출]</strong> 버튼을 눌러주세요.
-      기준환율: <strong id="fw-exrate-display">1,450 KRW/USD</strong>
-    </div>
-    <div style="background:white;border:1.5px dashed #90CAF9;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-      <div style="font-size:13px;color:var(--navy);font-weight:700;">📂 엑셀 일괄 입력</div>
-      <button onclick="downloadFwExcel()" style="background:#1F4E79;color:white;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;">⬇ 양식 다운로드</button>
-      <div style="font-size:11px;color:var(--dgray);">① 다운로드 → ② 노란 셀 입력 → ③ 업로드</div>
-      <label for="excel-upload" style="background:var(--blue);color:white;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📤 엑셀 업로드</label>
-      <input type="file" id="excel-upload" accept=".xlsx,.xls" style="display:none;" onchange="handleExcelUpload(this)">
-      <span id="upload-status" style="font-size:12px;color:var(--green);font-weight:600;"></span>
-    </div>
-    <div class="input-table-wrap">
-      <table class="input-table" id="fw-table">
-        <thead>
-          <tr>
-            <th style="width:30px;">NO</th>
-            <th>도착국가</th>
-            <th>작업지</th>
-            <th>출발PORT</th>
-            <th>도착PORT</th>
-            <th>CTNR</th>
-            <th style="width:50px;">예상물량</th>
-            <th>O/FRT<br>(USD/CTNR)</th>
-            <th>LSS<br>(USD/CTNR)</th>
-            <th>AMS/AFR<br>(USD/CTNR)</th>
-            <th style="min-width:52px;">THC<br>(원)</th>
-            <th style="min-width:60px;">내륙운송료<br>(원)</th>
-            <th style="min-width:52px;">DOC<br>(원)</th>
-            <th style="min-width:52px;">WFG<br>(원)</th>
-            <th style="min-width:52px;">SEF<br>(원)</th>
-            <th style="min-width:52px;">PSC<br>(원)</th>
-            <th style="min-width:52px;">PSM<br>(원)</th>
-            <th style="min-width:80px;">기타비용<br>(원)</th>
-            <th style="min-width:80px;">기타비용<br>(USD)</th>
-            <th>★합계(원)</th>
-            <th style="min-width:110px;">적하보험요율<br>(%)</th>
-            <th style="min-width:120px;">주당항차수/<br>출항요일</th>
-            <th style="min-width:70px;">프리타임<br>(최대/일)</th>
-            <th style="min-width:160px;">비고</th>
-          </tr>
-        </thead>
-        <tbody id="fw-tbody"></tbody>
-      </table>
-    </div>
-    </div><!-- fw-panel-input 닫기 -->
-    <div id="fw-panel-conditions" style="display:none;">
-<div style="padding:4px;"><div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">1. 서류 지원 및 행정 업무</div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 선적서류 업로드</div><div style="font-size:11px;color:#333;">선사 사이트 또는 바이어가 요구하는 지정 플랫폼에 선적서류 업로드 지원 필수</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 미국 ISF Filing</div><div style="font-size:11px;color:#333;">미국향 화물의 경우 ISF Filing 업무 필수 지원</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 세금계산서 발행</div><div style="font-size:11px;color:#333;">세금계산서 발행 시 당사가 공유할 요청 양식에 따라 상세 내역 작성 제출</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 서류마감 알림</div><div style="font-size:11px;color:#333;">Doc Closing 1일 전 퇴근 시간 전까지 마감 일정을 유선 또는 메일로 안내</div></div><div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">2. 운임 및 비용 산정 조건</div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 운임 업데이트</div><div style="font-size:11px;color:#333;">전 구간 O/FRT 시황을 매월 1주차에 정기 업데이트하여 당사에 제공</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 운임 변동 허용</div><div style="font-size:11px;color:#333;">운임 변동 10% 이내는 기존 운임 적용, 10% 초과 시 해당 구간 재협의</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ LSS 포함 조건</div><div style="font-size:11px;color:#333;">중국·홍콩·대만 LSS는 당사 부담. 반드시 All-in 운임(LSS 포함)으로 제출</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ Document Fee</div><div style="font-size:11px;color:#333;">서류발급비용 40,000원 고정(상한선). 초과 금액 청구 불가</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 내륙운송 대행</div><div style="font-size:11px;color:#333;">노미 포워더 신규 진행 시 추가 비용 없이 내륙운송 및 계산서 처리 대행</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 적하보험 대행</div><div style="font-size:11px;color:#333;">적하보험 부보 대행. 보험료 산출 시 HS Code 2202.99 기준</div></div><div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">3. 화물 관리 및 선적 조건</div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ RF 온도 설정</div><div style="font-size:11px;color:#333;">일반 RF: +3°C / 경산·우성 출고 특정 품목: -20°C (Vent Closed)</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ T/S 불가</div><div style="font-size:11px;color:#333;">환적(T/S) 스케줄 원칙적으로 불가. 반드시 직항(Direct) 스케줄로 제출</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 싱가폴·말레이 T/T</div><div style="font-size:11px;color:#333;">싱가포르·말레이시아 노선은 Transit Time 최단 스케줄 최우선 확보</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 배차 대행</div><div style="font-size:11px;color:#333;">내륙운송 배차 대행 업무 수행</div></div><div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">4. 안전운임제 관련</div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 재비딩 방침</div><div style="font-size:11px;color:#333;">안전운임제 시행 등 이슈 발생 시 구간별 최저운임 기준으로 재비딩 진행 예정</div></div><div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">5. 기타 조건</div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 담당자 변경</div><div style="font-size:11px;color:#333;">서비스 응대 지연·업무연계 미흡 지속 시 당사는 담당자 변경 요구 가능</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 월별 시황 제공</div><div style="font-size:11px;color:#333;">매월 1주차 전 구간 O/FRT 시황 업데이트 제공 의무</div></div><div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 스케줄 요건</div><div style="font-size:11px;color:#333;">항차, 리드타임 및 프리타임 등은 견적양식 해당 열에 반드시 기재</div></div><div style="margin-top:16px;background:#FFF2CC;border-radius:8px;padding:12px;font-size:11px;"><strong>📦 대표 품목 / HS Code</strong><br>커피/곡물음료/주스: 2202.99-9000 | 발효유: 0403.20-1000 | 분유: 1901.10-1010 | 유아식: 1904.10-9000 | 치즈: 0406.30-0000</div><div style="margin-top:10px;background:#EEF4FF;border-radius:8px;padding:12px;font-size:11px;"><strong>🏭 작업지 주소</strong><br><span id="fw-worksite-list">켄달: 안성시 원곡면 지문로 393 지상 1층 JP로지스틱스 상온창고<br>도곡: 경기도 안성시 양성면 도곡리 40-6 (양성로 376-92) 지하 2층<br>경산: 경북 경산시 진량읍 대학로 1090 매일유업 경산공장<br>우성월드: 경상북도 영천시 대창면 금박로 945</span></div></div>
-    </div>
-    <div id="fw-closed-banner" style="display:none;background:#FFEBEE;border:1.5px solid #C00000;border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:13px;color:#C00000;font-weight:700;">
-      🔒 비딩이 마감됐습니다. 더 이상 견적 입력 및 제출이 불가합니다.
-    </div>
-    <div class="submit-area">
-      <button class="btn-save-draft" onclick="saveDraft()" id="draft-btn">
-        💾 임시저장
-      </button>
-      <button onclick="clearAllData()" style="background:white;color:#C00000;border:1.5px solid #C00000;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">
-        🗑 전체 초기화
-      </button>
-      <div class="submit-divider"></div>
-      <button class="btn-submit" onclick="submitQuote()" id="submit-btn">
-        ✓ 최종 제출
-      </button>
-      <span class="save-status" id="submit-status"></span>
-      <div class="submit-info" id="submit-info"></div>
-    </div>
-  </div>
-</div>
+<!-- 포워더 입력 페이지: 로그인 후 JS로 동적 렌더링 -->
+<div id="fw-page" class="page"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -773,18 +689,85 @@ function recordFailedAttempt() {
 
 // ── 포워더 페이지
 async function showFwPage() {
+  // ── 로그인 후 fw-page HTML 동적 생성 (소스보기로 노출 방지)
+  const fwPage = document.getElementById('fw-page');
+  fwPage.innerHTML = `
+    <div class="top-bar">
+      <div>
+        <div style="font-size:15px;font-weight:700;" id="fw-title">[${currentFw}] 견적 입력</div>
+        <div style="font-size:11px;opacity:0.7;">매일유업 포워딩 비딩 2026 하반기</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span id="fw-save-indicator" style="font-size:12px;opacity:0.8;"></span>
+        <button class="nav-btn" onclick="logout()">로그아웃</button>
+      </div>
+    </div>
+    <div class="container">
+      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px;">
+        <div id="fw-tab-input" onclick="switchFwTab('input')" style="padding:9px 20px;font-size:13px;font-weight:700;color:var(--navy);border-bottom:2px solid var(--navy);margin-bottom:-2px;cursor:pointer;">견적 입력</div>
+        <div id="fw-tab-conditions" onclick="switchFwTab('conditions')" style="padding:9px 20px;font-size:13px;font-weight:600;color:var(--dgray);cursor:pointer;">📋 비딩 조건</div>
+      </div>
+      <div id="fw-panel-input">
+        <div class="info-bar">
+          노란색 셀에만 운임을 입력하세요. 입력한 내용은 실시간으로 저장됩니다. 모든 구간 입력 완료 후 하단의 <strong>[견적 제출]</strong> 버튼을 눌러주세요.
+          기준환율: <strong id="fw-exrate-display">${(cfgExRate||1450).toLocaleString('ko-KR')} KRW/USD</strong>
+        </div>
+        <div style="background:white;border:1.5px dashed #90CAF9;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="font-size:13px;color:var(--navy);font-weight:700;">📂 엑셀 일괄 입력</div>
+          <button onclick="downloadFwExcel()" style="background:#1F4E79;color:white;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;">⬇ 양식 다운로드</button>
+          <div style="font-size:11px;color:var(--dgray);">① 다운로드 → ② 노란 셀 입력 → ③ 업로드</div>
+          <label for="excel-upload" style="background:var(--blue);color:white;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📤 엑셀 업로드</label>
+          <input type="file" id="excel-upload" accept=".xlsx,.xls" style="display:none;" onchange="handleExcelUpload(this)">
+          <span id="upload-status" style="font-size:12px;color:var(--green);font-weight:600;"></span>
+        </div>
+        <div class="input-table-wrap">
+          <table class="input-table" id="fw-table">
+            <thead>
+              <tr>
+                <th style="width:30px;">NO</th><th>도착국가</th><th>작업지</th>
+                <th>출발PORT</th><th>도착PORT</th><th>CTNR</th>
+                <th style="width:50px;">예상물량</th>
+                <th>O/FRT<br>(USD/CTNR)</th><th>LSS<br>(USD/CTNR)</th><th>AMS/AFR<br>(USD/CTNR)</th>
+                <th style="min-width:52px;">THC<br>(원)</th><th style="min-width:60px;">내륙운송료<br>(원)</th>
+                <th style="min-width:52px;">DOC<br>(원)</th><th style="min-width:52px;">WFG<br>(원)</th>
+                <th style="min-width:52px;">SEF<br>(원)</th><th style="min-width:52px;">PSC<br>(원)</th>
+                <th style="min-width:52px;">PSM<br>(원)</th>
+                <th style="min-width:80px;">기타비용<br>(원)</th><th style="min-width:80px;">기타비용<br>(USD)</th>
+                <th>★합계(원)</th>
+                <th style="min-width:110px;">적하보험요율<br>(%)</th>
+                <th style="min-width:120px;">주당항차수/<br>출항요일</th>
+                <th style="min-width:70px;">프리타임<br>(최대/일)</th>
+                <th style="min-width:160px;">비고</th>
+              </tr>
+            </thead>
+            <tbody id="fw-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="fw-panel-conditions" style="display:none;"></div>
+      <div id="fw-closed-banner" style="display:none;background:#FFEBEE;border:1.5px solid #C00000;border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:13px;color:#C00000;font-weight:700;">
+        🔒 비딩이 마감됐습니다. 더 이상 견적 입력 및 제출이 불가합니다.
+      </div>
+      <div class="submit-area">
+        <button class="btn-save-draft" onclick="saveDraft()" id="draft-btn">💾 임시저장</button>
+        <button onclick="clearAllData()" style="background:white;color:#C00000;border:1.5px solid #C00000;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">🗑 전체 초기화</button>
+        <div class="submit-divider"></div>
+        <button class="btn-submit" onclick="submitQuote()" id="submit-btn">✓ 최종 제출</button>
+        <span class="save-status" id="submit-status"></span>
+        <div class="submit-info" id="submit-info"></div>
+      </div>
+    </div>`;
+
   showPage('fw-page');
   await loadSettings();
-  await loadBiddingStatus();  // 비딩 마감 여부 확인
+  await loadBiddingStatus();
 
-  document.getElementById('fw-title').textContent = `[${currentFw}] 견적 입력`;
+  // 비딩 조건 탭 내용도 동적 생성
+  buildConditionsPanel();
 
-  // 환율 표시 업데이트
+  // 환율 업데이트
   const exEl = document.getElementById('fw-exrate-display');
   if(exEl) exEl.textContent = (cfgExRate||1450).toLocaleString('ko-KR') + ' KRW/USD';
-
-  // 작업지 주소 업데이트
-  updateFwWorksiteDisplay();
 
   // 이전 제출 기록 표시
   const sub = await loadFromStorage(`submission_${currentFw}`);
@@ -799,6 +782,42 @@ async function showFwPage() {
     if(status) { status.textContent = '✓ 최종 제출 완료'; status.className = 'save-status saved'; }
     if(info) info.textContent = t + ' 제출 · 수정 후 재제출 가능';
   }
+}
+
+function buildConditionsPanel() {
+  const panel = document.getElementById('fw-panel-conditions');
+  if(!panel) return;
+  const worksiteHtml = (cfgWorksites||[]).map(w =>
+    (w.name ? `<strong>${w.name}:</strong> ` : '') + (w.addr || '')
+  ).join('<br>') || '켄달/도곡/경산/우성월드 (로딩 중...)';
+
+  panel.innerHTML = `<div style="padding:4px;">
+    <div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">1. 서류 지원 및 행정 업무</div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 선적서류 업로드</div><div style="font-size:11px;color:#333;">선사 사이트 또는 바이어가 요구하는 지정 플랫폼에 선적서류 업로드 지원 필수</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 미국 ISF Filing</div><div style="font-size:11px;color:#333;">미국향 화물의 경우 ISF Filing 업무 필수 지원</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 세금계산서 발행</div><div style="font-size:11px;color:#333;">세금계산서 발행 시 당사가 공유할 요청 양식에 따라 상세 내역 작성 제출</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 서류마감 알림</div><div style="font-size:11px;color:#333;">Doc Closing 1일 전 퇴근 시간 전까지 마감 일정을 유선 또는 메일로 안내</div></div>
+    <div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">2. 운임 및 비용 산정 조건</div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 운임 업데이트</div><div style="font-size:11px;color:#333;">전 구간 O/FRT 시황을 매월 1주차에 정기 업데이트하여 당사에 제공</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 운임 변동 허용</div><div style="font-size:11px;color:#333;">운임 변동 10% 이내는 기존 운임 적용, 10% 초과 시 해당 구간 재협의</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ LSS 포함 조건</div><div style="font-size:11px;color:#333;">중국·홍콩·대만 LSS는 당사 부담. 반드시 All-in 운임(LSS 포함)으로 제출</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ Document Fee</div><div style="font-size:11px;color:#333;">서류발급비용 40,000원 고정(상한선). 초과 금액 청구 불가</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 내륙운송 대행</div><div style="font-size:11px;color:#333;">노미 포워더 신규 진행 시 추가 비용 없이 내륙운송 및 계산서 처리 대행</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 적하보험 대행</div><div style="font-size:11px;color:#333;">적하보험 부보 대행. 보험료 산출 시 HS Code 2202.99 기준</div></div>
+    <div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">3. 화물 관리 및 선적 조건</div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ RF 온도 설정</div><div style="font-size:11px;color:#333;">일반 RF: +3°C / 경산·우성 출고 특정 품목: -20°C (Vent Closed)</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ T/S 불가</div><div style="font-size:11px;color:#333;">환적(T/S) 스케줄 원칙적으로 불가. 반드시 직항(Direct) 스케줄로 제출</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 싱가폴·말레이 T/T</div><div style="font-size:11px;color:#333;">싱가포르·말레이시아 노선은 Transit Time 최단 스케줄 최우선 확보</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 배차 대행</div><div style="font-size:11px;color:#333;">내륙운송 배차 대행 업무 수행</div></div>
+    <div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">4. 안전운임제 관련</div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 재비딩 방침</div><div style="font-size:11px;color:#333;">안전운임제 시행 등 이슈 발생 시 구간별 최저운임 기준으로 재비딩 진행 예정</div></div>
+    <div style="background:#1F4E79;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin:10px 0 6px;">5. 기타 조건</div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 담당자 변경</div><div style="font-size:11px;color:#333;">서비스 응대 지연·업무연계 미흡 지속 시 당사는 담당자 변경 요구 가능</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 월별 시황 제공</div><div style="font-size:11px;color:#333;">매월 1주차 전 구간 O/FRT 시황 업데이트 제공 의무</div></div>
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;padding:6px 4px;border-bottom:1px solid #eee;"><div style="font-weight:700;font-size:11px;color:#2E75B6;">▶ 스케줄 요건</div><div style="font-size:11px;color:#333;">항차, 리드타임 및 프리타임 등은 견적양식 해당 열에 반드시 기재</div></div>
+    <div style="margin-top:16px;background:#FFF2CC;border-radius:8px;padding:12px;font-size:11px;"><strong>📦 대표 품목 / HS Code</strong><br>커피/곡물음료/주스: 2202.99-9000 | 발효유: 0403.20-1000 | 분유: 1901.10-1010 | 유아식: 1904.10-9000 | 치즈: 0406.30-0000</div>
+    <div style="margin-top:10px;background:#EEF4FF;border-radius:8px;padding:12px;font-size:11px;"><strong>🏭 작업지 주소</strong><br><span id="fw-worksite-list">${worksiteHtml}</span></div>
+  </div>`;
 }
 
 function buildFwTable() {
