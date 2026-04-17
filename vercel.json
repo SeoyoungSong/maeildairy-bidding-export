@@ -8,8 +8,7 @@
       "source": "/admin.html",
       "headers": [
         { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Cache-Control", "value": "no-store, no-cache" }
+        { "key": "Cache-Control", "value": "no-store" }
       ]
     }
   ]
