@@ -1,6 +1,7 @@
 {
   "name": "maeildairy-bidding",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
     "@upstash/redis": "^1.28.0"
   }
