@@ -188,7 +188,7 @@
     </div>
     <div class="role-tabs">
       <div class="role-tab active" onclick="setRole('forwarder')">포워더 견적 입력</div>
-      <div class="role-tab" onclick="setRole('admin')">담당자 관리</div>
+      <div class="role-tab" id="admin-tab" onclick="setRole('admin')" style="display:none;">담당자 관리</div>
     </div>
     <div id="forwarder-form">
       <div class="form-group">
@@ -570,8 +570,8 @@
 
 <script>
 const EXCHANGE_RATE = 1450;
-const ADMIN_PW = 'maeil2026!';
-const FW_PW = 'bidding2026';
+const ADMIN_PW_HASH = 'd142920f5cf62d228c32ff7b821718db67eb44423e8e19adf3ae515ff00f1187'; // SHA-256
+const FW_PW_HASH = 'c6001804948baf0e400cc53aa92da54794cff2ef481018c891d243912e576745'; // SHA-256
 const PLAN_SALES = 3586500000;
 const PLAN_LOGISTICS = 282110000;
 const F_SALES = 23423904724;
@@ -709,19 +709,43 @@ function setRole(role) {
 }
 
 async function doLogin() {
+  // 잠금 상태 확인
+  if(checkLockout()) return;
+
   await loadSettings();
+
   if(currentRole === 'forwarder') {
     const fw = document.getElementById('fw-select').value;
     const pw = document.getElementById('fw-password').value;
     if(!fw) { showLoginErr('업체를 선택해주세요.'); return; }
-    // 포워더별 비밀번호 우선, 없으면 공통 비밀번호
-    const validPw = (cfgFwPasswords && cfgFwPasswords[fw]) ? cfgFwPasswords[fw] : (cfgFwPw || FW_PW);
-    if(pw !== validPw) { showLoginErr('비딩 코드가 올바르지 않습니다.'); return; }
+
+    // 해시 비교: 포워더별 비밀번호 우선
+    const inputHash = await sha256(pw);
+    let validHash = '';
+    if(cfgFwPasswords && cfgFwPasswords[fw]) {
+      validHash = await sha256(cfgFwPasswords[fw]);
+    } else {
+      const basePw = cfgFwPw || '';
+      validHash = basePw ? await sha256(basePw) : FW_PW_HASH;
+    }
+
+    if(inputHash !== validHash) {
+      recordFailedAttempt();
+      return;
+    }
+    loginAttempts.count = 0;
     currentFw = fw;
     showFwPage();
   } else {
     const pw = document.getElementById('admin-password').value;
-    if(pw !== ADMIN_PW) { showLoginErr('관리자 비밀번호가 올바르지 않습니다.'); return; }
+    const inputHash = await sha256(pw);
+    // 관리자: 설정에 저장된 비밀번호 또는 기본 해시
+    const adminPwFromCfg = cfgFwPw ? '' : ''; // 관리자는 별도
+    if(inputHash !== ADMIN_PW_HASH) {
+      recordFailedAttempt();
+      return;
+    }
+    loginAttempts.count = 0;
     showAdminPage();
   }
 }
@@ -745,6 +769,39 @@ function logout() {
   document.getElementById('fw-select').value = '';
   document.getElementById('fw-password').value = '';
   document.getElementById('admin-password').value = '';
+}
+
+
+// ══════════════════════════════════════════
+// 보안: SHA-256 해시 + 로그인 시도 제한
+// ══════════════════════════════════════════
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// 로그인 시도 횟수 제한
+const loginAttempts = { count: 0, lockedUntil: 0 };
+
+function checkLockout() {
+  if(loginAttempts.lockedUntil > Date.now()) {
+    const remaining = Math.ceil((loginAttempts.lockedUntil - Date.now()) / 1000);
+    showLoginErr(`로그인 시도가 너무 많습니다. ${remaining}초 후 다시 시도하세요.`);
+    return true;
+  }
+  return false;
+}
+
+function recordFailedAttempt() {
+  loginAttempts.count++;
+  if(loginAttempts.count >= 5) {
+    loginAttempts.lockedUntil = Date.now() + 10 * 60 * 1000; // 10분 잠금
+    loginAttempts.count = 0;
+    showLoginErr('5회 실패. 10분간 로그인이 잠깁니다.');
+  } else {
+    const remaining = 5 - loginAttempts.count;
+    showLoginErr(`비밀번호가 올바르지 않습니다. (${remaining}회 남음)`);
+  }
 }
 
 // ── 포워더 페이지
@@ -2480,6 +2537,34 @@ function clearAllData() {
   if(info) info.textContent = '';
   showToast('전체 초기화 완료!');
 }
+
+
+// ══════════════════════════════════════════
+// 담당자 탭 숨김/표시 보안
+// ══════════════════════════════════════════
+(function() {
+  // URL 파라미터 ?mgmt=maeil 로 접근 시 담당자 탭 표시
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('mgmt') === 'maeil') {
+    const tab = document.getElementById('admin-tab');
+    if(tab) tab.style.display = '';
+  }
+
+  // 비상 접근: 로그인 페이지에서 빈 공간을 빠르게 7번 클릭
+  let clickCount = 0, clickTimer = null;
+  document.addEventListener('click', function(e) {
+    if(e.target.closest('.login-card')) {
+      clickCount++;
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => { clickCount = 0; }, 2000);
+      if(clickCount >= 7) {
+        const tab = document.getElementById('admin-tab');
+        if(tab) { tab.style.display = ''; showToast('담당자 모드 활성화'); }
+        clickCount = 0;
+      }
+    }
+  });
+})();
 
 </script>
 </body>
