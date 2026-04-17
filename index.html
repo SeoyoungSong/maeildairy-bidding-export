@@ -545,7 +545,30 @@ async function doLogin() {
 const fwPwEl = document.getElementById('fw-password');
 if(fwPwEl) fwPwEl.addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 
-function handleExcelUpload(input) {
+// 페이지 로드 시 세션 자동 복원
+(async function() {
+  const token = sessionStorage.getItem('bidding_token');
+  const fw = sessionStorage.getItem('bidding_fw');
+  if(token && fw) {
+    try {
+      const res = await fetch('/api/verify', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ token })
+      });
+      if(res.ok) {
+        currentFw = fw;
+        showFwPage();
+        return;
+      }
+    } catch(e) {}
+    // 토큰 만료 시 세션 정리
+    sessionStorage.removeItem('bidding_token');
+    sessionStorage.removeItem('bidding_fw');
+  }
+})();
+
+async function handleExcelUpload(input) {
   const file = input.files[0];
   if(!file) return;
 
@@ -869,10 +892,10 @@ function onInputChange(el) {
 
 async function autoSave() {
   const ind = document.getElementById('fw-save-indicator');
-  ind.textContent = '저장 중...';
+  if(ind) ind.textContent = '저장 중...';
   const ok = await saveToStorage(`fw_data_${currentFw}`, fwData);
-  ind.textContent = ok ? '✓ 자동 저장됨' : '저장 실패';
-  setTimeout(()=>{ if(ind.textContent.includes('저장됨')) ind.textContent = ''; }, 3000);
+  if(ind) ind.textContent = ok ? '✓ 자동 저장됨' : '저장 실패';
+  setTimeout(()=>{ if(ind && ind.textContent.includes('저장됨')) ind.textContent = ''; }, 3000);
 }
 
 function calcTotal(d) {
