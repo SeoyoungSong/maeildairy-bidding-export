@@ -2,6 +2,15 @@ import { Redis } from '@upstash/redis';
 
 const redis = Redis.fromEnv();
 
+function ensureObject(value) {
+  if (!value) return {};
+  if (typeof value === 'string') {
+    try { return JSON.parse(value); } catch { return {}; }
+  }
+  if (typeof value === 'object') return value;
+  return {};
+}
+
 const ADMIN_PW = process.env.ADMIN_PASSWORD || 'maeil2026!';
 const DEFAULT_FW_PW = process.env.FW_PASSWORD || 'bidding2026';
 const MAX_ATTEMPTS = 5;
@@ -38,7 +47,7 @@ export default async function handler(req, res) {
       isValid = (password === ADMIN_PW);
     } else if (role === 'forwarder' && fw) {
       const cfgPw = await redis.get('bidding:cfg_fw_passwords');
-      const passwords = cfgPw ? JSON.parse(cfgPw) : {};
+      const passwords = ensureObject(cfgPw);
       const validPw = passwords[fw] || DEFAULT_FW_PW;
       isValid = (password === validPw);
     }
@@ -64,7 +73,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ ok: true, token, role, fw: fw || null });
   } catch (e) {
-    console.error('auth error:', e.message);
+    console.error('auth error:', e);
     return res.status(500).json({ error: e.message });
   }
 }
