@@ -2346,7 +2346,15 @@ function buildAdminUI() {
   const loading = document.getElementById('auth-check');
   const adminWrap = document.getElementById('admin-wrap');
 
-  // 1. sessionStorage에서 토큰 확인
+  // 1. URL 파라미터 또는 sessionStorage에서 토큰 확인
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlToken = urlParams.get('t');
+  if (urlToken) {
+    // URL에서 받은 토큰을 sessionStorage에 저장
+    sessionStorage.setItem('admin_token', urlToken);
+    // URL에서 토큰 파라미터 제거 (주소창 깔끔하게)
+    window.history.replaceState({}, '', '/admin.html');
+  }
   const token = sessionStorage.getItem('admin_token');
   if (!token) {
     window.location.replace('/admin-login.html');
