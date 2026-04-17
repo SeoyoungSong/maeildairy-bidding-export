@@ -191,190 +191,7 @@
 </div>
 
 <!-- 관리자 대시보드 (인증 후 표시) -->
-<div id="admin-wrap" style="display:none;">
-  <div class="top-bar">
-    <div>
-      <div style="font-size:15px;font-weight:700;">관리자 대시보드</div>
-      <div style="font-size:11px;opacity:0.7;">매일유업 포워딩 비딩 2026 하반기</div>
-    </div>
-    <div style="display:flex;gap:8px;">
-      <button class="nav-btn" onclick="refreshData()">🔄 새로고침</button>
-      <button class="nav-btn" onclick="adminLogout()">로그아웃</button>
-    </div>
-  </div>
-
-  <!-- 탭 네비게이션 -->
-  <div class="tabs">
-    <div class="tab active" onclick="showTab('dash')">현황</div>
-    <div class="tab" onclick="showTab('rank')">순위계산</div>
-    <div class="tab" onclick="showTab('eval')">종합평가</div>
-    <div class="tab" onclick="showTab('report')">보고자료</div>
-    <div class="tab" onclick="showTab('settings')">설정</div>
-  </div>
-
-  <!-- 현황 -->
-  <div id="tab-dash" class="tab-content">
-    <div id="stat-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;"></div>
-    <div class="section-card"><h3>포워더별 제출 현황</h3><div id="fw-status-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;"></div></div>
-    <div class="section-card" style="margin-top:16px;"><h3>최근 제출 내역</h3><table class="report-table" style="width:100%;"><thead><tr><th>업체명</th><th>제출시간</th><th>구간 수</th><th>상태</th></tr></thead><tbody id="submission-log"><tr><td colspan="4" class="no-data">데이터 없음</td></tr></tbody></table></div>
-  </div>
-
-  <!-- 순위계산 -->
-  <div id="tab-rank" class="tab-content" style="display:none;">
-    <div class="section-card">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-        <h3 style="margin:0;">노선별 순위 자동계산</h3>
-        <select id="nation-filter" onchange="renderRankTable()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
-          <option value="all">전체 국가</option>
-          <option value="중국">중국</option><option value="대만">대만</option>
-          <option value="미국">미국</option><option value="싱가폴">싱가폴</option>
-          <option value="말레이시아">말레이시아</option><option value="홍콩">홍콩</option>
-          <option value="국내">국내</option>
-        </select>
-        <button class="btn-sm btn-primary" onclick="saveSelections()">💾 선정 결과 저장</button>
-      </div>
-      <div style="overflow-x:auto;">
-        <table class="report-table" id="rank-table">
-          <thead><tr>
-            <th>NO</th><th>국가</th><th>작업지</th><th>출발PORT</th><th>도착PORT</th><th>CTNR</th><th>예상물량</th>
-            <th class="rank-1">1위 업체</th><th class="rank-1">1위 견적(원)</th>
-            <th class="rank-2">2위 업체</th><th class="rank-2">2위 견적(원)</th>
-            <th class="rank-3">3위 업체</th><th class="rank-3">3위 견적(원)</th>
-            <th>4위 업체</th><th>4위 견적(원)</th>
-            <th style="background:#375623;color:white;">✓ 선정 포워더</th>
-            <th style="background:#375623;color:white;">선정 견적(원)</th>
-          </tr></thead>
-          <tbody id="rank-tbody"></tbody>
-        </table>
-      </div>
-      <div style="margin-top:16px;">
-        <h4 style="margin-bottom:10px;">포워더별 선정 노선 요약</h4>
-        <div id="fw-selection-summary"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 종합평가 -->
-  <div id="tab-eval" class="tab-content" style="display:none;">
-    <div class="section-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <h3 style="margin:0;">업체 종합평가</h3>
-        <button class="btn-sm btn-primary" onclick="saveEvalScores()">💾 평가점수 저장</button>
-      </div>
-      <div id="eval-content"></div>
-    </div>
-  </div>
-
-  <!-- 보고자료 -->
-  <div id="tab-report" class="tab-content" style="display:none;">
-    <div class="section-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <h3 style="margin:0;">물류비 비딩 결과 보고자료</h3>
-        <button class="btn-sm" onclick="printReport()" style="background:white;border:1.5px solid var(--border);">🖨️ 인쇄</button>
-      </div>
-      <h4>1. 물류비 비딩 결과 요약</h4>
-      <div style="overflow-x:auto;margin-bottom:20px;"><table class="summary-table" id="summary-table"></table></div>
-      <h4>2. 노선별 선정 포워더</h4>
-      <div style="overflow-x:auto;margin-bottom:20px;">
-        <table class="report-table" id="report-route-table">
-          <thead><tr>
-            <th>NO</th><th>국가</th><th>작업지</th><th>출발PORT</th><th>도착PORT</th><th>CTNR</th><th>예상물량</th>
-            <th class="rank-1">1위 업체</th><th class="rank-1">1위 견적가(원)</th>
-            <th style="background:#375623;color:white;">선정업체</th><th style="background:#375623;color:white;">선정 견적가(원)</th>
-            <th>1위↔선정 차액(원)</th>
-            <th style="background:#AAAAAA;color:white;font-size:9px;">직전반기<br>매출(원)</th>
-            <th style="background:#AAAAAA;color:white;font-size:9px;">직전반기<br>물류비(원)</th>
-            <th style="background:#2E75B6;color:white;font-size:9px;">이번반기<br>매출(원)</th>
-            <th style="background:#2E75B6;color:white;">이번반기<br>물류비(원)</th>
-            <th style="background:#2E75B6;color:white;">비딩<br>물류비(원)</th>
-            <th style="background:#2E75B6;color:white;">절감금액(원)</th>
-            <th style="background:#2E75B6;color:white;">절감율</th>
-          </tr></thead>
-          <tbody id="report-route-tbody"></tbody>
-        </table>
-      </div>
-      <h4>3. 국가별 물류비 소계</h4>
-      <div style="overflow-x:auto;"><table class="report-table" id="country-table"></table></div>
-    </div>
-  </div>
-
-  <!-- 설정 -->
-  <div id="tab-settings" class="tab-content" style="display:none;">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-      <div>
-        <!-- 포워더 관리 -->
-        <div class="settings-section">
-          <h4>포워더 관리</h4>
-          <div id="fw-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
-          <div style="display:flex;gap:8px;margin-top:8px;">
-            <input type="text" id="new-fw-name" placeholder="새 업체명" style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
-            <button class="btn-sm btn-primary" onclick="addForwarder()">+ 추가</button>
-          </div>
-          <button class="btn-sm btn-primary" style="margin-top:10px;width:100%;" onclick="saveForwarders()">저장</button>
-        </div>
-
-        <!-- 기본 설정 -->
-        <div class="settings-section" style="margin-top:16px;">
-          <h4>기본 설정</h4>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">기준 환율 (KRW/USD)</label><input type="number" id="cfg-exrate" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
-            <div style="font-size:11px;font-weight:700;color:var(--navy);padding:6px 10px;background:#EEF4FF;border-radius:6px;">📅 직전반기 사업계획 (참고용)</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — C조건 (원)</label><input type="number" id="cfg-prev-c-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
-              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — C조건 (원)</label><input type="number" id="cfg-prev-c-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — F조건 (원)</label><input type="number" id="cfg-prev-f-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
-              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — F조건 (원)</label><input type="number" id="cfg-prev-f-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
-            </div>
-            <div style="font-size:11px;font-weight:700;color:var(--navy);padding:6px 10px;background:#EEF4FF;border-radius:6px;">📅 이번반기 사업계획 (보고자료 기준)</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — C조건 (원)</label><input type="number" id="cfg-plan-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
-              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — C조건 (원)</label><input type="number" id="cfg-plan-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — F조건 (원)</label><input type="number" id="cfg-f-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
-              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — F조건 (원)</label><input type="number" id="cfg-f-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
-            </div>
-            <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">포워더 공통 비밀번호</label><input type="text" id="cfg-fw-pw" placeholder="bidding2026" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;background:#FFFDE7;"></div>
-            <button class="btn-sm btn-primary" onclick="saveConfig()">저장</button>
-          </div>
-        </div>
-
-        <!-- 작업지 주소 -->
-        <div class="settings-section" style="margin-top:16px;">
-          <h4>작업지 주소</h4>
-          <p style="font-size:11px;color:var(--dgray);margin-bottom:12px;">포워더 비딩 조건 화면에 표시됩니다.</p>
-          <div style="display:flex;flex-direction:column;gap:8px;" id="worksite-list"></div>
-          <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="saveWorksites()">저장</button>
-        </div>
-      </div>
-
-      <div>
-        <!-- 노선 관리 -->
-        <div class="settings-section">
-          <h4>노선 관리</h4>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:#EBF3FB;border-radius:8px;">
-            <span style="font-size:12px;color:#1565C0;">📋 엑셀로 일괄 업로드</span>
-            <button onclick="downloadRouteExcel()" style="background:#1F4E79;color:white;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;">⬇ 양식 다운로드</button>
-            <label for="route-excel-upload" style="background:var(--blue);color:white;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">📤 엑셀 업로드</label>
-            <input type="file" id="route-excel-upload" accept=".xlsx,.xls" style="display:none;" onchange="handleRouteExcelUpload(this)">
-            <span id="route-upload-status" style="font-size:11px;color:var(--green);"></span>
-          </div>
-          <div style="font-size:10px;color:var(--dgray);font-weight:700;display:grid;grid-template-columns:40px 75px 65px 85px 85px 65px 55px 80px 80px 80px 80px 70px 70px 90px 30px;gap:5px;padding:6px 10px;margin-bottom:4px;">
-            <div>NO</div><div>도착국가</div><div>작업지</div><div>출발PORT</div><div>도착PORT</div><div>CTNR</div><div>예상물량</div>
-            <div style="color:#888;">직전반기<br>매출(원)</div><div style="color:#888;">직전반기<br>물류비(원)</div>
-            <div style="color:#2E75B6;">이번반기<br>매출(원)</div><div style="color:#2E75B6;">이번반기<br>물류비(원)</div>
-            <div>제품명</div><div>거래처</div><div>비고</div><div></div>
-          </div>
-          <div id="route-list" style="display:flex;flex-direction:column;gap:4px;max-height:400px;overflow-y:auto;"></div>
-          <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="saveRoutes()">저장</button>
-          <div id="settings-banner" style="display:none;margin-top:10px;padding:8px 12px;background:#E8F5E9;border-radius:6px;font-size:12px;color:#2E7D32;">✅ 설정이 저장됐어요! 포워더 입력 화면에 즉시 반영됩니다.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="admin-wrap" style="display:none;"></div></div>
 
 <div class="toast" id="toast"></div>
 
@@ -2336,43 +2153,208 @@ function adminLogout() {
   window.location.href = '/admin-login';
 }
 
-// ── 페이지 초기화: 서버 토큰 검증
+
+// ── 관리자 UI 빌드 함수
+function buildAdminUI() {
+  const wrap = document.getElementById('admin-wrap');
+  wrap.innerHTML = `<div class="top-bar">
+    <div>
+      <div style="font-size:15px;font-weight:700;">관리자 대시보드</div>
+      <div style="font-size:11px;opacity:0.7;">매일유업 포워딩 비딩 2026 하반기</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="nav-btn" onclick="refreshData()">🔄 새로고침</button>
+      <button class="nav-btn" onclick="adminLogout()">로그아웃</button>
+    </div>
+  </div>
+
+  <!-- 탭 네비게이션 -->
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('dash')">현황</div>
+    <div class="tab" onclick="showTab('rank')">순위계산</div>
+    <div class="tab" onclick="showTab('eval')">종합평가</div>
+    <div class="tab" onclick="showTab('report')">보고자료</div>
+    <div class="tab" onclick="showTab('settings')">설정</div>
+  </div>
+
+  <!-- 현황 -->
+  <div id="tab-dash" class="tab-content">
+    <div id="stat-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;"></div>
+    <div class="section-card"><h3>포워더별 제출 현황</h3><div id="fw-status-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;"></div></div>
+    <div class="section-card" style="margin-top:16px;"><h3>최근 제출 내역</h3><table class="report-table" style="width:100%;"><thead><tr><th>업체명</th><th>제출시간</th><th>구간 수</th><th>상태</th></tr></thead><tbody id="submission-log"><tr><td colspan="4" class="no-data">데이터 없음</td></tr></tbody></table></div>
+  </div>
+
+  <!-- 순위계산 -->
+  <div id="tab-rank" class="tab-content" style="display:none;">
+    <div class="section-card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <h3 style="margin:0;">노선별 순위 자동계산</h3>
+        <select id="nation-filter" onchange="renderRankTable()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
+          <option value="all">전체 국가</option>
+          <option value="중국">중국</option><option value="대만">대만</option>
+          <option value="미국">미국</option><option value="싱가폴">싱가폴</option>
+          <option value="말레이시아">말레이시아</option><option value="홍콩">홍콩</option>
+          <option value="국내">국내</option>
+        </select>
+        <button class="btn-sm btn-primary" onclick="saveSelections()">💾 선정 결과 저장</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="report-table" id="rank-table">
+          <thead><tr>
+            <th>NO</th><th>국가</th><th>작업지</th><th>출발PORT</th><th>도착PORT</th><th>CTNR</th><th>예상물량</th>
+            <th class="rank-1">1위 업체</th><th class="rank-1">1위 견적(원)</th>
+            <th class="rank-2">2위 업체</th><th class="rank-2">2위 견적(원)</th>
+            <th class="rank-3">3위 업체</th><th class="rank-3">3위 견적(원)</th>
+            <th>4위 업체</th><th>4위 견적(원)</th>
+            <th style="background:#375623;color:white;">✓ 선정 포워더</th>
+            <th style="background:#375623;color:white;">선정 견적(원)</th>
+          </tr></thead>
+          <tbody id="rank-tbody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:16px;">
+        <h4 style="margin-bottom:10px;">포워더별 선정 노선 요약</h4>
+        <div id="fw-selection-summary"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 종합평가 -->
+  <div id="tab-eval" class="tab-content" style="display:none;">
+    <div class="section-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <h3 style="margin:0;">업체 종합평가</h3>
+        <button class="btn-sm btn-primary" onclick="saveEvalScores()">💾 평가점수 저장</button>
+      </div>
+      <div id="eval-content"></div>
+    </div>
+  </div>
+
+  <!-- 보고자료 -->
+  <div id="tab-report" class="tab-content" style="display:none;">
+    <div class="section-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <h3 style="margin:0;">물류비 비딩 결과 보고자료</h3>
+        <button class="btn-sm" onclick="printReport()" style="background:white;border:1.5px solid var(--border);">🖨️ 인쇄</button>
+      </div>
+      <h4>1. 물류비 비딩 결과 요약</h4>
+      <div style="overflow-x:auto;margin-bottom:20px;"><table class="summary-table" id="summary-table"></table></div>
+      <h4>2. 노선별 선정 포워더</h4>
+      <div style="overflow-x:auto;margin-bottom:20px;">
+        <table class="report-table" id="report-route-table">
+          <thead><tr>
+            <th>NO</th><th>국가</th><th>작업지</th><th>출발PORT</th><th>도착PORT</th><th>CTNR</th><th>예상물량</th>
+            <th class="rank-1">1위 업체</th><th class="rank-1">1위 견적가(원)</th>
+            <th style="background:#375623;color:white;">선정업체</th><th style="background:#375623;color:white;">선정 견적가(원)</th>
+            <th>1위↔선정 차액(원)</th>
+            <th style="background:#AAAAAA;color:white;font-size:9px;">직전반기<br>매출(원)</th>
+            <th style="background:#AAAAAA;color:white;font-size:9px;">직전반기<br>물류비(원)</th>
+            <th style="background:#2E75B6;color:white;font-size:9px;">이번반기<br>매출(원)</th>
+            <th style="background:#2E75B6;color:white;">이번반기<br>물류비(원)</th>
+            <th style="background:#2E75B6;color:white;">비딩<br>물류비(원)</th>
+            <th style="background:#2E75B6;color:white;">절감금액(원)</th>
+            <th style="background:#2E75B6;color:white;">절감율</th>
+          </tr></thead>
+          <tbody id="report-route-tbody"></tbody>
+        </table>
+      </div>
+      <h4>3. 국가별 물류비 소계</h4>
+      <div style="overflow-x:auto;"><table class="report-table" id="country-table"></table></div>
+    </div>
+  </div>
+
+  <!-- 설정 -->
+  <div id="tab-settings" class="tab-content" style="display:none;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div>
+        <!-- 포워더 관리 -->
+        <div class="settings-section">
+          <h4>포워더 관리</h4>
+          <div id="fw-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <input type="text" id="new-fw-name" placeholder="새 업체명" style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
+            <button class="btn-sm btn-primary" onclick="addForwarder()">+ 추가</button>
+          </div>
+          <button class="btn-sm btn-primary" style="margin-top:10px;width:100%;" onclick="saveForwarders()">저장</button>
+        </div>
+
+        <!-- 기본 설정 -->
+        <div class="settings-section" style="margin-top:16px;">
+          <h4>기본 설정</h4>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">기준 환율 (KRW/USD)</label><input type="number" id="cfg-exrate" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+            <div style="font-size:11px;font-weight:700;color:var(--navy);padding:6px 10px;background:#EEF4FF;border-radius:6px;">📅 직전반기 사업계획 (참고용)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — C조건 (원)</label><input type="number" id="cfg-prev-c-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — C조건 (원)</label><input type="number" id="cfg-prev-c-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — F조건 (원)</label><input type="number" id="cfg-prev-f-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — F조건 (원)</label><input type="number" id="cfg-prev-f-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;color:var(--navy);padding:6px 10px;background:#EEF4FF;border-radius:6px;">📅 이번반기 사업계획 (보고자료 기준)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — C조건 (원)</label><input type="number" id="cfg-plan-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — C조건 (원)</label><input type="number" id="cfg-plan-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — F조건 (원)</label><input type="number" id="cfg-f-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — F조건 (원)</label><input type="number" id="cfg-f-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+            </div>
+            <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">포워더 공통 비밀번호</label><input type="text" id="cfg-fw-pw" placeholder="bidding2026" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;background:#FFFDE7;"></div>
+            <button class="btn-sm btn-primary" onclick="saveConfig()">저장</button>
+          </div>
+        </div>
+
+        <!-- 작업지 주소 -->
+        <div class="settings-section" style="margin-top:16px;">
+          <h4>작업지 주소</h4>
+          <p style="font-size:11px;color:var(--dgray);margin-bottom:12px;">포워더 비딩 조건 화면에 표시됩니다.</p>
+          <div style="display:flex;flex-direction:column;gap:8px;" id="worksite-list"></div>
+          <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="saveWorksites()">저장</button>
+        </div>
+      </div>
+
+      <div>
+        <!-- 노선 관리 -->
+        <div class="settings-section">
+          <h4>노선 관리</h4>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:#EBF3FB;border-radius:8px;">
+            <span style="font-size:12px;color:#1565C0;">📋 엑셀로 일괄 업로드</span>
+            <button onclick="downloadRouteExcel()" style="background:#1F4E79;color:white;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;">⬇ 양식 다운로드</button>
+            <label for="route-excel-upload" style="background:var(--blue);color:white;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">📤 엑셀 업로드</label>
+            <input type="file" id="route-excel-upload" accept=".xlsx,.xls" style="display:none;" onchange="handleRouteExcelUpload(this)">
+            <span id="route-upload-status" style="font-size:11px;color:var(--green);"></span>
+          </div>
+          <div style="font-size:10px;color:var(--dgray);font-weight:700;display:grid;grid-template-columns:40px 75px 65px 85px 85px 65px 55px 80px 80px 80px 80px 70px 70px 90px 30px;gap:5px;padding:6px 10px;margin-bottom:4px;">
+            <div>NO</div><div>도착국가</div><div>작업지</div><div>출발PORT</div><div>도착PORT</div><div>CTNR</div><div>예상물량</div>
+            <div style="color:#888;">직전반기<br>매출(원)</div><div style="color:#888;">직전반기<br>물류비(원)</div>
+            <div style="color:#2E75B6;">이번반기<br>매출(원)</div><div style="color:#2E75B6;">이번반기<br>물류비(원)</div>
+            <div>제품명</div><div>거래처</div><div>비고</div><div></div>
+          </div>
+          <div id="route-list" style="display:flex;flex-direction:column;gap:4px;max-height:400px;overflow-y:auto;"></div>
+          <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="saveRoutes()">저장</button>
+          <div id="settings-banner" style="display:none;margin-top:10px;padding:8px 12px;background:#E8F5E9;border-radius:6px;font-size:12px;color:#2E7D32;">✅ 설정이 저장됐어요! 포워더 입력 화면에 즉시 반영됩니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── 페이지 초기화: 쿠키 기반 서버 검증
 (async function() {
-  const token = sessionStorage.getItem('admin_token');
-
-  if(!token) {
-    window.location.replace('/admin-login');
-    return;
-  }
-
   try {
-    const res = await fetch('/api/verify', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ token })
-    });
+    // 쿠키 검증 (HttpOnly 쿠키는 서버에서만 읽을 수 있음)
+    const res = await fetch('/api/admin-check', { method: 'GET', credentials: 'include' });
 
-    // API 자체가 없거나 오류
-    if(res.status === 404) {
-      // verify API 없으면 임시로 토큰 존재 여부만 확인
-      document.getElementById('auth-check').style.display = 'none';
-      document.getElementById('admin-wrap').style.display = 'block';
-      await loadSettings();
-      const saved = await loadFromStorage('eval_scores');
-      if(saved) Object.assign(evalScores, saved);
-      await refreshData();
-      return;
-    }
-
-    const data = await res.json();
-
-    if(!res.ok || data.role !== 'admin') {
-      sessionStorage.removeItem('admin_token');
+    if (!res.ok) {
+      // 미인증 → 로그인 페이지로
       window.location.replace('/admin-login');
       return;
     }
 
-    // 인증 성공 → 대시보드 표시
+    // 인증 성공 → UI 빌드 후 표시
+    buildAdminUI();
     document.getElementById('auth-check').style.display = 'none';
     document.getElementById('admin-wrap').style.display = 'block';
 
@@ -2382,14 +2364,6 @@ function adminLogout() {
     await refreshData();
 
   } catch(e) {
-    // 네트워크 오류 등 - 토큰 있으면 일단 진입 허용 (개발 편의)
-    console.error('Auth check failed:', e);
-    document.getElementById('auth-check').style.display = 'none';
-    document.getElementById('admin-wrap').style.display = 'block';
-    await loadSettings();
-    await refreshData();
+    window.location.replace('/admin-login');
   }
 })();
-</script>
-</body>
-</html>
