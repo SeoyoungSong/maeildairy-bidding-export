@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관리자 로그인 — 매일유업 포워딩 비딩</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', sans-serif; background: #F0F4F8; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-box { background: white; border-radius: 16px; padding: 40px; width: 100%; max-width: 380px; box-shadow: 0 4px 24px rgba(0,0,0,0.1); }
+  .logo { text-align: center; margin-bottom: 28px; }
+  .logo-sub { font-size: 12px; color: #888; margin-bottom: 6px; }
+  .logo-title { font-size: 22px; font-weight: 700; color: #1F4E79; }
+  .logo-period { font-size: 13px; color: #2E75B6; margin-top: 4px; }
+  .admin-badge { background: #1F4E79; color: white; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-top: 8px; }
+  .form-group { margin-bottom: 16px; }
+  label { font-size: 12px; font-weight: 600; color: #555; display: block; margin-bottom: 6px; }
+  input[type=password] { width: 100%; padding: 12px 14px; border: 1.5px solid #D9D9D9; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+  input[type=password]:focus { border-color: #1F4E79; }
+  .login-btn { width: 100%; padding: 14px; background: #1F4E79; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+  .login-btn:hover { background: #16395c; }
+  .login-btn:disabled { background: #aaa; cursor: not-allowed; }
+  .err { color: #C00000; font-size: 12px; text-align: center; margin-top: 10px; display: none; padding: 8px; background: #FFF0F0; border-radius: 6px; }
+  .back-link { text-align: center; margin-top: 16px; font-size: 12px; color: #888; }
+  .back-link a { color: #2E75B6; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="login-box">
+  <div class="logo">
+    <div class="logo-sub">매일유업 해외사업기획팀</div>
+    <div class="logo-title">포워딩 비딩 시스템</div>
+    <div class="logo-period">2026년 하반기 (2026.07 ~ 2026.12)</div>
+    <div class="admin-badge">🔐 관리자 전용</div>
+  </div>
+
+  <div class="form-group">
+    <label>관리자 비밀번호</label>
+    <input type="password" id="admin-pw" placeholder="비밀번호를 입력하세요" autocomplete="current-password">
+  </div>
+
+  <button class="login-btn" onclick="doAdminLogin()" id="login-btn">로그인</button>
+  <div class="err" id="err-msg"></div>
+
+  <div class="back-link">
+    포워더이신가요? <a href="/">견적 입력 페이지로 →</a>
+  </div>
+</div>
+
+<script>
+document.getElementById('admin-pw').addEventListener('keydown', function(e) {
+  if(e.key === 'Enter') doAdminLogin();
+});
+
+async function doAdminLogin() {
+  const pw = document.getElementById('admin-pw').value;
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('err-msg');
+  err.style.display = 'none';
+
+  if(!pw) { showErr('비밀번호를 입력하세요.'); return; }
+
+  btn.disabled = true; btn.textContent = '확인 중...';
+
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ role: 'admin', password: pw })
+    });
+    const data = await res.json();
+
+    if(!res.ok) {
+      showErr(data.error || '비밀번호가 올바르지 않습니다.');
+      return;
+    }
+
+    // 토큰 저장 후 관리자 페이지로 이동
+    sessionStorage.setItem('admin_token', data.token);
+    window.location.replace('/admin');
+
+  } catch(e) {
+    showErr('서버 연결 오류. 잠시 후 다시 시도하세요.');
+  } finally {
+    btn.disabled = false; btn.textContent = '로그인';
+  }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('err-msg');
+  el.textContent = msg; el.style.display = 'block';
+}
+</script>
+</body>
+</html>

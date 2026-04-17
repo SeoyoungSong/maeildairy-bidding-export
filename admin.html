@@ -1,0 +1,2378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관리자 대시보드 — 매일유업 포워딩 비딩 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<style>
+  :root {
+    --navy: #1F4E79;
+    --blue: #2E75B6;
+    --lblue: #BDD7EE;
+    --green: #70AD47;
+    --orange: #ED7D31;
+    --red: #C00000;
+    --gray: #F2F2F2;
+    --dgray: #595959;
+    --border: #D9D9D9;
+    --yellow: #FFF2CC;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; font-size: 13px; background: #F5F7FA; color: #222; }
+  
+  /* 공통 */
+  .page { display: none; }
+  .page.active { display: block; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+  
+  /* 헤더 */
+  .top-bar { background: var(--navy); color: white; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .top-bar h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+  .top-bar .sub { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+  .nav-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  .nav-btn:hover { background: rgba(255,255,255,0.25); }
+  
+  /* 로그인 */
+  #login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1F4E79 0%, #2E75B6 100%); }
+  .login-box { background: white; border-radius: 16px; padding: 48px 40px; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+  .login-logo { text-align: center; margin-bottom: 32px; }
+  .login-logo .co { font-size: 13px; color: var(--dgray); }
+  .login-logo .title { font-size: 20px; font-weight: 700; color: var(--navy); margin-top: 6px; }
+  .login-logo .period { font-size: 12px; color: var(--blue); margin-top: 4px; }
+  .role-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .role-tab { flex: 1; padding: 10px; border: 1.5px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; font-size: 12px; color: var(--dgray); transition: all 0.15s; }
+  .role-tab.active { border-color: var(--navy); background: var(--navy); color: white; font-weight: 600; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; color: var(--dgray); margin-bottom: 6px; font-weight: 600; }
+  .form-group select, .form-group input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; transition: border 0.15s; }
+  .form-group select:focus, .form-group input:focus { border-color: var(--blue); }
+  .btn-login { width: 100%; padding: 12px; background: var(--navy); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+  .btn-login:hover { background: #163a5f; }
+  .login-err { color: var(--red); font-size: 12px; text-align: center; margin-top: 12px; display: none; }
+
+  /* 포워더 입력 페이지 */
+  .fw-header { background: white; border-bottom: 1px solid var(--border); padding: 16px 24px; }
+  .fw-header h2 { font-size: 16px; color: var(--navy); font-weight: 700; }
+  .fw-header p { font-size: 12px; color: var(--dgray); margin-top: 4px; }
+  .info-bar { background: var(--yellow); border: 1px solid #FFD966; border-radius: 8px; padding: 10px 16px; margin: 16px 0; font-size: 12px; color: #7F6000; }
+  
+  /* 입력 테이블 */
+  .input-table-wrap { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: auto; margin-bottom: 20px; }
+  .input-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1200px; }
+  .input-table th { background: var(--navy); color: white; padding: 6px 4px; text-align: center; font-weight: 600; font-size: 10px; border-right: 1px solid rgba(255,255,255,0.15); white-space: nowrap; position: sticky; top: 0; }
+  .input-table td { padding: 4px 3px; border-bottom: 1px solid #eee; border-right: 1px solid #f0f0f0; text-align: center; }
+  .input-table tr:hover td { background: #f8f9ff; }
+  .input-table tr.domestic td.info { background: #EEF2F7; color: var(--dgray); }
+  td.info { background: var(--gray); font-size: 11px; color: #444; }
+  td.vol { background: #EEF2F7; color: var(--dgray); font-weight: 600; }
+  td.total { background: #E8F5E9; color: #2E7D32; font-weight: 700; font-size: 12px; }
+  td.nation { font-weight: 600; color: var(--navy); }
+  td.no { font-weight: 700; color: var(--dgray); font-size: 11px; }
+  .input-table input[type=number] { width: 100%; min-width: 42px; padding: 4px 4px; border: 1.5px solid var(--border); border-radius: 4px; font-size: 11px; text-align: right; outline: none; background: var(--yellow); }
+  .input-table input[type=number]:focus { border-color: var(--blue); background: white; }
+  .input-table input[type=text] { width: 100%; min-width: 42px; padding: 4px 4px; border: 1.5px solid var(--border); border-radius: 4px; font-size: 11px; outline: none; background: var(--yellow); }
+  .input-table input[type=text]:focus { border-color: var(--blue); background: white; }
+  .section-divider td { background: #EEF2F7; font-weight: 700; color: var(--navy); font-size: 11px; padding: 6px 10px; text-align: left; }
+  
+  .btn-submit { background: var(--green); color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.15s; }
+  .btn-submit:hover { background: #5a9438; }
+  .btn-submit:disabled { background: #aaa; cursor: not-allowed; }
+  .btn-save-draft { background: white; color: var(--blue); border: 2px solid var(--blue); padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s; }
+  .btn-save-draft:hover { background: var(--lblue); }
+  .submit-area { display: flex; align-items: center; gap: 12px; padding: 16px 0; flex-wrap: wrap; }
+  .submit-divider { width: 1px; height: 32px; background: var(--border); margin: 0 4px; }
+  .submit-info { font-size: 11px; color: var(--dgray); line-height: 1.5; }
+  .submit-area { display: flex; align-items: center; gap: 16px; padding: 16px 0; }
+  .save-status { font-size: 12px; color: var(--dgray); }
+  .save-status.saved { color: var(--green); font-weight: 600; }
+  .save-status.error { color: var(--red); }
+
+  /* 담당자 대시보드 */
+  .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; }
+  .stat-card .label { font-size: 12px; color: var(--dgray); margin-bottom: 8px; }
+  .stat-card .value { font-size: 26px; font-weight: 700; color: var(--navy); }
+  .stat-card .sub { font-size: 11px; color: var(--dgray); margin-top: 4px; }
+  .stat-card.green .value { color: var(--green); }
+  .stat-card.orange .value { color: var(--orange); }
+  
+  /* 포워더 제출 현황 */
+  .fw-status-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 24px; }
+  .fw-card { background: white; border-radius: 10px; border: 2px solid var(--border); padding: 14px; text-align: center; transition: all 0.2s; }
+  .fw-card.submitted { border-color: var(--green); background: #F1F8E9; }
+  .fw-card.submitted .fw-name { color: var(--green); }
+  .fw-card .fw-name { font-weight: 700; font-size: 13px; color: var(--dgray); }
+  .fw-card .fw-count { font-size: 11px; color: var(--dgray); margin-top: 4px; }
+  .fw-card .fw-badge { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .fw-card.submitted .fw-badge { background: var(--green); color: white; }
+  .fw-card:not(.submitted) .fw-badge { background: var(--border); color: var(--dgray); }
+
+  /* 순위 테이블 */
+  .rank-table-wrap { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: auto; margin-bottom: 20px; }
+  .rank-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
+  .rank-table th { background: var(--navy); color: white; padding: 8px; text-align: center; font-size: 11px; }
+  .rank-table td { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: center; }
+  .rank-table tr:hover td { background: #f8f9ff; }
+  .rank-1 { background: #E8F5E9; color: #2E7D32; font-weight: 700; }
+  .rank-2 { background: #F3F8E8; color: #558B2F; }
+  .rank-3 { background: #FFFDE7; color: #F57F17; }
+  .rank-4 { background: #FFF3E0; color: #E65100; }
+  .no-data { color: #aaa; font-style: italic; }
+
+  .report-section { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 24px; margin-bottom: 20px; }
+  .report-section h3 { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid var(--lblue); }
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .summary-table th { background: var(--navy); color: white; padding: 8px 12px; text-align: center; }
+  .summary-table td { padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right; }
+  .summary-table td:first-child { text-align: left; font-weight: 600; }
+  .summary-table tr.total { background: var(--lblue); font-weight: 700; }
+  .highlight { color: #1565C0; font-weight: 700; }  /* 절감: 파랑 */
+  .negative { color: var(--red); font-weight: 700; }
+
+  /* 탭 */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+  .tab { padding: 10px 20px; cursor: pointer; font-size: 13px; color: var(--dgray); border-bottom: 2px solid transparent; margin-bottom: -2px; font-weight: 600; }
+  .tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+  /* 섹션 제목 */
+  .sec-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .sec-title h3 { font-size: 15px; font-weight: 700; color: var(--navy); }
+  .btn-sm { padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1.5px solid; font-weight: 600; }
+  .btn-primary { background: var(--navy); color: white; border-color: var(--navy); }
+  .btn-primary:hover { background: #163a5f; }
+  .btn-outline { background: white; color: var(--navy); border-color: var(--navy); }
+  .btn-outline:hover { background: var(--gray); }
+
+  /* 토스트 */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #333; color: white; padding: 12px 20px; border-radius: 8px; font-size: 13px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 768px) {
+    .dash-grid { grid-template-columns: repeat(2,1fr); }
+    .fw-status-grid { grid-template-columns: repeat(3,1fr); }
+  }
+
+  .settings-section { background:white; border-radius:10px; border:1px solid var(--border); padding:20px; margin-bottom:16px; }
+  .settings-section h4 { font-size:13px; font-weight:700; color:var(--navy); margin-bottom:14px; padding-bottom:8px; border-bottom:1.5px solid var(--lblue); }
+  .item-list { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .item-row { display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--gray); border-radius:7px; }
+  .item-row .item-num { font-weight:700; color:var(--dgray); font-size:12px; min-width:24px; }
+  .item-row input { flex:1; padding:5px 8px; border:1.5px solid var(--border); border-radius:5px; font-size:12px; outline:none; }
+  .item-row input:focus { border-color:var(--blue); }
+  .item-row .del-btn { background:none; border:none; color:#ccc; cursor:pointer; font-size:16px; padding:0 4px; }
+  .item-row .del-btn:hover { color:var(--red); }
+  .add-row { display:flex; gap:8px; margin-top:4px; }
+  .add-row input { flex:1; padding:7px 10px; border:1.5px solid var(--border); border-radius:6px; font-size:12px; outline:none; }
+  .add-row input:focus { border-color:var(--blue); }
+  .btn-add { background:var(--blue); color:white; border:none; padding:7px 16px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .btn-add:hover { background:#1a5fa8; }
+  .route-row { display:grid; grid-template-columns:40px 75px 65px 85px 85px 65px 55px 80px 80px 80px 80px 70px 70px 90px 30px; gap:5px; align-items:center; padding:6px 10px; background:var(--gray); border-radius:6px; }
+  .route-row input { padding:4px 6px; border:1.5px solid var(--border); border-radius:4px; font-size:11px; outline:none; width:100%; }
+  .route-row input:focus { border-color:var(--blue); }
+  .route-row .no-label { font-weight:700; color:var(--dgray); font-size:12px; text-align:center; }
+  .save-banner { background:#E8F5E9; border:1px solid #A5D6A7; border-radius:8px; padding:10px 16px; font-size:12px; color:#2E7D32; font-weight:600; display:none; margin-bottom:12px; }
+</style>
+<style>
+  /* 관리자 전용 추가 스타일 */
+  body { background: #F0F4F8; }
+  .admin-wrap { max-width: 1400px; margin: 0 auto; padding: 20px; }
+</style>
+</head>
+<body>
+
+<!-- 인증 확인 중 오버레이 -->
+<div id="auth-check" style="position:fixed;inset:0;background:#1F4E79;display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div style="color:white;text-align:center;">
+    <div style="font-size:18px;font-weight:700;margin-bottom:8px;">🔐 인증 확인 중...</div>
+    <div style="font-size:13px;opacity:0.7;">잠시만 기다려주세요</div>
+  </div>
+</div>
+
+<!-- 관리자 대시보드 (인증 후 표시) -->
+<div id="admin-wrap" style="display:none;">
+  <div class="top-bar">
+    <div>
+      <div style="font-size:15px;font-weight:700;">관리자 대시보드</div>
+      <div style="font-size:11px;opacity:0.7;">매일유업 포워딩 비딩 2026 하반기</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="nav-btn" onclick="refreshData()">🔄 새로고침</button>
+      <button class="nav-btn" onclick="adminLogout()">로그아웃</button>
+    </div>
+  </div>
+
+  <!-- 탭 네비게이션 -->
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('dash')">현황</div>
+    <div class="tab" onclick="showTab('rank')">순위계산</div>
+    <div class="tab" onclick="showTab('eval')">종합평가</div>
+    <div class="tab" onclick="showTab('report')">보고자료</div>
+    <div class="tab" onclick="showTab('settings')">설정</div>
+  </div>
+
+  <!-- 현황 -->
+  <div id="tab-dash" class="tab-content">
+    <div id="stat-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;"></div>
+    <div class="section-card"><h3>포워더별 제출 현황</h3><div id="fw-status-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;"></div></div>
+    <div class="section-card" style="margin-top:16px;"><h3>최근 제출 내역</h3><table class="report-table" style="width:100%;"><thead><tr><th>업체명</th><th>제출시간</th><th>구간 수</th><th>상태</th></tr></thead><tbody id="submission-log"><tr><td colspan="4" class="no-data">데이터 없음</td></tr></tbody></table></div>
+  </div>
+
+  <!-- 순위계산 -->
+  <div id="tab-rank" class="tab-content" style="display:none;">
+    <div class="section-card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <h3 style="margin:0;">노선별 순위 자동계산</h3>
+        <select id="nation-filter" onchange="renderRankTable()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
+          <option value="all">전체 국가</option>
+          <option value="중국">중국</option><option value="대만">대만</option>
+          <option value="미국">미국</option><option value="싱가폴">싱가폴</option>
+          <option value="말레이시아">말레이시아</option><option value="홍콩">홍콩</option>
+          <option value="국내">국내</option>
+        </select>
+        <button class="btn-sm btn-primary" onclick="saveSelections()">💾 선정 결과 저장</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="report-table" id="rank-table">
+          <thead><tr>
+            <th>NO</th><th>국가</th><th>작업지</th><th>출발PORT</th><th>도착PORT</th><th>CTNR</th><th>예상물량</th>
+            <th class="rank-1">1위 업체</th><th class="rank-1">1위 견적(원)</th>
+            <th class="rank-2">2위 업체</th><th class="rank-2">2위 견적(원)</th>
+            <th class="rank-3">3위 업체</th><th class="rank-3">3위 견적(원)</th>
+            <th>4위 업체</th><th>4위 견적(원)</th>
+            <th style="background:#375623;color:white;">✓ 선정 포워더</th>
+            <th style="background:#375623;color:white;">선정 견적(원)</th>
+          </tr></thead>
+          <tbody id="rank-tbody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:16px;">
+        <h4 style="margin-bottom:10px;">포워더별 선정 노선 요약</h4>
+        <div id="fw-selection-summary"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 종합평가 -->
+  <div id="tab-eval" class="tab-content" style="display:none;">
+    <div class="section-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <h3 style="margin:0;">업체 종합평가</h3>
+        <button class="btn-sm btn-primary" onclick="saveEvalScores()">💾 평가점수 저장</button>
+      </div>
+      <div id="eval-content"></div>
+    </div>
+  </div>
+
+  <!-- 보고자료 -->
+  <div id="tab-report" class="tab-content" style="display:none;">
+    <div class="section-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <h3 style="margin:0;">물류비 비딩 결과 보고자료</h3>
+        <button class="btn-sm" onclick="printReport()" style="background:white;border:1.5px solid var(--border);">🖨️ 인쇄</button>
+      </div>
+      <h4>1. 물류비 비딩 결과 요약</h4>
+      <div style="overflow-x:auto;margin-bottom:20px;"><table class="summary-table" id="summary-table"></table></div>
+      <h4>2. 노선별 선정 포워더</h4>
+      <div style="overflow-x:auto;margin-bottom:20px;">
+        <table class="report-table" id="report-route-table">
+          <thead><tr>
+            <th>NO</th><th>국가</th><th>작업지</th><th>출발PORT</th><th>도착PORT</th><th>CTNR</th><th>예상물량</th>
+            <th class="rank-1">1위 업체</th><th class="rank-1">1위 견적가(원)</th>
+            <th style="background:#375623;color:white;">선정업체</th><th style="background:#375623;color:white;">선정 견적가(원)</th>
+            <th>1위↔선정 차액(원)</th>
+            <th style="background:#AAAAAA;color:white;font-size:9px;">직전반기<br>매출(원)</th>
+            <th style="background:#AAAAAA;color:white;font-size:9px;">직전반기<br>물류비(원)</th>
+            <th style="background:#2E75B6;color:white;font-size:9px;">이번반기<br>매출(원)</th>
+            <th style="background:#2E75B6;color:white;">이번반기<br>물류비(원)</th>
+            <th style="background:#2E75B6;color:white;">비딩<br>물류비(원)</th>
+            <th style="background:#2E75B6;color:white;">절감금액(원)</th>
+            <th style="background:#2E75B6;color:white;">절감율</th>
+          </tr></thead>
+          <tbody id="report-route-tbody"></tbody>
+        </table>
+      </div>
+      <h4>3. 국가별 물류비 소계</h4>
+      <div style="overflow-x:auto;"><table class="report-table" id="country-table"></table></div>
+    </div>
+  </div>
+
+  <!-- 설정 -->
+  <div id="tab-settings" class="tab-content" style="display:none;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div>
+        <!-- 포워더 관리 -->
+        <div class="settings-section">
+          <h4>포워더 관리</h4>
+          <div id="fw-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <input type="text" id="new-fw-name" placeholder="새 업체명" style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
+            <button class="btn-sm btn-primary" onclick="addForwarder()">+ 추가</button>
+          </div>
+          <button class="btn-sm btn-primary" style="margin-top:10px;width:100%;" onclick="saveForwarders()">저장</button>
+        </div>
+
+        <!-- 기본 설정 -->
+        <div class="settings-section" style="margin-top:16px;">
+          <h4>기본 설정</h4>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">기준 환율 (KRW/USD)</label><input type="number" id="cfg-exrate" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+            <div style="font-size:11px;font-weight:700;color:var(--navy);padding:6px 10px;background:#EEF4FF;border-radius:6px;">📅 직전반기 사업계획 (참고용)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — C조건 (원)</label><input type="number" id="cfg-prev-c-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — C조건 (원)</label><input type="number" id="cfg-prev-c-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — F조건 (원)</label><input type="number" id="cfg-prev-f-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — F조건 (원)</label><input type="number" id="cfg-prev-f-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;color:var(--navy);padding:6px 10px;background:#EEF4FF;border-radius:6px;">📅 이번반기 사업계획 (보고자료 기준)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — C조건 (원)</label><input type="number" id="cfg-plan-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — C조건 (원)</label><input type="number" id="cfg-plan-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">매출 — F조건 (원)</label><input type="number" id="cfg-f-sales" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+              <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">물류비 — F조건 (원)</label><input type="number" id="cfg-f-logistics" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;"></div>
+            </div>
+            <div><label style="font-size:11px;color:var(--dgray);font-weight:600;display:block;margin-bottom:4px;">포워더 공통 비밀번호</label><input type="text" id="cfg-fw-pw" placeholder="bidding2026" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none;background:#FFFDE7;"></div>
+            <button class="btn-sm btn-primary" onclick="saveConfig()">저장</button>
+          </div>
+        </div>
+
+        <!-- 작업지 주소 -->
+        <div class="settings-section" style="margin-top:16px;">
+          <h4>작업지 주소</h4>
+          <p style="font-size:11px;color:var(--dgray);margin-bottom:12px;">포워더 비딩 조건 화면에 표시됩니다.</p>
+          <div style="display:flex;flex-direction:column;gap:8px;" id="worksite-list"></div>
+          <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="saveWorksites()">저장</button>
+        </div>
+      </div>
+
+      <div>
+        <!-- 노선 관리 -->
+        <div class="settings-section">
+          <h4>노선 관리</h4>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:#EBF3FB;border-radius:8px;">
+            <span style="font-size:12px;color:#1565C0;">📋 엑셀로 일괄 업로드</span>
+            <button onclick="downloadRouteExcel()" style="background:#1F4E79;color:white;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;">⬇ 양식 다운로드</button>
+            <label for="route-excel-upload" style="background:var(--blue);color:white;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">📤 엑셀 업로드</label>
+            <input type="file" id="route-excel-upload" accept=".xlsx,.xls" style="display:none;" onchange="handleRouteExcelUpload(this)">
+            <span id="route-upload-status" style="font-size:11px;color:var(--green);"></span>
+          </div>
+          <div style="font-size:10px;color:var(--dgray);font-weight:700;display:grid;grid-template-columns:40px 75px 65px 85px 85px 65px 55px 80px 80px 80px 80px 70px 70px 90px 30px;gap:5px;padding:6px 10px;margin-bottom:4px;">
+            <div>NO</div><div>도착국가</div><div>작업지</div><div>출발PORT</div><div>도착PORT</div><div>CTNR</div><div>예상물량</div>
+            <div style="color:#888;">직전반기<br>매출(원)</div><div style="color:#888;">직전반기<br>물류비(원)</div>
+            <div style="color:#2E75B6;">이번반기<br>매출(원)</div><div style="color:#2E75B6;">이번반기<br>물류비(원)</div>
+            <div>제품명</div><div>거래처</div><div>비고</div><div></div>
+          </div>
+          <div id="route-list" style="display:flex;flex-direction:column;gap:4px;max-height:400px;overflow-y:auto;"></div>
+          <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="saveRoutes()">저장</button>
+          <div id="settings-banner" style="display:none;margin-top:10px;padding:8px 12px;background:#E8F5E9;border-radius:6px;font-size:12px;color:#2E7D32;">✅ 설정이 저장됐어요! 포워더 입력 화면에 즉시 반영됩니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── 공통 코드
+
+const EXCHANGE_RATE = 1450;
+const PLAN_SALES = 3586500000;
+const PLAN_LOGISTICS = 282110000;
+const F_SALES = 23423904724;
+const F_LOGISTICS = 1470281964;
+
+const FORWARDERS = ['람세스','원스탑','판토스','태웅','JPI','솔트랜스','오리엔트'];
+const VOL = {2:81,3:40,4:2,5:24,6:18,8:90,10:20,12:10,14:5,16:6,17:3,18:6,19:5,20:6,22:2,24:4,26:4,28:2,29:7};
+
+const ROUTES = [
+  {no:1,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'상해',ctnr:'20DRY'},
+  {no:2,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'상해',ctnr:'40DRY'},
+  {no:3,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'상해',ctnr:'40RF'},
+  {no:4,nation:'중국',site:'도곡',port_o:'평택',port_i:'상해',ctnr:'40RF'},
+  {no:5,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'천진',ctnr:'40RF'},
+  {no:6,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'심천',ctnr:'40RF'},
+  {no:7,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'닝보',ctnr:'20DRY'},
+  {no:8,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'닝보',ctnr:'40DRY'},
+  {no:9,nation:'중국',site:'켄달',port_o:'평택',port_i:'닝보',ctnr:'20DRY'},
+  {no:10,nation:'중국',site:'켄달',port_o:'평택',port_i:'닝보',ctnr:'40DRY'},
+  {no:11,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'심양',ctnr:'20DRY'},
+  {no:12,nation:'중국',site:'켄달',port_o:'인천(경인)',port_i:'심양',ctnr:'40DRY'},
+  {no:13,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'청도',ctnr:'20RF'},
+  {no:14,nation:'중국',site:'도곡',port_o:'인천(경인)',port_i:'청도',ctnr:'40RF'},
+  {no:15,nation:'대만',site:'켄달',port_o:'인천(경인)',port_i:'타이중',ctnr:'20DRY'},
+  {no:16,nation:'대만',site:'켄달',port_o:'인천(경인)',port_i:'타이중',ctnr:'40DRY'},
+  {no:17,nation:'미국',site:'경산/우성',port_o:'부산',port_i:'LA',ctnr:'40RF'},
+  {no:18,nation:'미국',site:'도곡',port_o:'부산',port_i:'LA',ctnr:'40RF'},
+  {no:19,nation:'미국',site:'경산/우성',port_o:'부산',port_i:'NY',ctnr:'40RF'},
+  {no:20,nation:'미국',site:'도곡',port_o:'부산',port_i:'NY',ctnr:'40RF'},
+  {no:21,nation:'싱가폴',site:'켄달',port_o:'부산',port_i:'싱가폴',ctnr:'20DRY'},
+  {no:22,nation:'싱가폴',site:'켄달',port_o:'부산',port_i:'싱가폴',ctnr:'40DRY'},
+  {no:23,nation:'싱가폴',site:'도곡',port_o:'부산',port_i:'싱가폴',ctnr:'20RF'},
+  {no:24,nation:'싱가폴',site:'도곡',port_o:'부산',port_i:'싱가폴',ctnr:'40RF'},
+  {no:25,nation:'싱가폴',site:'도곡',port_o:'인천',port_i:'싱가폴',ctnr:'20RF'},
+  {no:26,nation:'싱가폴',site:'도곡',port_o:'인천',port_i:'싱가폴',ctnr:'40RF'},
+  {no:27,nation:'말레이시아',site:'도곡',port_o:'부산',port_i:'포트켈랑(W)',ctnr:'20DRY'},
+  {no:28,nation:'말레이시아',site:'도곡',port_o:'부산',port_i:'포트켈랑(W)',ctnr:'40DRY'},
+  {no:29,nation:'홍콩',site:'경산/우성',port_o:'부산',port_i:'홍콩',ctnr:'20RF'},
+  {no:30,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
+  {no:31,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
+  {no:32,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
+  {no:33,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
+  {no:34,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
+  {no:35,nation:'',site:'',port_o:'',port_i:'',ctnr:''},
+  {no:36,nation:'국내',site:'경산/우성',port_o:'부산',port_i:'국내',ctnr:'20RF'},
+  {no:37,nation:'국내',site:'경산/우성',port_o:'부산',port_i:'국내',ctnr:'40RF'},
+  {no:38,nation:'국내',site:'도곡',port_o:'부산',port_i:'국내',ctnr:'20RF'},
+  {no:39,nation:'국내',site:'도곡',port_o:'부산',port_i:'국내',ctnr:'40RF'},
+  {no:40,nation:'국내',site:'도곡',port_o:'인천',port_i:'국내',ctnr:'20RF'},
+  {no:41,nation:'국내',site:'도곡',port_o:'인천',port_i:'국내',ctnr:'40RF'},
+  {no:42,nation:'국내',site:'켄달',port_o:'부산',port_i:'국내',ctnr:'20DRY'},
+  {no:43,nation:'국내',site:'켄달',port_o:'부산',port_i:'국내',ctnr:'40DRY'},
+  {no:44,nation:'국내',site:'켄달',port_o:'인천',port_i:'국내',ctnr:'20DRY'},
+  {no:45,nation:'국내',site:'켄달',port_o:'인천',port_i:'국내',ctnr:'40DRY'},
+];
+
+let currentFw = null;
+
+let fwData = {}; // 현재 포워더 입력 데이터
+let allSubmissions = {}; // 전체 제출 데이터 (admin용)
+let evalScores = {}; // 종합평가 점수
+
+FORWARDERS.forEach(fw => { evalScores[fw] = {stability:0, network:0, response:0}; });
+evalScores['람세스'] = {stability:3, network:2, response:5};
+evalScores['원스탑'] = {stability:3, network:2, response:5};
+evalScores['판토스'] = {stability:3, network:2, response:4};
+evalScores['태웅']   = {stability:3, network:2, response:5};
+evalScores['JPI']   = {stability:2, network:2, response:3};
+
+// ── 스토리지 (Vercel KV API 기반 — 모든 기기에서 공유)
+async function saveToStorage(key, value) {
+  try {
+    const res = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    // 로컬에도 캐시 (오프라인 대비)
+    try { localStorage.setItem('bidding_cache_' + key, JSON.stringify(value)); } catch(e) {}
+    return true;
+  } catch(e) {
+    console.error('저장 실패:', e);
+    // API 실패 시 로컬 캐시로 fallback
+    try { localStorage.setItem('bidding_cache_' + key, JSON.stringify(value)); return true; } catch(e2) { return false; }
+  }
+}
+
+async function loadFromStorage(key) {
+  try {
+    const res = await fetch('/api/load?key=' + encodeURIComponent(key));
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    return data.value ?? null;
+  } catch(e) {
+    console.warn('API 로드 실패, 캐시 사용:', e);
+    // API 실패 시 로컬 캐시로 fallback
+    try {
+      const v = localStorage.getItem('bidding_cache_' + key);
+      return v ? JSON.parse(v) : null;
+    } catch(e2) { return null; }
+  }
+}
+
+async function deleteFromStorage(key) {
+  try {
+    await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value: null })
+    });
+    localStorage.removeItem('bidding_cache_' + key);
+    return true;
+  } catch(e) { return false; }
+}
+
+// ── 유틸
+const fmt = n => n ? Math.round(n).toLocaleString('ko-KR') : '';
+const fmtK = n => n ? (n/1e8).toFixed(2)+'억' : '';
+const pct = n => n ? (n*100).toFixed(2)+'%' : '';
+
+function showToast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+
+async function doLogin() {
+  // 포워더 로그인만 처리 (관리자는 /admin-login 별도 페이지)
+  const fw = document.getElementById('fw-select').value;
+  const password = document.getElementById('fw-password').value;
+
+  if(!fw) { showLoginErr('업체를 선택해주세요.'); return; }
+
+  const loginBtn = document.querySelector('.login-btn');
+  if(loginBtn) { loginBtn.disabled = true; loginBtn.textContent = '확인 중...'; }
+
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'forwarder', fw, password })
+    });
+    const data = await res.json();
+
+    if(!res.ok) {
+      showLoginErr(data.error || '비밀번호가 올바르지 않습니다.');
+      return;
+    }
+
+    sessionStorage.setItem('bidding_token', data.token);
+    sessionStorage.setItem('bidding_fw', data.fw);
+    currentFw = data.fw;
+    showFwPage();
+  } catch(e) {
+    showLoginErr('서버 연결 오류. 잠시 후 다시 시도하세요.');
+  } finally {
+    if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = '입장하기'; }
+  }
+}
+document.getElementById('admin-password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('fw-password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+
+function showLoginErr(msg) {
+  const el = document.getElementById('login-err');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 3000);
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function logout() {
+  currentFw = null;
+  showPage('login-page');
+  document.getElementById('fw-select').value = '';
+  document.getElementById('fw-password').value = '';
+  document.getElementById('admin-password').value = '';
+}
+
+
+// ══════════════════════════════════════════
+// 보안: SHA-256 해시 + 로그인 시도 제한
+// ══════════════════════════════════════════
+
+
+function checkLockout() {
+  if(loginAttempts.lockedUntil > Date.now()) {
+    const remaining = Math.ceil((loginAttempts.lockedUntil - Date.now()) / 1000);
+    showLoginErr(`로그인 시도가 너무 많습니다. ${remaining}초 후 다시 시도하세요.`);
+    return true;
+  }
+  return false;
+}
+
+function recordFailedAttempt() {
+  loginAttempts.count++;
+  if(loginAttempts.count >= 5) {
+    loginAttempts.lockedUntil = Date.now() + 10 * 60 * 1000; // 10분 잠금
+        showLoginErr('5회 실패. 10분간 로그인이 잠깁니다.');
+  } else {
+    const remaining = 5 - loginAttempts.count;
+    showLoginErr(`비밀번호가 올바르지 않습니다. (${remaining}회 남음)`);
+  }
+}
+
+// ── 포워더 페이지
+async function showFwPage() {
+  showPage('fw-page');
+  await loadSettings();  // 환율·작업지 등 최신 설정 로드
+
+  document.getElementById('fw-title').textContent = `[${currentFw}] 견적 입력`;
+
+  // 환율 표시 업데이트
+  const exEl = document.getElementById('fw-exrate-display');
+  if(exEl) exEl.textContent = (cfgExRate||1450).toLocaleString('ko-KR') + ' KRW/USD';
+
+  // 작업지 주소 업데이트
+  updateFwWorksiteDisplay();
+
+  // 이전 제출 기록 표시
+  const sub = await loadFromStorage(`submission_${currentFw}`);
+  const draft = await loadFromStorage(`fw_data_${currentFw}`);
+  fwData = draft || (sub ? sub.data : {});
+  buildFwTable();
+
+  const info = document.getElementById('submit-info');
+  const status = document.getElementById('submit-status');
+  if(sub && sub.submitted) {
+    const t = new Date(sub.submittedAt).toLocaleString('ko-KR');
+    if(status) { status.textContent = '✓ 최종 제출 완료'; status.className = 'save-status saved'; }
+    if(info) info.textContent = t + ' 제출 · 수정 후 재제출 가능';
+  }
+}
+
+function buildFwTable() {
+  const tbody = document.getElementById('fw-tbody');
+  tbody.innerHTML = '';
+  let lastNation = '';
+
+  cfgRoutes.forEach(route => {
+    if(!route.nation && route.no >= 30 && route.no <= 35) {
+      // 빈 슬롯 (NO 30~35)
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="no">${route.no}</td><td colspan="19" style="color:#ccc;font-style:italic;font-size:11px;">빈 슬롯 (추가 노선 발생 시 담당자 공지)</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    if(route.nation && route.nation !== lastNation && route.nation !== '') {
+      lastNation = route.nation;
+      const divider = document.createElement('tr');
+      divider.className = 'section-divider';
+      divider.innerHTML = `<td colspan="21">${route.nation === '국내' ? '🏠 국내 구간' : `🌏 ${route.nation}`}</td>`;
+      tbody.appendChild(divider);
+    }
+
+    const d = fwData[route.no] || {};
+    const isDom = route.nation === '국내';
+    const vol = route.vol || '';
+    const total = calcTotal(d);
+
+    const tr = document.createElement('tr');
+    tr.className = isDom ? 'domestic' : '';
+    tr.innerHTML = `
+      <td class="no">${route.no}</td>
+      <td class="info nation">${route.nation||''}</td>
+      <td class="info">${route.site||''}</td>
+      <td class="info">${route.port_o||''}</td>
+      <td class="info">${route.port_i||''}</td>
+      <td class="info">${route.ctnr||''}</td>
+      <td class="vol">${vol}</td>
+      ${inp(route.no,'ofrt',d.ofrt,'number','0.00')}
+      ${inp(route.no,'lss',d.lss,'number','0.00')}
+      ${inp(route.no,'ams',d.ams,'number','0.00')}
+      ${inp(route.no,'thc',d.thc,'number','0')}
+      ${inp(route.no,'inland',d.inland,'number','0')}
+      ${inp(route.no,'doc',d.doc,'number','0')}
+      ${inp(route.no,'wfg',d.wfg,'number','0')}
+      ${inp(route.no,'sef',d.sef,'number','0')}
+      ${inp(route.no,'psc',d.psc,'number','0')}
+      ${inp(route.no,'psm',d.psm,'number','0')}
+      ${inp(route.no,'etc_krw',d.etc_krw,'number','0')}
+      ${inp(route.no,'etc_usd',d.etc_usd,'number','0.00')}
+      <td class="total" id="total-${route.no}">${total ? fmt(total) : ''}</td>
+      ${inp(route.no,'ins',d.ins,'number','0.00000')}
+      ${inp(route.no,'sch',d.sch,'text','')}
+      ${inp(route.no,'freetime',d.freetime,'text','')}
+      ${inp(route.no,'note',d.note,'text','')}
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // 이벤트
+  tbody.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', () => onInputChange(el));
+  });
+}
+
+function inp(no, field, val, type, step) {
+  const v = val !== undefined && val !== null ? val : '';
+  if(type === 'text') {
+    return `<td><input type="text" data-no="${no}" data-field="${field}" value="${v}" placeholder=""></td>`;
+  }
+  return `<td><input type="number" data-no="${no}" data-field="${field}" value="${v}" step="${step}" placeholder="0" min="0"></td>`;
+}
+
+function onInputChange(el) {
+  const no = parseInt(el.dataset.no);
+  const field = el.dataset.field;
+  const val = el.type === 'number' ? (parseFloat(el.value)||0) : el.value;
+
+  if(!fwData[no]) fwData[no] = {};
+  fwData[no][field] = val;
+
+  const total = calcTotal(fwData[no]);
+  const totalEl = document.getElementById(`total-${no}`);
+  if(totalEl) totalEl.textContent = total ? fmt(total) : '';
+
+  // 자동 저장 (디바운스)
+  clearTimeout(el._saveTimer);
+  el._saveTimer = setTimeout(() => autoSave(), 1500);
+}
+
+async function autoSave() {
+  const ind = document.getElementById('fw-save-indicator');
+  ind.textContent = '저장 중...';
+  const ok = await saveToStorage(`fw_data_${currentFw}`, fwData);
+  ind.textContent = ok ? '✓ 자동 저장됨' : '저장 실패';
+  setTimeout(()=>{ if(ind.textContent.includes('저장됨')) ind.textContent = ''; }, 3000);
+}
+
+function calcTotal(d) {
+  if(!d) return 0;
+  const er = cfgExRate || EXCHANGE_RATE;
+  const usd = ((d.ofrt||0)+(d.lss||0)+(d.ams||0)+(d.etc_usd||0)) * er;
+  const krw = (d.thc||0)+(d.inland||0)+(d.doc||0)+(d.wfg||0)+(d.sef||0)+(d.psc||0)+(d.psm||0)+(d.etc_krw||0);
+  return usd + krw;
+}
+
+async function saveDraft() {
+  const btn = document.getElementById('draft-btn');
+  const status = document.getElementById('submit-status');
+  btn.textContent = '저장 중...';
+  btn.disabled = true;
+
+  const ok = await saveToStorage(`fw_data_${currentFw}`, fwData);
+  if(ok) {
+    status.textContent = '💾 임시저장 완료 — ' + new Date().toLocaleString('ko-KR');
+    status.className = 'save-status saved';
+    showToast('임시저장됐어요. 나중에 이어서 입력하실 수 있어요.');
+  } else {
+    status.textContent = '저장 실패. 다시 시도해주세요.';
+    status.className = 'save-status error';
+  }
+  btn.textContent = '💾 임시저장';
+  btn.disabled = false;
+}
+
+async function submitQuote() {
+  const btn = document.getElementById('submit-btn');
+  const status = document.getElementById('submit-status');
+  const info = document.getElementById('submit-info');
+
+  // 재제출 시 확인
+  const prevSub = await loadFromStorage(`submission_${currentFw}`);
+  if(prevSub && prevSub.submitted) {
+    const prevTime = new Date(prevSub.submittedAt).toLocaleString('ko-KR');
+    if(!confirm('이미 제출한 내역이 있어요.\n(' + prevTime + ')\n\n수정된 내용으로 다시 제출할까요?')) return;
+  }
+
+  btn.textContent = '제출 중...';
+  btn.disabled = true;
+  status.textContent = '';
+
+  // 임시저장도 같이
+  await saveToStorage(`fw_data_${currentFw}`, fwData);
+
+  const submission = {
+    fw: currentFw,
+    data: fwData,
+    submittedAt: new Date().toISOString(),
+    submitted: true
+  };
+
+  const ok = await saveToStorage(`submission_${currentFw}`, submission);
+  if(ok) {
+    const timeStr = new Date().toLocaleString('ko-KR');
+    status.textContent = '✓ 최종 제출 완료!';
+    status.className = 'save-status saved';
+    info.textContent = timeStr + ' 제출 · 수정이 필요하면 다시 입력 후 재제출 가능';
+    showToast('견적이 제출되었습니다! 수정이 필요하면 언제든 재제출 가능해요.');
+  } else {
+    status.textContent = '제출 실패. 다시 시도해주세요.';
+    status.className = 'save-status error';
+  }
+  btn.textContent = '✓ 최종 제출';
+  btn.disabled = false;
+}
+
+// ── 관리자 페이지
+
+async function refreshData() {
+  await loadSelections();
+  // 전체 포워더 제출 데이터 로드 (설정에서 불러온 목록 기준)
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  for(const fw of allFwdrs) {
+    const sub = await loadFromStorage(`submission_${fw}`);
+    if(sub) allSubmissions[fw] = sub;
+    else {
+      const draft = await loadFromStorage(`fw_data_${fw}`);
+      if(draft) allSubmissions[fw] = { fw, data: draft, submitted: false };
+    }
+  }
+  renderDash();
+  renderRankTable();
+  renderReport();
+  renderEval();
+}
+
+function downloadFwExcel() {
+  // xlsx-js-style의 XLSXStyle 사용
+  const XS = (typeof XLSXStyle !== 'undefined') ? XLSXStyle : XLSX;
+
+  const exRate = cfgExRate || 1450;
+  const routes = cfgRoutes;
+
+  // 스타일 정의
+  const border = {
+    top:{style:"thin",color:{rgb:"BFBFBF"}},
+    bottom:{style:"thin",color:{rgb:"BFBFBF"}},
+    left:{style:"thin",color:{rgb:"BFBFBF"}},
+    right:{style:"thin",color:{rgb:"BFBFBF"}}
+  };
+  const st = {
+    title:  {font:{bold:true,color:{rgb:"FFFFFF"},sz:12,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"1F4E79"}},alignment:{horizontal:"center",vertical:"center"},border},
+    notice: {font:{italic:true,color:{rgb:"7F3F00"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FCE4D6"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpBlue:{font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"2E75B6"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpNvy: {font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"1F4E79"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpGrn: {font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"375623"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpSky: {font:{bold:true,color:{rgb:"1F4E79"},sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"DAEEF3"}},alignment:{horizontal:"center",vertical:"center"},border},
+    hdr:    {font:{bold:true,color:{rgb:"FFFFFF"},sz:7,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"1F4E79"}},alignment:{horizontal:"center",vertical:"center",wrapText:true},border},
+    lbl:    {font:{bold:true,color:{rgb:"1F4E79"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"BDD7EE"}},alignment:{horizontal:"center",vertical:"center"},border},
+    lock1:  {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"EBEBEB"}},alignment:{horizontal:"center",vertical:"center"},border},
+    lock2:  {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"F5F5F5"}},alignment:{horizontal:"center",vertical:"center"},border},
+    inp1:   {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FFF2CC"}},alignment:{horizontal:"right",vertical:"center"},border},
+    inp2:   {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FFFACD"}},alignment:{horizontal:"right",vertical:"center"},border},
+    inpL1:  {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FFF2CC"}},alignment:{horizontal:"left",vertical:"center"},border},
+    inpL2:  {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FFFACD"}},alignment:{horizontal:"left",vertical:"center"},border},
+    sum1:   {font:{bold:true,color:{rgb:"FFFFFF"},sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"70AD47"}},alignment:{horizontal:"center",vertical:"center"},border},
+    sum2:   {font:{bold:true,color:{rgb:"FFFFFF"},sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"A9D18E"}},alignment:{horizontal:"center",vertical:"center"},border},
+    foot:   {font:{bold:true,color:{rgb:"1F4E79"},sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"BDD7EE"}},alignment:{horizontal:"center",vertical:"center"},border},
+  };
+
+  // 셀 헬퍼
+  function c(v, s, fmt) {
+    var cell = {v: v, s: s};
+    if(v === null || v === undefined || v === '') { cell.v = ''; cell.t = 's'; }
+    else if(typeof v === 'number') { cell.t = 'n'; if(fmt) cell.z = fmt; }
+    else if(typeof v === 'object' && v.f) { cell.f = v.f; cell.v = 0; cell.t = 'n'; if(fmt) cell.z = fmt; }
+    else { cell.t = 's'; }
+    return cell;
+  }
+
+  const ws = {};
+  const enc = XS.utils.encode_cell;
+  const R = function(r,col) { return enc({r:r,c:col}); };
+
+  // 열 수 24
+  const COLS = 24;
+
+  // 행0: 제목
+  ws[R(0,0)] = c('2026년 하반기 포워딩 비딩 — 견적 제출 양식  (' + currentFw + ')', st.title);
+  for(var ci=1;ci<COLS;ci++) ws[R(0,ci)] = c('', st.title);
+
+  // 행1: 업체명/제출일/환율
+  ws[R(1,0)] = c('업체명', st.lbl);
+  ws[R(1,1)] = c(currentFw, {...st.inp1, font:{bold:true,color:{rgb:"1F4E79"},sz:11,name:"맑은 고딕"}});
+  ws[R(1,2)] = c('', st.inp1); ws[R(1,3)] = c('', st.inp1);
+  ws[R(1,4)] = c('제출일', st.lbl);
+  ws[R(1,5)] = c(new Date().toLocaleDateString('ko-KR'), st.inp1);
+  ws[R(1,6)] = c('', st.inp1); ws[R(1,7)] = c('', st.inp1);
+  ws[R(1,8)] = c('기준환율\n(USD/KRW)', {...st.lbl, alignment:{horizontal:"center",vertical:"center",wrapText:true}});
+  ws[R(1,9)] = c(exRate, {...st.grpSky, font:{bold:true,color:{rgb:"1F4E79"},sz:11,name:"맑은 고딕"}});
+  for(var ci=10;ci<COLS;ci++) ws[R(1,ci)] = c('', st.lock1);
+
+  // 행2: 안내
+  ws[R(2,0)] = c('※ 노란색 셀만 입력  |  기타비용 무슨 비용인지 비고란에 기재  |  저장 후 📤 업로드', st.notice);
+  for(var ci=1;ci<COLS;ci++) ws[R(2,ci)] = c('', st.notice);
+
+  // 행3: 그룹헤더
+  const grp3 = [
+    [0,6,'노선 정보',st.grpNvy],[7,9,'💵 USD 항목',st.grpBlue],
+    [10,16,'🪙 KRW 항목',st.grpBlue],[17,18,'기타비용',st.grpBlue],
+    [19,19,'★합계',st.grpGrn],[20,23,'스케줄·비고',st.grpBlue]
+  ];
+  grp3.forEach(function(g){
+    ws[R(3,g[0])] = c(g[2], g[3]);
+    for(var ci=g[0]+1;ci<=g[1];ci++) ws[R(3,ci)] = c('', g[3]);
+  });
+
+  // 행4: 컬럼 헤더
+  var hdrs = [
+    'NO','도착국가','작업지','출발PORT','도착PORT','CTNR','예상물량\n(CTN/참고)',
+    'O/FRT\n(USD/CTNR)','LSS\n(USD/CTNR)','AMS/AFR\n(USD/CTNR)',
+    'THC\n(원)','내륙운송료\n(원)','DOC\n(원)','WFG\n(원)','SEF\n(원)','PSC\n(원)','PSM\n(원)',
+    '기타비용\n(원)','기타비용\n(USD)','★합계(원)',
+    '적하보험요율\n(%)','주당항차수/\n출항요일','프리타임\n(최대/일)','비고·특이사항'
+  ];
+  hdrs.forEach(function(h,ci){ ws[R(4,ci)] = c(h, st.hdr); });
+
+  // 행5~: 노선 데이터
+  routes.forEach(function(r, idx) {
+    var row = 5 + idx;
+    var isEven = idx % 2 === 0;
+    var lk = isEven ? st.lock1 : st.lock2;
+    var ip = isEven ? st.inp1 : st.inp2;
+    var ipL = isEven ? st.inpL1 : st.inpL2;
+    var sm = isEven ? st.sum1 : st.sum2;
+    var exRow = row + 1; // Excel 행번호 (1-based)
+
+    // A~F: 고정 노선 정보
+    ws[R(row,0)] = c(r.no||'', {...lk,font:{bold:true,sz:9,name:"맑은 고딕"}});
+    ws[R(row,1)] = c(r.nation||'', lk);
+    ws[R(row,2)] = c(r.site||'', lk);
+    ws[R(row,3)] = c(r.port_o||'', lk);
+    ws[R(row,4)] = c(r.port_i||'', lk);
+    ws[R(row,5)] = c(r.ctnr||'', lk);
+    // G: 예상물량
+    ws[R(row,6)] = c(r.vol||'', {...lk, alignment:{horizontal:"right",vertical:"center"}});
+
+    // H~J: USD 입력
+    [7,8,9].forEach(function(ci){ ws[R(row,ci)] = c('', {...ip, z:'#,##0.00'}); });
+    // K~Q: KRW 입력
+    [10,11,12,13,14,15,16].forEach(function(ci){ ws[R(row,ci)] = c('', {...ip, z:'#,##0'}); });
+    // R: 기타비용(원)
+    ws[R(row,17)] = c('', {...ip, z:'#,##0'});
+    // S: 기타비용(USD)
+    ws[R(row,18)] = c('', {...ip, z:'#,##0.00'});
+    // T: 합계 수식
+    ws[R(row,19)] = c({f:'IFERROR((H'+exRow+'+I'+exRow+'+IF(OR(J'+exRow+'="",J'+exRow+'=0),0,J'+exRow+')+IF(OR(S'+exRow+'="",S'+exRow+'=0),0,S'+exRow+'))*J2+SUM(K'+exRow+':Q'+exRow+')+IF(ISNUMBER(R'+exRow+'),R'+exRow+',0),0)'}, {...sm, z:'#,##0'});
+    // U: 적하보험요율
+    ws[R(row,20)] = c('', {...ip, z:'0.00000%'});
+    // V: 스케줄
+    ws[R(row,21)] = c('', ipL);
+    // W: 프리타임
+    ws[R(row,22)] = c('', ipL);  // 프리타임: 텍스트
+    // X: 비고
+    ws[R(row,23)] = c('', ipL);
+  });
+
+  // 마지막 안내행
+  var lastRow = 5 + routes.length;
+  ws[R(lastRow,0)] = c('✅ 작성 완료 후 저장 → 홈페이지에서 📤 엑셀 업로드 버튼 클릭', st.foot);
+  for(var ci=1;ci<COLS;ci++) ws[R(lastRow,ci)] = c('', st.foot);
+
+  // 범위 설정
+  ws['!ref'] = XS.utils.encode_range({r:0,c:0},{r:lastRow,c:COLS-1});
+
+  // 병합
+  ws['!merges'] = [
+    {s:{r:0,c:0},e:{r:0,c:COLS-1}},
+    {s:{r:1,c:1},e:{r:1,c:3}},
+    {s:{r:1,c:5},e:{r:1,c:7}},
+    {s:{r:2,c:0},e:{r:2,c:COLS-1}},
+    {s:{r:3,c:0},e:{r:3,c:6}},
+    {s:{r:3,c:7},e:{r:3,c:9}},
+    {s:{r:3,c:10},e:{r:3,c:16}},
+    {s:{r:3,c:17},e:{r:3,c:18}},
+    {s:{r:3,c:20},e:{r:3,c:23}},
+    {s:{r:lastRow,c:0},e:{r:lastRow,c:COLS-1}}
+  ];
+
+  // 열 너비
+  ws['!cols'] = [
+    {wch:4},{wch:8},{wch:7},{wch:9},{wch:8},{wch:7},{wch:8},
+    {wch:8},{wch:8},{wch:8},
+    {wch:9},{wch:9},{wch:7},{wch:7},{wch:7},{wch:7},{wch:7},
+    {wch:10},{wch:10},
+    {wch:13},
+    {wch:16},{wch:14},{wch:8},{wch:18}
+  ];
+
+  // 행 높이
+  ws['!rows'] = [{hpt:32},{hpt:24},{hpt:18},{hpt:22},{hpt:45}];
+  for(var i=0;i<routes.length;i++) ws['!rows'].push({hpt:20});
+  ws['!rows'].push({hpt:22});
+
+  // 틀 고정 (G열 이후, 6행 이후)
+  ws['!freeze'] = {xSplit:7, ySplit:5, state:'frozen'};
+
+  var wb = XS.utils.book_new();
+  XS.utils.book_append_sheet(wb, ws, '견적입력');
+
+  var today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  XS.writeFile(wb, '포워딩비딩_26하반기_' + currentFw + '_' + today + '.xlsx');
+  showToast('양식 다운로드 완료! 노란 셀에 입력 후 업로드하세요.');
+}
+
+// ══════════════════════════════════════════════════════
+// 노선관리 양식 다운로드
+// ══════════════════════════════════════════════════════
+function downloadRouteExcel() {
+  const XS = (typeof XLSXStyle !== 'undefined') ? XLSXStyle : XLSX;
+
+  const border = {
+    top:{style:"thin",color:{rgb:"BFBFBF"}},bottom:{style:"thin",color:{rgb:"BFBFBF"}},
+    left:{style:"thin",color:{rgb:"BFBFBF"}},right:{style:"thin",color:{rgb:"BFBFBF"}}
+  };
+  const st = {
+    title: {font:{bold:true,color:{rgb:"FFFFFF"},sz:12,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"1F4E79"}},alignment:{horizontal:"center",vertical:"center"},border},
+    notice:{font:{italic:true,color:{rgb:"7F3F00"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FCE4D6"}},alignment:{horizontal:"center",vertical:"center"},border},
+    hdr:   {font:{bold:true,color:{rgb:"FFFFFF"},sz:7,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"1F4E79"}},alignment:{horizontal:"center",vertical:"center",wrapText:true},border},
+    hdrGr: {font:{bold:true,color:{rgb:"FFFFFF"},sz:7,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"777777"}},alignment:{horizontal:"center",vertical:"center",wrapText:true},border},
+    hdrBl: {font:{bold:true,color:{rgb:"FFFFFF"},sz:7,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"2E75B6"}},alignment:{horizontal:"center",vertical:"center",wrapText:true},border},
+    hdrGn: {font:{bold:true,color:{rgb:"FFFFFF"},sz:7,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"375623"}},alignment:{horizontal:"center",vertical:"center",wrapText:true},border},
+    grpNv: {font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"1F4E79"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpGr: {font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"777777"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpBl: {font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"2E75B6"}},alignment:{horizontal:"center",vertical:"center"},border},
+    grpGn: {font:{bold:true,color:{rgb:"FFFFFF"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"375623"}},alignment:{horizontal:"center",vertical:"center"},border},
+    lock1: {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"EBEBEB"}},alignment:{horizontal:"center",vertical:"center"},border},
+    lock2: {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"F5F5F5"}},alignment:{horizontal:"center",vertical:"center"},border},
+    inp1:  {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FFF2CC"}},alignment:{horizontal:"right",vertical:"center"},border},
+    inp2:  {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"FFFACD"}},alignment:{horizontal:"right",vertical:"center"},border},
+    prev1: {font:{sz:9,color:{rgb:"666666"},name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"F0F0F0"}},alignment:{horizontal:"right",vertical:"center"},border},
+    prev2: {font:{sz:9,color:{rgb:"666666"},name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"E8E8E8"}},alignment:{horizontal:"right",vertical:"center"},border},
+    curr1: {font:{sz:9,color:{rgb:"1565C0"},name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"EBF3FB"}},alignment:{horizontal:"right",vertical:"center"},border},
+    curr2: {font:{sz:9,color:{rgb:"1565C0"},name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"DCE9F5"}},alignment:{horizontal:"right",vertical:"center"},border},
+    info1: {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"E8F5E9"}},alignment:{horizontal:"left",vertical:"center"},border},
+    info2: {font:{sz:9,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"D0EDD4"}},alignment:{horizontal:"left",vertical:"center"},border},
+    foot:  {font:{italic:true,color:{rgb:"1F4E79"},sz:8,name:"맑은 고딕"},fill:{patternType:"solid",fgColor:{rgb:"BDD7EE"}},alignment:{horizontal:"center",vertical:"center"},border},
+  };
+
+  function c(v, s, fmt) {
+    var cell = {v: v===null||v===undefined?'':v, s: s};
+    if(typeof v === 'number') { cell.t='n'; if(fmt) cell.z=fmt; }
+    else { cell.t='s'; }
+    return cell;
+  }
+
+  const ws = {};
+  const COLS = 15;
+  const enc = XS.utils.encode_cell;
+  const R = function(r,col) { return enc({r:r,c:col}); };
+
+  // 행0: 제목
+  ws[R(0,0)] = c('매일유업 포워딩 비딩 — 노선관리 업로드 양식', st.title);
+  for(var ci=1;ci<COLS;ci++) ws[R(0,ci)] = c('', st.title);
+
+  // 행1: 안내
+  ws[R(1,0)] = c('※ 이 파일 작성 후 웹사이트 [설정 > 노선관리]에서 업로드하세요. NO·도착국가 필수. 비딩대상 N이면 제외.', st.notice);
+  for(var ci=1;ci<COLS;ci++) ws[R(1,ci)] = c('', st.notice);
+
+  // 행2: 그룹헤더
+  var grp2 = [[0,6,'노선 정보',st.grpNv],[7,8,'📅 직전반기',st.grpGr],[9,10,'📅 이번반기',st.grpBl],[11,14,'추가 정보',st.grpGn]];
+  grp2.forEach(function(g){ ws[R(2,g[0])]=c(g[2],g[3]); for(var ci=g[0]+1;ci<=g[1];ci++) ws[R(2,ci)]=c('',g[3]); });
+
+  // 행3: 헤더
+  var hdrs=['NO','도착국가','작업지','출발PORT','도착PORT','CTNR\n(20DRY/40DRY/20RF/40RF)','예상물량\n(CTN/반기)',
+    '직전반기\n매출(원)','직전반기\n물류비(원)','이번반기\n매출(원)','이번반기\n물류비(원)',
+    '비딩대상\n(Y/N)','제품명','거래처','비고'];
+  var hdrSts=[st.hdr,st.hdr,st.hdr,st.hdr,st.hdr,st.hdr,st.hdr,st.hdrGr,st.hdrGr,st.hdrBl,st.hdrBl,st.hdrGn,st.hdrGn,st.hdrGn,st.hdrGn];
+  hdrs.forEach(function(h,ci){ ws[R(3,ci)]=c(h,hdrSts[ci]); });
+
+  // 행4~: 노선 데이터
+  cfgRoutes.forEach(function(r,idx){
+    var row=4+idx; var isEven=idx%2===0;
+    var lk=isEven?st.lock1:st.lock2;
+    var pr=isEven?st.prev1:st.prev2;
+    var cu=isEven?st.curr1:st.curr2;
+    var ip=isEven?st.inp1:st.inp2;
+    var inf=isEven?st.info1:st.info2;
+
+    ws[R(row,0)]=c(r.no||'',{...lk,font:{bold:true,sz:9,name:"맑은 고딕"}});
+    [r.nation,r.site,r.port_o,r.port_i,r.ctnr].forEach(function(v,i){ ws[R(row,1+i)]=c(v||'',lk); });
+    ws[R(row,6)]=c(r.vol||'',{...ip,z:'#,##0'});
+    ws[R(row,7)]=c(r.prev_sales||'',{...pr,z:'#,##0'});
+    ws[R(row,8)]=c(r.prev_plan_cost||'',{...pr,z:'#,##0'});
+    ws[R(row,9)]=c(r.curr_sales||'',{...cu,z:'#,##0'});
+    ws[R(row,10)]=c(r.plan_cost||'',{...cu,z:'#,##0'});
+    ws[R(row,11)]=c('Y',lk);
+    ws[R(row,12)]=c(r.product||'',inf);
+    ws[R(row,13)]=c(r.customer||'',inf);
+    ws[R(row,14)]=c(r.note||'',inf);
+  });
+
+  // 안내행
+  var lastRow=4+cfgRoutes.length;
+  ws[R(lastRow,0)]=c('H=직전반기매출 | I=직전반기물류비 | J=이번반기매출 | K=이번반기물류비 | 비워두면 C조건 물류비 물량비율 자동배분',st.foot);
+  for(var ci=1;ci<COLS;ci++) ws[R(lastRow,ci)]=c('',st.foot);
+
+  ws['!ref']=XS.utils.encode_range({r:0,c:0},{r:lastRow,c:COLS-1});
+  ws['!merges']=[
+    {s:{r:0,c:0},e:{r:0,c:COLS-1}},{s:{r:1,c:0},e:{r:1,c:COLS-1}},
+    {s:{r:2,c:0},e:{r:2,c:6}},{s:{r:2,c:7},e:{r:2,c:8}},
+    {s:{r:2,c:9},e:{r:2,c:10}},{s:{r:2,c:11},e:{r:2,c:14}},
+    {s:{r:lastRow,c:0},e:{r:lastRow,c:COLS-1}}
+  ];
+  ws['!cols']=[{wch:4},{wch:8},{wch:7},{wch:9},{wch:8},{wch:12},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:7},{wch:14},{wch:14},{wch:18}];
+  ws['!rows']=[{hpt:28},{hpt:18},{hpt:22},{hpt:45}];
+  for(var i=0;i<cfgRoutes.length;i++) ws['!rows'].push({hpt:18});
+  ws['!rows'].push({hpt:20});
+  ws['!freeze']={xSplit:0,ySplit:4,state:'frozen'};
+
+  var wb2=XS.utils.book_new();
+  XS.utils.book_append_sheet(wb2,ws,'노선관리');
+
+  var today=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  XS.writeFile(wb2,'노선관리_업로드양식_'+today+'.xlsx');
+  showToast('노선관리 양식 다운로드 완료!');
+}
+
+
+function clearAllData() {
+  if(!confirm('입력한 모든 데이터를 초기화할까요?\n이 작업은 되돌릴 수 없어요.')) return;
+  fwData = {};
+  buildFwTable();
+  // 저장소에서도 삭제
+  saveToStorage('fw_data_' + currentFw, {});
+  const status = document.getElementById('submit-status');
+  const info = document.getElementById('submit-info');
+  if(status) { status.textContent = ''; status.className = 'save-status'; }
+  if(info) info.textContent = '';
+  showToast('전체 초기화 완료!');
+}
+
+
+
+
+
+
+
+// ── 관리자 전용 코드
+function renderDash() {
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  const submitted = allFwdrs.filter(fw => allSubmissions[fw]?.submitted).length;
+  const drafted   = allFwdrs.filter(fw => allSubmissions[fw] && !allSubmissions[fw].submitted).length;
+  const totalRoutes = cfgRoutes.filter(r=>r.nation).length;
+
+  document.getElementById('stat-cards').innerHTML = `
+    <div class="stat-card green"><div class="label">제출 완료</div><div class="value">${submitted}</div><div class="sub">/ ${allFwdrs.length}개 업체</div></div>
+    <div class="stat-card orange"><div class="label">작성 중</div><div class="value">${drafted}</div><div class="sub">미제출</div></div>
+    <div class="stat-card"><div class="label">총 노선 수</div><div class="value">${totalRoutes}</div><div class="sub">해외+국내</div></div>
+    <div class="stat-card"><div class="label">기준 환율</div><div class="value">1,450</div><div class="sub">KRW/USD</div></div>
+  `;
+
+  // 포워더별 현황
+  document.getElementById('fw-status-grid').innerHTML = allFwdrs.map(fw => {
+    const sub = allSubmissions[fw];
+    const submitted = sub?.submitted;
+    const count = sub ? Object.keys(sub.data||{}).filter(k=>calcTotal(sub.data[k])>0).length : 0;
+    const time = submitted && sub.submittedAt ? new Date(sub.submittedAt).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div class="fw-card ${submitted?'submitted':''}">
+      <div class="fw-name">${fw}</div>
+      <div class="fw-count">${count}개 구간 입력</div>
+      ${time ? `<div style="font-size:10px;color:var(--dgray);margin-top:4px;">${time}</div>` : ''}
+      <div class="fw-badge">${submitted?'제출완료':'미제출'}</div>
+    </div>`;
+  }).join('');
+
+  // 제출 로그
+  document.getElementById('submission-log').innerHTML = allFwdrs
+    .filter(fw => allSubmissions[fw])
+    .map(fw => {
+      const sub = allSubmissions[fw];
+      const count = Object.keys(sub.data||{}).filter(k=>calcTotal(sub.data[k])>0).length;
+      const time = sub.submittedAt ? new Date(sub.submittedAt).toLocaleString('ko-KR') : '-';
+      return `<tr>
+        <td><strong>${fw}</strong></td>
+        <td>${time}</td>
+        <td>${count}개 구간</td>
+        <td><span style="padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;background:${sub.submitted?'#E8F5E9':'#FFF3E0'};color:${sub.submitted?'#2E7D32':'#E65100'};">${sub.submitted?'제출완료':'작성중'}</span></td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="4" class="no-data">제출된 견적이 없습니다.</td></tr>';
+}
+
+function getRanked(no) {
+  const quotes = [];
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  allFwdrs.forEach(fw => {
+    const sub = allSubmissions[fw];
+    if(!sub?.data?.[no]) return;
+    const total = calcTotal(sub.data[no]);
+    if(total > 0) quotes.push({ fw, total, data: sub.data[no] });
+  });
+  return quotes.sort((a,b) => a.total - b.total);
+}
+
+function renderRankTable() {
+  const filter = document.getElementById('nation-filter')?.value || 'all';
+  const tbody = document.getElementById('rank-tbody');
+  tbody.innerHTML = '';
+
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+
+  cfgRoutes.filter(function(r) {
+    return r.nation && (filter === 'all' || r.nation === filter);
+  }).forEach(function(r) {
+    const ranked = getRanked(r.no);
+    const vol = r.vol || '';
+    const r1 = ranked[0], r2 = ranked[1], r3 = ranked[2], r4 = ranked[3];
+    const sav = r1 && r2 ? fmt(r2.total - r1.total) : '';
+    const sel = selectedFw[r.no];
+
+    const tr = document.createElement('tr');
+
+    // 노선 기본 정보
+    const basic = [r.no, r.nation, r.site, r.port_o, r.port_i, r.ctnr, vol];
+    basic.forEach(function(v) {
+      const td = document.createElement('td');
+      td.textContent = v || '';
+      tr.appendChild(td);
+    });
+
+    // 1~4위 업체/금액
+    const ranks = [r1, r2, r3, r4];
+    const rankCls = ['rank-1', 'rank-2', 'rank-3', ''];
+    ranks.forEach(function(rk, i) {
+      const tdN = document.createElement('td');
+      const tdP = document.createElement('td');
+      tdN.className = rankCls[i];
+      tdP.className = rankCls[i];
+      tdN.textContent = rk ? rk.fw : '-';
+      tdP.textContent = rk ? fmt(rk.total) : '';
+      tr.appendChild(tdN);
+      tr.appendChild(tdP);
+    });
+
+    // 선정 드롭다운
+    const tdSel = document.createElement('td');
+    tdSel.style.background = '#F0FAF0';
+    const sel_select = document.createElement('select');
+    sel_select.style.cssText = 'width:100%;padding:4px 6px;border:1.5px solid #70AD47;border-radius:4px;font-size:11px;font-weight:700;background:white;cursor:pointer;';
+    sel_select.dataset.no = r.no;
+
+    const optEmpty = document.createElement('option');
+    optEmpty.value = '';
+    optEmpty.textContent = '-- 선정 --';
+    sel_select.appendChild(optEmpty);
+
+    ranks.forEach(function(rk) {
+      if(!rk) return;
+      const opt = document.createElement('option');
+      opt.value = rk.fw;
+      opt.dataset.total = rk.total;
+      opt.textContent = rk.fw + ' (' + fmt(rk.total) + ')';
+      if(sel && sel.fw === rk.fw) opt.selected = true;
+      sel_select.appendChild(opt);
+    });
+
+    sel_select.addEventListener('change', function() {
+      const selectedOpt = this.options[this.selectedIndex];
+      const total = selectedOpt.dataset.total || 0;
+      onSelectFw(parseInt(this.dataset.no), this.value, total);
+      // 선정 견적가 셀 업데이트
+      const priceCell = this.closest('tr').querySelector('.sel-price');
+      if(priceCell) priceCell.textContent = this.value ? fmt(parseFloat(total)) : '';
+    });
+
+    tdSel.appendChild(sel_select);
+    tr.appendChild(tdSel);
+
+    // 선정 견적가
+    const tdSelPrice = document.createElement('td');
+    tdSelPrice.className = 'sel-price';
+    tdSelPrice.style.cssText = 'background:#F0FAF0;font-weight:700;color:#375623;';
+    tdSelPrice.textContent = sel ? fmt(sel.total) : '';
+    tr.appendChild(tdSelPrice);
+
+    tbody.appendChild(tr);
+  });
+
+  renderFwSelectionSummary();
+}
+
+function renderReport() {
+  // 비딩 물류비 계산 (해외 구간 NO1~35, 1위금액×예상물량)
+  let bidTotal = 0;
+  cfgRoutes.filter(r=>r.nation && r.nation!=='국내').forEach(route => {
+    const ranked = getRanked(route.no);
+    const vol = route.vol || 0;
+    if(ranked[0] && vol) bidTotal += ranked[0].total * vol;
+  });
+
+  const savings = (cfgPlanLogistics||PLAN_LOGISTICS) - bidTotal;
+  const planRate = (cfgPlanLogistics||PLAN_LOGISTICS) / (cfgPlanSales||PLAN_SALES);
+  const bidRate  = bidTotal / (cfgPlanSales||PLAN_SALES);
+  const fBidTot  = bidTotal + cfgFLogistics;
+  const fPlanTot = (cfgPlanLogistics||PLAN_LOGISTICS) + cfgFLogistics;
+  const fSales   = (cfgPlanSales||PLAN_SALES) + cfgFSales;
+
+  // 요약 테이블
+  document.getElementById('summary-table').innerHTML = `
+    <thead><tr>
+      <th>구분</th><th>사업계획 매출</th><th>사업계획 물류비</th><th>비딩 물류비</th>
+      <th>절감액</th><th>물류비율(계획)</th><th>물류비율(비딩후)</th><th>물류비율 절감</th>
+    </tr></thead>
+    <tbody>
+      ${cfgPrevCSales>0 ? `<tr style="background:#F8F9FA;">
+        <td style="color:#888;font-size:11px;">직전반기 C조건 (참고)</td>
+        <td style="color:#888;font-size:11px;">${fmt(cfgPrevCSales)}</td>
+        <td style="color:#888;font-size:11px;">${fmt(cfgPrevCLogistics)}</td>
+        <td style="color:#888;">-</td><td>-</td>
+        <td style="color:#888;font-size:11px;">${pct(cfgPrevCLogistics/cfgPrevCSales)}</td>
+        <td>-</td><td>-</td>
+      </tr>` : ''}
+      <tr>
+        <td>이번반기 C조건 (비딩 대상)</td>
+        <td>${fmt(cfgPlanSales||PLAN_SALES)}</td><td>${fmt(cfgPlanLogistics||PLAN_LOGISTICS)}</td>
+        <td class="${bidTotal>(cfgPlanLogistics||PLAN_LOGISTICS)?'negative':'highlight'}">${fmt(bidTotal)}</td>
+        <td class="${savings>=0?'highlight':'negative'}">${savings>=0?'-':'+'}${fmt(Math.abs(savings))}</td>
+        <td>${pct(planRate)}</td><td>${pct(bidRate)}</td>
+        <td class="${planRate>=bidRate?'highlight':'negative'}">${planRate>=bidRate?'-':'+'}${pct(Math.abs(planRate-bidRate))}</td>
+      </tr>
+      ${cfgPrevFSales>0 ? `<tr style="background:#F8F9FA;">
+        <td style="color:#888;font-size:11px;">직전반기 F조건 (참고)</td>
+        <td style="color:#888;font-size:11px;">${fmt(cfgPrevFSales)}</td>
+        <td style="color:#888;font-size:11px;">${fmt(cfgPrevFLogistics)}</td>
+        <td style="color:#888;">-</td><td>-</td>
+        <td style="color:#888;font-size:11px;">${pct(cfgPrevFLogistics/cfgPrevFSales)}</td>
+        <td>-</td><td>-</td>
+      </tr>` : ''}
+      <tr>
+        <td>이번반기 F조건 (비딩 미대상)</td>
+        <td>${fmt(cfgFSales)}</td><td>${fmt(cfgFLogistics)}</td><td>${fmt(cfgFLogistics)}</td>
+        <td>0</td><td>${pct(cfgFLogistics/cfgFSales)}</td><td>${pct(cfgFLogistics/cfgFSales)}</td><td>0.00%</td>
+      </tr>
+      <tr class="total">
+        <td>이번반기 합 계</td>
+        <td>${fmt(fSales)}</td><td>${fmt(fPlanTot)}</td><td>${fmt(fBidTot)}</td>
+        <td class="${fPlanTot>=fBidTot?'highlight':'negative'}">${fPlanTot>=fBidTot?'-':'+'}${fmt(Math.abs(fPlanTot-fBidTot))}</td>
+        <td>${pct(fPlanTot/fSales)}</td><td>${pct(fBidTot/fSales)}</td>
+        <td class="${fPlanTot/fSales>=fBidTot/fSales?'highlight':'negative'}">${fPlanTot/fSales>=fBidTot/fSales?'-':'+'}${pct(Math.abs(fPlanTot/fSales-fBidTot/fSales))}</td>
+      </tr>
+    </tbody>`;
+
+  // 노선별 테이블
+  const rtbody = document.getElementById('report-route-tbody');
+  rtbody.innerHTML = '';
+  // 사업계획 물류비는 설정값 기준 노선별 배분(물량 비율)
+  const totalVol_c = cfgRoutes.filter(function(r){ return r.nation && r.nation !== '국내'; }).reduce(function(s,r){ return s+(r.vol||0); }, 0);
+  const cPlan = cfgPlanLogistics || PLAN_LOGISTICS;
+
+  cfgRoutes.filter(function(r){ return r.nation; }).forEach(function(route) {
+    const ranked = getRanked(route.no);
+    const vol = route.vol || 0;
+    const r1 = ranked[0];
+    const sel = selectedFw[route.no];
+    const selFw = sel && sel.fw ? sel : r1;
+    const selPrice = selFw ? selFw.total : 0;
+    const selName = selFw ? selFw.fw : '-';
+
+    const isDom = route.nation === '국내';
+    let routePlan = 0;
+    if(!isDom) {
+      if(route.plan_cost && route.plan_cost > 0) {
+        routePlan = route.plan_cost;
+      } else if(totalVol_c > 0 && vol > 0) {
+        routePlan = Math.round(cPlan * vol / totalVol_c);
+      }
+    }
+    const routePrevSales = route.prev_sales || 0;
+    const routePrevPlan  = route.prev_plan_cost || 0;
+    const routeCurrSales = route.curr_sales || 0;
+    const bidCost = selPrice * vol;
+    const savings = routePlan > 0 ? routePlan - bidCost : 0;
+    // 절감율: 사업계획 대비 비율, 부호 포함
+    const savePct = routePlan > 0 && bidCost > 0
+      ? (savings >= 0 ? '-' : '+') + ((Math.abs(savings) / routePlan) * 100).toFixed(1) + '%'
+      : '-';
+
+    const tr = document.createElement('tr');
+    const isSelected = sel && sel.fw && r1 && sel.fw !== r1.fw;
+
+    tr.innerHTML = '<td>' + route.no + '</td><td>' + route.nation + '</td><td>' + route.site + '</td>' +
+      '<td>' + route.port_o + '</td><td>' + route.port_i + '</td><td>' + route.ctnr + '</td><td>' + (vol||'') + '</td>' +
+      '<td class="rank-1">' + (r1?r1.fw:'-') + '</td>' +
+      '<td class="rank-1">' + (r1?fmt(r1.total):'') + '</td>' +
+      '<td style="background:#F0FAF0;font-weight:700;color:#375623;">' + selName + '</td>' +
+      '<td style="background:#F0FAF0;font-weight:700;color:#375623;">' + (selPrice?fmt(selPrice):'') + '</td>' +
+      '<td style="' + (isSelected?'color:#ED7D31;font-weight:700;':'') + '">' + (r1&&selPrice&&r1.total!==selPrice?fmt(selPrice-r1.total):'') + '</td>' +
+      '<td style="text-align:right;color:#999;font-size:10px;">' + (routePrevSales>0?fmt(routePrevSales):'-') + '</td>' +
+      '<td style="text-align:right;color:#999;font-size:10px;">' + (routePrevPlan>0?fmt(routePrevPlan):'-') + '</td>' +
+      '<td style="text-align:right;color:#2E75B6;font-size:10px;">' + (routeCurrSales>0?fmt(routeCurrSales):'-') + '</td>' +
+      '<td style="text-align:right;color:#2E75B6;">' + (routePlan?fmt(routePlan):'-') + '</td>' +
+      '<td style="text-align:right;">' + (bidCost?fmt(bidCost):'-') + '</td>' +
+      '<td style="text-align:right;' + (savings>=0?'color:#1565C0;font-weight:700;':'color:#C00000;font-weight:700;') + '">' + (routePlan>0?(savings>=0?'-':'+') + fmt(Math.abs(savings)):'-') + '</td>' +
+      '<td style="text-align:center;' + (savings>=0?'color:#1565C0;font-weight:700;':'color:#C00000;font-weight:700;') + '">' + (routePlan>0?savePct:'-') + '</td>';
+
+    rtbody.appendChild(tr);
+  });
+
+  // 국가별 소계
+  const countries=['중국','대만','미국','싱가폴','말레이시아','홍콩'];
+  // C조건 사업계획 물류비 기준으로 국가별 배분 (비율 기준)
+  const cPlanLogistics = cfgPlanLogistics || PLAN_LOGISTICS;
+  let ctRows='<thead><tr><th>도착국가</th><th>노선 수</th><th>예상물량<br>(CTN)</th><th style="background:#AAAAAA;color:white;font-size:10px;">직전반기<br>매출(원)</th><th style="background:#AAAAAA;color:white;font-size:10px;">직전반기<br>물류비(원)</th><th style="background:#2E75B6;color:white;font-size:10px;">이번반기<br>매출(원)</th><th style="background:#2E75B6;color:white;">이번반기<br>물류비(원)</th><th>비딩<br>물류비(원)</th><th>절감금액(원)</th><th>절감율</th></tr></thead><tbody>';
+  let grandTotal=0;
+  countries.forEach(c=>{
+    const routes=cfgRoutes.filter(r=>r.nation===c);
+    if(routes.length===0) return; // 해당 국가 노선 없으면 스킵
+    let tot=0;
+    let hasData=false;
+    routes.forEach(function(r) {
+      const vol = r.vol || 0;
+      const sel = selectedFw[r.no];
+      const ranked = getRanked(r.no);
+      const eff = sel && sel.fw ? sel : ranked[0];
+      if(eff) {
+        hasData = true;
+        if(vol) tot += eff.total * vol;
+      }
+    });
+    grandTotal+=tot;
+    const totalVol = routes.reduce((s,r)=>s+(r.vol||0),0);
+    const totDisplay = tot>0 ? fmt(tot) : (hasData ? '(물량 미입력)' : '-');
+    // 국가별 사업계획 물류비: 노선별 직접 입력값 합산 우선, 없으면 물량 비율 배분
+    const totalVol_all = cfgRoutes.filter(function(r){ return r.nation && r.nation !== '국내'; }).reduce(function(s,r){ return s+(r.vol||0); }, 0);
+    const sumPlanCost = routes.reduce(function(s,r){ return s+(r.plan_cost||0); }, 0);
+    const nationPlan = sumPlanCost > 0 ? sumPlanCost
+      : (totalVol_all > 0 && totalVol > 0 ? Math.round(cPlanLogistics * totalVol / totalVol_all) : 0);
+    const savingsAmt = nationPlan > 0 && tot > 0 ? nationPlan - tot : 0;
+    const savingsPctNation = nationPlan > 0 && tot > 0 ? ((savingsAmt/nationPlan)*100).toFixed(1)+'%' : '-';
+    const planDisplay = nationPlan > 0 ? fmt(nationPlan) : '-';
+    const savingsDisplay = savingsAmt !== 0 ? fmt(savingsAmt) : '-';
+    // 절감: savings>0 → 파랑(-), 초과: savings<0 → 빨강(+)
+    const savColor = savingsAmt > 0 ? 'color:#1565C0;font-weight:700;' : (savingsAmt < 0 ? 'color:#C00000;font-weight:700;' : '');
+    const savSign = savingsAmt > 0 ? '-' : (savingsAmt < 0 ? '+' : '');
+    const savingsDisplaySigned = savingsAmt !== 0 ? savSign + fmt(Math.abs(savingsAmt)) : '-';
+    const savingsPctSigned = savingsAmt !== 0 && nationPlan > 0
+      ? savSign + ((Math.abs(savingsAmt)/nationPlan)*100).toFixed(1)+'%' : '-';
+    const sumPrevSales    = routes.reduce(function(s,r){ return s+(r.prev_sales||0); }, 0);
+    const sumPrevPlanCost = routes.reduce(function(s,r){ return s+(r.prev_plan_cost||0); }, 0);
+    const sumCurrSales    = routes.reduce(function(s,r){ return s+(r.curr_sales||0); }, 0);
+    ctRows+=`<tr>
+      <td>${c}</td><td>${routes.length}</td><td style="text-align:right;">${totalVol||'-'}</td>
+      <td style="text-align:right;color:#999;font-size:10px;">${sumPrevSales>0?fmt(sumPrevSales):'-'}</td>
+      <td style="text-align:right;color:#999;font-size:10px;">${sumPrevPlanCost>0?fmt(sumPrevPlanCost):'-'}</td>
+      <td style="text-align:right;color:#2E75B6;font-size:10px;">${sumCurrSales>0?fmt(sumCurrSales):'-'}</td>
+      <td style="text-align:right;color:#2E75B6;">${planDisplay}</td>
+      <td style="text-align:right;">${totDisplay}</td>
+      <td style="text-align:right;${savColor}">${savingsDisplaySigned}</td>
+      <td style="text-align:center;${savColor}">${savingsPctSigned}</td>
+    </tr>`;
+  });
+  const totalAllVol2 = cfgRoutes.filter(function(r){ return r.nation&&r.nation!=='국내'; }).reduce(function(s,r){ return s+(r.vol||0); }, 0);
+  const savings_c = cPlanLogistics - grandTotal;
+  const savingsPct = cPlanLogistics > 0 ? ((savings_c/cPlanLogistics)*100).toFixed(1)+'%' : '-';
+  // 합계: savings_c>0 → 절감(파랑,-), savings_c<0 → 초과(빨강,+)
+  const savCls = savings_c > 0 ? 'color:#1565C0;font-weight:700;' : 'color:#C00000;font-weight:700;';
+  const totalSign = savings_c > 0 ? '-' : '+';
+  const totalPct = cPlanLogistics > 0 ? totalSign + ((Math.abs(savings_c)/cPlanLogistics)*100).toFixed(1)+'%' : '-';
+  const routes_os = cfgRoutes.filter(function(r){ return r.nation && r.nation!=='국내'; });
+  const totalPrevSales    = routes_os.reduce(function(s,r){ return s+(r.prev_sales||0); }, 0);
+  const totalPrevPlan     = routes_os.reduce(function(s,r){ return s+(r.prev_plan_cost||0); }, 0);
+  const totalCurrSales    = routes_os.reduce(function(s,r){ return s+(r.curr_sales||0); }, 0);
+  ctRows+='<tr class="total"><td>합 계</td><td></td><td style="text-align:right;">' + totalAllVol2 +
+    '</td><td style="text-align:right;color:#888;">' + (totalPrevSales>0?fmt(totalPrevSales):'-') +
+    '</td><td style="text-align:right;color:#888;">' + (totalPrevPlan>0?fmt(totalPrevPlan):'-') +
+    '</td><td style="text-align:right;color:#2E75B6;">' + (totalCurrSales>0?fmt(totalCurrSales):'-') +
+    '</td><td style="text-align:right;color:#2E75B6;">' + fmt(cPlanLogistics) +
+    '</td><td style="text-align:right;">' + fmt(grandTotal) +
+    '</td><td style="text-align:right;' + savCls + '">' + totalSign + fmt(Math.abs(savings_c)) +
+    '</td><td style="text-align:center;' + savCls + '">' + totalPct + '</td></tr></tbody>';
+  document.getElementById('country-table').innerHTML=ctRows;
+}
+
+function renderEval() {
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+
+  const rawCounts = {};
+  allFwdrs.forEach(function(fw){ rawCounts[fw] = 0; });
+  cfgRoutes.filter(function(r){ return r.nation && r.nation !== '국내'; }).forEach(function(route){
+    const ranked = getRanked(route.no);
+    if(ranked[0]) rawCounts[ranked[0].fw] = (rawCounts[ranked[0].fw]||0) + 3;
+    if(ranked[1]) rawCounts[ranked[1].fw] = (rawCounts[ranked[1].fw]||0) + 2;
+    if(ranked[2]) rawCounts[ranked[2].fw] = (rawCounts[ranked[2].fw]||0) + 1;
+  });
+
+  const maxRaw = Math.max.apply(null, allFwdrs.map(function(fw){ return rawCounts[fw]||0; }).concat([0]));
+
+  const finals = {};
+  allFwdrs.forEach(function(fw){
+    const e = evalScores[fw] || {};
+    const qual = (e.stability||0) + (e.network||0) + (e.response||0);
+    const priceScore = maxRaw > 0 ? Math.round((rawCounts[fw]||0) / maxRaw * 90 * 10) / 10 : 0;
+    finals[fw] = { qual: qual, priceScore: priceScore, total: qual + priceScore, raw: rawCounts[fw]||0 };
+  });
+
+  function getrank(fw) {
+    const f = finals[fw];
+    if(f.total === 0) return '-';
+    let higher = 0;
+    allFwdrs.forEach(function(x){
+      if(finals[x].total > f.total) higher++;
+    });
+    return (higher + 1) + '위';
+  }
+
+  const el = document.getElementById('eval-content');
+  const tbl = document.createElement('table');
+  tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:12px;';
+
+  tbl.innerHTML = '<thead><tr style="background:#1F4E79;color:white;">' +
+    '<th style="padding:9px;text-align:left;">업체명</th>' +
+    '<th style="padding:9px;">안정성<br>(3점)</th>' +
+    '<th style="padding:9px;">네트워크<br>(2점)</th>' +
+    '<th style="padding:9px;">대응력<br>(5점)</th>' +
+    '<th style="padding:9px;">역량 소계<br>(10점)</th>' +
+    '<th style="padding:9px;">1~3위<br>누적점수</th>' +
+    '<th style="padding:9px;">가격점수<br>(90점)</th>' +
+    '<th style="padding:9px;background:#375623;">최종점수<br>(100점)</th>' +
+    '<th style="padding:9px;background:#375623;">순위</th>' +
+    '</tr></thead><tbody></tbody>';
+
+  const tbody = tbl.querySelector('tbody');
+
+  allFwdrs.forEach(function(fw, fi){
+    const e = evalScores[fw] || {};
+    const f = finals[fw];
+    const rankStr = getrank(fw);
+    const isTop = rankStr === '1위';
+    const bg = fi%2===0 ? '#F9F9F9' : 'white';
+    const totalColor = isTop ? '#2E7D32' : '#333';
+    const totalBg = isTop ? '#E8F5E9' : (fi%2===0 ? '#F0F4F0' : '#F5FAF5');
+
+    const tr = document.createElement('tr');
+    tr.style.background = bg;
+
+    const tdName = document.createElement('td');
+    tdName.style.cssText = 'padding:9px;font-weight:700;';
+    tdName.textContent = fw;
+    tr.appendChild(tdName);
+
+    const fields = [
+      {key:'stability', max:3},
+      {key:'network',   max:2},
+      {key:'response',  max:5}
+    ];
+    fields.forEach(function(field){
+      const td = document.createElement('td');
+      td.style.cssText = 'padding:9px;text-align:center;';
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.value = e[field.key] || 0;
+      inp.min = 0; inp.max = field.max; inp.step = 1;
+      inp.style.cssText = 'width:46px;text-align:center;padding:3px;border:1.5px solid #D9D9D9;border-radius:4px;font-size:12px;';
+      inp.dataset.fw = fw;
+      inp.dataset.field = field.key;
+      inp.addEventListener('change', function(){
+        updateEval(this.dataset.fw, this.dataset.field, this.value);
+      });
+      td.appendChild(inp);
+      tr.appendChild(td);
+    });
+
+    const tdQual = document.createElement('td');
+    tdQual.style.cssText = 'padding:9px;text-align:center;font-weight:700;background:#EEF2F7;';
+    tdQual.textContent = f.qual;
+    tr.appendChild(tdQual);
+
+    const tdRaw = document.createElement('td');
+    tdRaw.style.cssText = 'padding:9px;text-align:center;';
+    tdRaw.textContent = f.raw + '점';
+    tr.appendChild(tdRaw);
+
+    const tdPrice = document.createElement('td');
+    tdPrice.style.cssText = 'padding:9px;text-align:center;';
+    tdPrice.textContent = f.priceScore.toFixed(1);
+    tr.appendChild(tdPrice);
+
+    const tdTotal = document.createElement('td');
+    tdTotal.style.cssText = 'padding:9px;text-align:center;font-weight:700;font-size:14px;background:' + totalBg + ';color:' + totalColor + ';';
+    tdTotal.textContent = f.total.toFixed(1);
+    tr.appendChild(tdTotal);
+
+    const tdRank = document.createElement('td');
+    tdRank.style.cssText = 'padding:9px;text-align:center;font-weight:700;background:' + (isTop?'#E8F5E9':totalBg) + ';color:' + (isTop?'#2E7D32':totalColor) + ';';
+    tdRank.textContent = rankStr;
+    tr.appendChild(tdRank);
+
+    tbody.appendChild(tr);
+  });
+
+  const note = document.createElement('div');
+  note.style.cssText = 'margin-top:10px;padding:10px;background:#F0F4FF;border-radius:7px;font-size:11px;color:#555;';
+  note.textContent = '💡 가격점수: 1위=3점·2위=2점·3위=1점 누적 → 최고점자 기준 90점 환산 | 동점 공동순위';
+
+  el.innerHTML = '';
+  el.appendChild(tbl);
+  el.appendChild(note);
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',t.textContent.includes({dash:'현황',rank:'순위',report:'보고',eval:'종합',settings:'설정'}[name]||'')));
+  document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none');
+  document.getElementById('tab-'+name).style.display='block';
+  if(name==='rank') renderRankTable();
+  if(name==='report') renderReport();
+  if(name==='eval') renderEval();
+  if(name==='settings') showSettingsTab();
+}
+
+function printReport() {
+  window.print();
+}
+
+function exportExcel() {
+  showToast('Excel 내보내기는 Vercel 배포 후 서버 기능으로 추가됩니다.');
+}
+
+// 스토리지 없는 환경 fallback (미리보기용)
+// Vercel KV API 사용 (window.storage 불필요)
+
+// 앱 시작 시 설정 로드 (포워더 드롭다운 업데이트)
+(async()=>{
+  await loadSettings();
+  const saved = await loadFromStorage('eval_scores');
+  if(saved) Object.assign(evalScores, saved);
+})();
+
+
+// ══════════════════════════════════════════
+// 설정 탭
+// ══════════════════════════════════════════
+
+// 현재 설정값 (스토리지에서 로드, 없으면 기본값)
+let cfgForwarders = [...FORWARDERS];
+let cfgFwPasswords = {};  // {업체명: 비밀번호}
+let cfgRoutes = ROUTES.map(r=>({...r}));
+let cfgExRate = EXCHANGE_RATE;
+let cfgPlanSales = PLAN_SALES;
+let cfgPlanLogistics = PLAN_LOGISTICS;
+let cfgFSales = F_SALES;
+let cfgFLogistics = F_LOGISTICS;
+let cfgPrevCSales = 0;
+let cfgPrevCLogistics = 0;
+let cfgPrevFSales = 0;
+let cfgPrevFLogistics = 0;
+let cfgFwPw = '';
+
+// 설정 로드 (앱 시작 시)
+async function loadSettings() {
+  const fwSaved = await loadFromStorage('cfg_forwarders');
+  if(fwSaved && fwSaved.length > 0) cfgForwarders = fwSaved;
+
+  const rtSaved = await loadFromStorage('cfg_routes');
+  if(rtSaved && rtSaved.length > 0) cfgRoutes = rtSaved;
+
+  const cfgSaved = await loadFromStorage('cfg_basic');
+  if(cfgSaved) {
+    if(cfgSaved.exRate) cfgExRate = cfgSaved.exRate;
+    if(cfgSaved.planSales) cfgPlanSales = cfgSaved.planSales;
+    if(cfgSaved.planLogistics) cfgPlanLogistics = cfgSaved.planLogistics;
+    if(cfgSaved.fSales) cfgFSales = cfgSaved.fSales;
+    if(cfgSaved.fLogistics) cfgFLogistics = cfgSaved.fLogistics;
+    if(cfgSaved.prevCSales) cfgPrevCSales = cfgSaved.prevCSales;
+    if(cfgSaved.prevCLogistics) cfgPrevCLogistics = cfgSaved.prevCLogistics;
+    if(cfgSaved.prevFSales) cfgPrevFSales = cfgSaved.prevFSales;
+    if(cfgSaved.prevFLogistics) cfgPrevFLogistics = cfgSaved.prevFLogistics;
+    if(cfgSaved.fwPw) cfgFwPw = cfgSaved.fwPw;
+  }
+
+  const pwSaved = await loadFromStorage('cfg_fw_passwords');
+  if(pwSaved) cfgFwPasswords = pwSaved;
+  await loadWorksites();
+
+  // 포워더 선택 드롭다운 업데이트
+  updateFwDropdown();
+}
+
+function updateFwDropdown() {
+  const sel = document.getElementById('fw-select');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- 업체를 선택하세요 --</option>';
+  cfgForwarders.forEach(fw => {
+    const opt = document.createElement('option');
+    opt.value = fw; opt.textContent = fw;
+    if(fw === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function showSettingsTab() {
+  // 포워더 목록 렌더
+  renderFwList();
+  // 노선 목록 렌더
+  renderRouteList();
+  // 기본 설정 값 채우기
+  document.getElementById('cfg-exrate').value = cfgExRate;
+  document.getElementById('cfg-plan-sales').value = cfgPlanSales;
+  document.getElementById('cfg-plan-logistics').value = cfgPlanLogistics;
+  document.getElementById('cfg-f-sales').value = cfgFSales;
+  document.getElementById('cfg-f-logistics').value = cfgFLogistics;
+  document.getElementById('cfg-prev-c-sales').value = cfgPrevCSales || '';
+  document.getElementById('cfg-prev-c-logistics').value = cfgPrevCLogistics || '';
+  document.getElementById('cfg-prev-f-sales').value = cfgPrevFSales || '';
+  document.getElementById('cfg-prev-f-logistics').value = cfgPrevFLogistics || '';
+  renderWorksiteList();
+  document.getElementById('cfg-fw-pw').value = cfgFwPw;
+}
+
+function renderFwList() {
+  const list = document.getElementById('fw-list');
+  list.innerHTML = cfgForwarders.map((fw, i) => {
+    const pw = cfgFwPasswords[fw] || '';
+    return `
+    <div class="item-row" style="grid-template-columns:24px 1fr 1fr 28px;display:grid;gap:8px;align-items:center;" data-idx="${i}">
+      <span class="item-num" style="text-align:center;">${i+1}</span>
+      <input type="text" class="fw-name-inp" value="${fw}" placeholder="업체명" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:5px;font-size:12px;outline:none;">
+      <input type="text" class="fw-pw-inp" value="${pw}" placeholder="비밀번호 설정" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:5px;font-size:12px;outline:none;background:#FFFDE7;">
+      <button class="del-btn" onclick="removeForwarder(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renameFw(idx, newName) {
+  const oldName = cfgForwarders[idx];
+  cfgForwarders[idx] = newName;
+  // 비밀번호도 새 이름으로 이전
+  if(cfgFwPasswords[oldName]) {
+    cfgFwPasswords[newName] = cfgFwPasswords[oldName];
+    delete cfgFwPasswords[oldName];
+  }
+}
+
+function addForwarder() {
+  const inp = document.getElementById('new-fw-name');
+  const name = inp.value.trim();
+  if(!name) return;
+  if(cfgForwarders.includes(name)) { showToast('이미 있는 업체명이에요.'); return; }
+  cfgForwarders.push(name);
+  inp.value = '';
+  renderFwList();
+}
+
+function removeForwarder(idx) {
+  if(cfgForwarders.length <= 1) { showToast('최소 1개 이상의 포워더가 필요해요.'); return; }
+  cfgForwarders.splice(idx, 1);
+  renderFwList();
+}
+
+async function saveForwarders() {
+  // DOM에서 현재 입력값 읽어서 cfgForwarders, cfgFwPasswords 모두 갱신
+  const rows = document.getElementById('fw-list').querySelectorAll('.item-row');
+  const newFwdrs = [];
+  const newPws = {};
+  rows.forEach(row => {
+    const nameInp = row.querySelector('.fw-name-inp');
+    const pwInp   = row.querySelector('.fw-pw-inp');
+    const name = nameInp ? nameInp.value.trim() : '';
+    const pw   = pwInp   ? pwInp.value.trim()   : '';
+    if(name) {
+      newFwdrs.push(name);
+      newPws[name] = pw;
+    }
+  });
+
+  // 새로 추가된 포워더도 반영
+  if(document.getElementById('new-fw-name').value.trim()) {
+    const newName = document.getElementById('new-fw-name').value.trim();
+    if(!newFwdrs.includes(newName)) newFwdrs.push(newName);
+    document.getElementById('new-fw-name').value = '';
+  }
+
+  cfgForwarders = newFwdrs;
+  cfgFwPasswords = newPws;
+
+  const ok1 = await saveToStorage('cfg_forwarders', cfgForwarders);
+  const ok2 = await saveToStorage('cfg_fw_passwords', cfgFwPasswords);
+  if(ok1 && ok2) {
+    renderFwList();
+    updateFwDropdown();
+    showSettingsBanner();
+    showToast('포워더 목록과 비밀번호가 저장됐어요!');
+  }
+}
+
+function renderRouteList() {
+  const list = document.getElementById('route-list');
+  list.innerHTML = cfgRoutes.map((r, i) => `
+    <div class="route-row">
+      <div class="no-label">${r.no}</div>
+      <input type="text" value="${r.nation||''}" placeholder="도착국가" onchange="cfgRoutes[${i}].nation=this.value">
+      <input type="text" value="${r.site||''}" placeholder="작업지" onchange="cfgRoutes[${i}].site=this.value">
+      <input type="text" value="${r.port_o||''}" placeholder="출발PORT" onchange="cfgRoutes[${i}].port_o=this.value">
+      <input type="text" value="${r.port_i||''}" placeholder="도착PORT" onchange="cfgRoutes[${i}].port_i=this.value">
+      <input type="text" value="${r.ctnr||''}" placeholder="CTNR" onchange="cfgRoutes[${i}].ctnr=this.value">
+      <input type="number" value="${r.vol||''}" placeholder="0" onchange="cfgRoutes[${i}].vol=parseInt(this.value)||0" style="text-align:right;">
+      <input type="number" value="${r.prev_sales||''}" placeholder="직전매출" onchange="cfgRoutes[${i}].prev_sales=parseInt(this.value)||0" style="text-align:right;background:#F5F5F5;color:#888;font-size:10px;">
+      <input type="number" value="${r.prev_plan_cost||''}" placeholder="직전물류비" onchange="cfgRoutes[${i}].prev_plan_cost=parseInt(this.value)||0" style="text-align:right;background:#F5F5F5;color:#888;font-size:10px;">
+      <input type="number" value="${r.curr_sales||''}" placeholder="이번매출" onchange="cfgRoutes[${i}].curr_sales=parseInt(this.value)||0" style="text-align:right;background:#EBF3FB;color:#1565C0;font-size:10px;">
+      <input type="number" value="${r.plan_cost||''}" placeholder="이번물류비" onchange="cfgRoutes[${i}].plan_cost=parseInt(this.value)||0" style="text-align:right;background:#EBF3FB;color:#1565C0;font-weight:700;font-size:10px;">
+      <input type="text" value="${r.product||''}" placeholder="제품명" onchange="cfgRoutes[${i}].product=this.value" style="font-size:10px;">
+      <input type="text" value="${r.customer||''}" placeholder="거래처" onchange="cfgRoutes[${i}].customer=this.value" style="font-size:10px;">
+      <input type="text" value="${r.note||''}" placeholder="비고" onchange="cfgRoutes[${i}].note=this.value" style="font-size:10px;">
+      <button class="del-btn" onclick="removeRoute(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addRoute() {
+  const lastNo = cfgRoutes.length > 0 ? Math.max(...cfgRoutes.map(r=>r.no||0)) + 1 : 1;
+  cfgRoutes.push({no:lastNo, nation:'', site:'', port_o:'', port_i:'', ctnr:'', vol:0});
+  renderRouteList();
+  // 스크롤 아래로
+  document.getElementById('route-list').lastElementChild?.scrollIntoView({behavior:'smooth'});
+}
+
+function removeRoute(idx) {
+  cfgRoutes.splice(idx, 1);
+  renderRouteList();
+}
+
+async function saveRoutes() {
+  // DOM에서 현재 입력값 읽어서 cfgRoutes 갱신
+  const rows = document.getElementById('route-list').querySelectorAll('.route-row');
+  rows.forEach((row, i) => {
+    if(!cfgRoutes[i]) return;
+    const inputs = row.querySelectorAll('input');
+    if(inputs[0]) cfgRoutes[i].nation  = inputs[0].value.trim();
+    if(inputs[1]) cfgRoutes[i].site    = inputs[1].value.trim();
+    if(inputs[2]) cfgRoutes[i].port_o  = inputs[2].value.trim();
+    if(inputs[3]) cfgRoutes[i].port_i  = inputs[3].value.trim();
+    if(inputs[4]) cfgRoutes[i].ctnr    = inputs[4].value.trim();
+    if(inputs[5]) cfgRoutes[i].vol     = parseInt(inputs[5].value) || 0;
+    if(inputs[5])  cfgRoutes[i].vol           = parseInt(inputs[5].value)  || 0;
+    if(inputs[6])  cfgRoutes[i].prev_sales    = parseInt(inputs[6].value)  || 0;
+    if(inputs[7])  cfgRoutes[i].prev_plan_cost= parseInt(inputs[7].value)  || 0;
+    if(inputs[8])  cfgRoutes[i].curr_sales    = parseInt(inputs[8].value)  || 0;
+    if(inputs[9])  cfgRoutes[i].plan_cost     = parseInt(inputs[9].value)  || 0;
+    if(inputs[10]) cfgRoutes[i].product  = inputs[10].value.trim();
+    if(inputs[11]) cfgRoutes[i].customer = inputs[11].value.trim();
+    if(inputs[12]) cfgRoutes[i].note     = inputs[12].value.trim();
+  });
+
+  const ok = await saveToStorage('cfg_routes', cfgRoutes);
+  if(ok) {
+    showSettingsBanner();
+    showToast('노선 정보가 저장됐어요! 포워더 입력 페이지에 즉시 반영됩니다.');
+  }
+}
+
+async function saveConfig() {
+  const cfg = {
+    exRate:        parseFloat(document.getElementById('cfg-exrate').value) || EXCHANGE_RATE,
+    planSales:     parseFloat(document.getElementById('cfg-plan-sales').value) || PLAN_SALES,
+    planLogistics: parseFloat(document.getElementById('cfg-plan-logistics').value) || PLAN_LOGISTICS,
+    fSales:        parseFloat(document.getElementById('cfg-f-sales').value) || F_SALES,
+    fLogistics:    parseFloat(document.getElementById('cfg-f-logistics').value) || F_LOGISTICS,
+    prevCSales:    parseFloat(document.getElementById('cfg-prev-c-sales').value) || 0,
+    prevCLogistics:parseFloat(document.getElementById('cfg-prev-c-logistics').value) || 0,
+    prevFSales:    parseFloat(document.getElementById('cfg-prev-f-sales').value) || 0,
+    prevFLogistics:parseFloat(document.getElementById('cfg-prev-f-logistics').value) || 0,
+    fwPw:          document.getElementById('cfg-fw-pw').value || '',
+  };
+  const ok = await saveToStorage('cfg_basic', cfg);
+  if(ok) {
+    cfgExRate = cfg.exRate;
+    cfgPlanSales = cfg.planSales;
+    cfgPlanLogistics = cfg.planLogistics;
+    cfgFSales = cfg.fSales;
+    cfgFLogistics = cfg.fLogistics;
+    cfgPrevCSales = cfg.prevCSales || 0;
+    cfgPrevCLogistics = cfg.prevCLogistics || 0;
+    cfgPrevFSales = cfg.prevFSales || 0;
+    cfgPrevFLogistics = cfg.prevFLogistics || 0;
+    cfgFwPw = cfg.fwPw;
+    showSettingsBanner();
+    showToast('기본 설정이 저장됐어요!');
+  }
+}
+
+function showSettingsBanner() {
+  const b = document.getElementById('settings-banner');
+  b.style.display = 'block';
+  setTimeout(() => b.style.display='none', 4000);
+}
+
+
+// ══════════════════════════════════════════
+// 엑셀 업로드 → 자동 입력
+// ══════════════════════════════════════════
+function handleExcelUpload(input) {
+  const file = input.files[0];
+  if(!file) return;
+
+  const status = document.getElementById('upload-status');
+  status.textContent = '읽는 중...';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+
+      // 시트 찾기: 이름에 '견적' 또는 '포워더' 포함 → 없으면 첫 번째 시트
+      const sheetName = wb.SheetNames.find(n =>
+        n.includes('견적') || n.includes('포워더') || n.includes('Sheet')
+      ) || wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+
+      // raw:false 로 읽어서 날짜·수식 등 문자열 변환
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:true});
+
+      // 업체명 읽기 (B2 = rows[1][1])
+      const companyName = rows[1] ? String(rows[1][1]||'').trim() : '';
+      if(companyName && companyName !== currentFw) {
+        if(!confirm('파일의 업체명(' + companyName + ')과 로그인 업체(' + currentFw + ')가 다릅니다.\n계속 불러올까요?')) {
+          status.textContent = '취소됨';
+          input.value = '';
+          return;
+        }
+      }
+
+      // 헤더행 찾기: A열이 'NO' 또는 B열이 '도착국가'인 행
+      let headerRow = 4; // 기본값 행5(index4)
+      for(let i=0; i<Math.min(rows.length,10); i++) {
+        const a = String(rows[i][0]||'').trim();
+        const b = String(rows[i][1]||'').trim();
+        if(a==='NO' || b==='도착국가') { headerRow = i; break; }
+      }
+
+      // 열 매핑: 헤더행에서 컬럼 위치 동적 파악
+      const hdr = rows[headerRow] || [];
+      function colIdx(keyword) {
+        // 공백/줄바꿈 제거 후 키워드 탐색
+        const kw = keyword.replace(/[\s\n]/g,'');
+        for(let col=0; col<hdr.length; col++) {
+          const h = String(hdr[col]||'').replace(/[\s\n]/g,'');
+          if(h.includes(kw)) return col;
+        }
+        return -1;
+      }
+      // 기타비용(USD) 구분: 기타비용(원)과 다른 열
+      function colIdxNth(keyword, nth) {
+        const kw = keyword.replace(/[\s\n]/g,'');
+        let found = 0;
+        for(let col=0; col<hdr.length; col++) {
+          const h = String(hdr[col]||'').replace(/[\s\n]/g,'');
+          if(h.includes(kw)) { found++; if(found === nth) return col; }
+        }
+        return -1;
+      }
+
+      // 각 필드 컬럼 인덱스 (헤더 키워드로 자동 탐색)
+      // 현재 엑셀 열 순서 (H~X):
+      // 7=OFRT, 8=LSS, 9=AMS, 10=THC, 11=내륙, 12=DOC, 13=WFG, 14=SEF, 15=PSC, 16=PSM
+      // 17=기타비용(원), 18=기타비용(USD), 19=★합계(자동), 20=적하보험, 21=스케줄, 22=프리타임, 23=비고
+      // 열 인덱스 확정 (★합계 열 자동 탐색 후 스킵)
+      const sumCol = colIdx('합계');  // ★합계 열 위치 찾기
+      function ciAfterSum(keyword, fallback) {
+        // ★합계 뒤에서 찾기
+        const kw = keyword.replace(/[\s\n]/g,'');
+        for(let col = (sumCol > 0 ? sumCol+1 : 19); col < hdr.length; col++) {
+          const h2 = String(hdr[col]||'').replace(/[\s\n]/g,'');
+          if(h2.includes(kw)) return col;
+        }
+        return fallback;
+      }
+      const CI = {
+        no:       0,
+        ofrt:     colIdx('O/FRT')    !== -1 ? colIdx('O/FRT')    : 7,
+        lss:      colIdx('LSS')      !== -1 ? colIdx('LSS')      : 8,
+        ams:      colIdx('AMS')      !== -1 ? colIdx('AMS')      : 9,
+        thc:      colIdx('THC')      !== -1 ? colIdx('THC')      : 10,
+        inland:   colIdx('내륙운송')   !== -1 ? colIdx('내륙운송')   : 11,
+        doc:      colIdx('DOC')      !== -1 ? colIdx('DOC')      : 12,
+        wfg:      colIdx('WFG')      !== -1 ? colIdx('WFG')      : 13,
+        sef:      colIdx('SEF')      !== -1 ? colIdx('SEF')      : 14,
+        psc:      colIdx('PSC')      !== -1 ? colIdx('PSC')      : 15,
+        psm:      colIdx('PSM')      !== -1 ? colIdx('PSM')      : 16,
+        etc_krw:  colIdx('기타비용')   !== -1 ? colIdx('기타비용')   : 17,
+        etc_usd:  colIdxNth('기타비용',2) !== -1 ? colIdxNth('기타비용',2) : 18,
+        // ★합계(index 19)는 자동계산이므로 읽지 않음
+        ins:      ciAfterSum('적하보험', 20),
+        sch:      ciAfterSum('주당항차', 21),
+        freetime: ciAfterSum('프리타임', 22),
+        note:     ciAfterSum('비고',     23),
+      };
+
+      let count = 0;
+
+      for(let i = headerRow+1; i < rows.length; i++) {
+        const row = rows[i];
+        const no = parseInt(row[CI.no]);
+        if(!no || isNaN(no)) continue;
+        // 안내문 행 제외
+        if(String(row[0]||'').includes('작성 완료')) continue;
+
+        const ofrt     = parseFloat(row[CI.ofrt])     || 0;
+        const lss      = parseFloat(row[CI.lss])      || 0;
+        const ams      = parseFloat(row[CI.ams])      || 0;
+        const thc      = parseFloat(row[CI.thc])      || 0;
+        const inland   = parseFloat(row[CI.inland])   || 0;
+        const doc      = parseFloat(row[CI.doc])      || 0;
+        const wfg      = parseFloat(row[CI.wfg])      || 0;
+        const sef      = parseFloat(row[CI.sef])      || 0;
+        const psc      = parseFloat(row[CI.psc])      || 0;
+        const psm      = parseFloat(row[CI.psm])      || 0;
+        const etc_krw  = parseFloat(row[CI.etc_krw])  || 0;
+        const etc_usd  = parseFloat(row[CI.etc_usd])  || 0;
+        const ins      = parseFloat(row[CI.ins])      || 0;
+        const sch      = row[CI.sch]      ? String(row[CI.sch])      : '';
+        const freetime = row[CI.freetime] ? String(row[CI.freetime]) : '';
+        const note     = row[CI.note]     ? String(row[CI.note])     : '';
+
+        if(ofrt||lss||ams||thc||inland||doc||wfg||sef||psc||psm||etc_krw||etc_usd||ins||sch||freetime||note) {
+          if(!fwData[no]) fwData[no] = {};
+          Object.assign(fwData[no], {ofrt,lss,ams,thc,inland,doc,wfg,sef,psc,psm,etc_krw,etc_usd,ins,sch,freetime,note});
+          count++;
+        }
+      }
+
+      buildFwTable();
+      autoSave();
+
+      status.textContent = count > 0
+        ? '✓ ' + count + '개 구간 불러오기 완료!'
+        : '데이터를 찾지 못했어요. 파일을 확인해주세요.';
+      setTimeout(() => status.textContent = '', 5000);
+
+    } catch(err) {
+      console.error(err);
+      let errMsg = err.message || '';
+      if(errMsg.includes('Encrypted') || errMsg.includes('EncryptionInfo') || errMsg.includes('CFB')) {
+        status.textContent = '❌ 파일이 암호화 또는 구버전입니다. [다른 이름으로 저장] → .xlsx 형식으로 저장 후 다시 업로드하세요.';
+      } else {
+        status.textContent = '파일 읽기 실패: ' + errMsg;
+      }
+    }
+    input.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+
+
+function updateEval(fw, field, value) {
+  if(!evalScores[fw]) evalScores[fw] = {};
+  evalScores[fw][field] = parseInt(value) || 0;
+  // 점수 바뀌면 합계/순위 즉시 갱신
+  renderEval();
+}
+
+async function saveEvalScores() {
+  const ok = await saveToStorage('eval_scores', evalScores);
+  if(ok) showToast('평가점수가 저장됐어요!');
+  else showToast('저장 실패. 다시 시도해주세요.');
+}
+
+
+// ══════════════════════════════════════════
+// 노선관리 엑셀 업로드
+// ══════════════════════════════════════════
+function handleRouteExcelUpload(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const status = document.getElementById('route-upload-status');
+  status.textContent = '읽는 중...';
+  status.style.color = 'var(--dgray)';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+
+      // '노선관리' 시트 찾기
+      const sheetName = wb.SheetNames.find(n =>
+        n.includes('노선') || n.includes('Route') || n.includes('Sheet')
+      ) || wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:true});
+
+      // 헤더 행 찾기 (NO 컬럼 있는 행)
+      let headerRow = -1;
+      for(let i=0; i<Math.min(rows.length,5); i++) {
+        if(String(rows[i][0]||'').trim()==='NO' || rows[i][0]==='NO') {
+          headerRow = i; break;
+        }
+      }
+      if(headerRow < 0) {
+        // NO가 첫 번째 열이 아닌 경우
+        for(let i=0; i<Math.min(rows.length,5); i++) {
+          if(rows[i].some(v => String(v||'').trim()==='NO')) {
+            headerRow = i; break;
+          }
+        }
+      }
+      if(headerRow < 0) headerRow = 2; // 기본값 행3(index2)
+
+      const newRoutes = [];
+      for(let i = headerRow+1; i < rows.length; i++) {
+        const row = rows[i];
+        const no = parseInt(row[0]);
+        if(!no || isNaN(no)) continue;
+
+        const nation  = String(row[1]||'').trim();
+        const site    = String(row[2]||'').trim();
+        const port_o  = String(row[3]||'').trim();
+        const port_i  = String(row[4]||'').trim();
+        const ctnr    = String(row[5]||'').trim();
+        const vol            = parseFloat(row[6])  || 0;
+        const prev_sales     = parseInt(row[7])   || 0;
+        const prev_plan_cost = parseInt(row[8])   || 0;
+        const curr_sales     = parseInt(row[9])   || 0;
+        const plan_cost      = parseInt(row[10])  || 0;
+        const active         = String(row[11]||'Y').trim().toUpperCase() !== 'N';
+        const note           = String(row[12]||'').trim();
+        const product        = String(row[13]||'').trim();
+        const customer       = String(row[14]||'').trim();
+
+        if(!active) continue;
+        newRoutes.push({ no, nation, site, port_o, port_i, ctnr, vol, prev_sales, prev_plan_cost, curr_sales, plan_cost, note, product, customer });
+      }
+
+      if(newRoutes.length === 0) {
+        status.textContent = '노선 데이터를 찾지 못했어요. 양식을 확인해주세요.';
+        status.style.color = 'var(--red)';
+        input.value=''; return;
+      }
+
+      // 확인 후 반영
+      if(!confirm(`총 ${newRoutes.length}개 노선을 불러왔어요.\n기존 노선 데이터를 덮어쓸까요?`)) {
+        input.value=''; status.textContent='취소됨'; return;
+      }
+
+      cfgRoutes = newRoutes;
+      renderRouteList();
+      status.textContent = `✓ ${newRoutes.length}개 노선 불러오기 완료! [저장] 버튼을 눌러주세요.`;
+      status.style.color = 'var(--green)';
+
+    } catch(err) {
+      console.error(err);
+      status.textContent = '파일 읽기 실패: ' + err.message;
+      status.style.color = 'var(--red)';
+    }
+    input.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+
+// ══════════════════════════════════════════════════════
+// 선정 포워더 관리
+// ══════════════════════════════════════════════════════
+let selectedFw = {}; // {no: {fw, total}}
+
+async function loadSelections() {
+  const saved = await loadFromStorage('selected_fw');
+  if(saved) selectedFw = saved;
+}
+
+async function saveSelections() {
+  const ok = await saveToStorage('selected_fw', selectedFw);
+  if(ok) {
+    showToast('선정 결과가 저장됐어요! 보고자료에 반영됩니다.');
+    renderReport();
+  } else {
+    showToast('저장 실패. 다시 시도해주세요.');
+  }
+}
+
+function onSelectFw(no, fw, total) {
+  if(!fw || fw === '') {
+    delete selectedFw[no];
+  } else {
+    selectedFw[no] = { fw: fw, total: parseFloat(total) || 0 };
+  }
+  renderFwSelectionSummary();
+}
+
+function renderFwSelectionSummary() {
+  const el = document.getElementById('fw-selection-summary');
+  if(!el) return;
+
+  const allFwdrs = (cfgForwarders && cfgForwarders.length > 0) ? cfgForwarders : FORWARDERS;
+  const fwRoutes = {};
+  allFwdrs.forEach(function(fw) { fwRoutes[fw] = { routes: [], nations: [], total: 0, vol: 0 }; });
+
+  cfgRoutes.forEach(function(route) {
+    const sel = selectedFw[route.no];
+    if(!sel || !sel.fw) return;
+    if(!fwRoutes[sel.fw]) fwRoutes[sel.fw] = { routes: [], nations: [], total: 0, vol: 0 };
+    const vol = route.vol || 0;
+    fwRoutes[sel.fw].routes.push(route.port_i || '');
+    if(route.nation) fwRoutes[sel.fw].nations.push(route.nation);
+    fwRoutes[sel.fw].total += sel.total * vol;
+    fwRoutes[sel.fw].vol += vol;
+  });
+
+  // 종합평가 순위 계산
+  const rawCounts = {};
+  allFwdrs.forEach(function(fw){ rawCounts[fw] = 0; });
+  cfgRoutes.filter(function(r){ return r.nation && r.nation !== '국내'; }).forEach(function(route){
+    const ranked = getRanked(route.no);
+    if(ranked[0]) rawCounts[ranked[0].fw] = (rawCounts[ranked[0].fw]||0) + 3;
+    if(ranked[1]) rawCounts[ranked[1].fw] = (rawCounts[ranked[1].fw]||0) + 2;
+    if(ranked[2]) rawCounts[ranked[2].fw] = (rawCounts[ranked[2].fw]||0) + 1;
+  });
+  const maxRaw = Math.max.apply(null, allFwdrs.map(function(fw){ return rawCounts[fw]||0; }).concat([0]));
+  const evalFinals = {};
+  allFwdrs.forEach(function(fw){
+    const e = evalScores[fw] || {};
+    const qual = (e.stability||0) + (e.network||0) + (e.response||0);
+    const priceScore = maxRaw > 0 ? Math.round((rawCounts[fw]||0) / maxRaw * 90 * 10) / 10 : 0;
+    evalFinals[fw] = qual + priceScore;
+  });
+  function getEvalRank(fw) {
+    const myScore = evalFinals[fw];
+    if(myScore === 0) return '';
+    const higher = allFwdrs.filter(function(x){ return evalFinals[x] > myScore; }).length;
+    return '종합평가 ' + (higher+1) + '위';
+  }
+
+  const fwdrsWithData = allFwdrs.filter(function(fw) {
+    return fwRoutes[fw] && fwRoutes[fw].routes.length > 0;
+  });
+
+  if(fwdrsWithData.length === 0) {
+    el.innerHTML = '<p style="color:var(--dgray);font-size:12px;">아직 선정된 포워더가 없어요. 위 테이블의 <strong>✓ 선정 포워더</strong> 드롭다운에서 선정하세요.</p>';
+    return;
+  }
+
+  const colors = ['#2E75B6','#70AD47','#ED7D31','#C00000','#7030A0','#00B0F0','#FF6600'];
+  let htmlStr = '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+  fwdrsWithData.forEach(function(fw, i) {
+    const d = fwRoutes[fw];
+    const nations = [...new Set(d.nations)].join(', ');
+    const evalRank = getEvalRank(fw);
+    const color = colors[i % colors.length];
+    htmlStr += '<div style="background:' + color + ';color:white;border-radius:8px;padding:14px 18px;min-width:150px;">';
+    htmlStr += '<div style="font-weight:700;font-size:14px;">' + fw + '</div>';
+    if(evalRank) htmlStr += '<div style="font-size:10px;opacity:0.85;margin-top:2px;background:rgba(255,255,255,0.2);border-radius:4px;padding:2px 6px;display:inline-block;">' + evalRank + '</div>';
+    htmlStr += '<div style="font-size:11px;opacity:0.9;margin-top:6px;">' + nations + '</div>';
+    htmlStr += '<div style="font-size:11px;opacity:0.85;">' + d.vol + ' CTN · ' + d.routes.length + '개 구간</div>';
+    htmlStr += '<div style="font-weight:700;font-size:13px;margin-top:6px;">' + fmt(Math.round(d.total)) + '원</div>';
+    htmlStr += '</div>';
+  });
+  htmlStr += '</div>';
+  el.innerHTML = htmlStr;
+}
+
+
+
+
+
+
+function switchFwTab(tab) {
+  document.getElementById('fw-panel-input').style.display = tab === 'input' ? 'block' : 'none';
+  document.getElementById('fw-panel-conditions').style.display = tab === 'conditions' ? 'block' : 'none';
+  const activeStyle = 'padding:9px 20px;font-size:13px;font-weight:700;color:var(--navy);border-bottom:2px solid var(--navy);margin-bottom:-2px;cursor:pointer;';
+  const inactiveStyle = 'padding:9px 20px;font-size:13px;font-weight:600;color:var(--dgray);cursor:pointer;';
+  document.getElementById('fw-tab-input').style.cssText = tab === 'input' ? activeStyle : inactiveStyle;
+  document.getElementById('fw-tab-conditions').style.cssText = tab === 'conditions' ? activeStyle : inactiveStyle;
+}
+
+const DEFAULT_WORKSITES = [
+  { name: '켄달', addr: '안성시 원곡면 지문로 393 지상 1층 JP로지스틱스 상온창고 (켄달센터)' },
+  { name: '도곡', addr: '경기도 안성시 양성면 도곡리 40-6 (양성로 376-92) 지하 2층' },
+  { name: '경산', addr: '경북 경산시 진량읍 대학로 1090 매일유업 경산공장' },
+  { name: '우성월드', addr: '경상북도 영천시 대창면 금박로 945' }
+];
+let cfgWorksites = DEFAULT_WORKSITES.map(function(w){ return Object.assign({}, w); });
+
+async function loadWorksites() {
+  const saved = await loadFromStorage('cfg_worksites');
+  if(saved && saved.length > 0) cfgWorksites = saved;
+}
+
+function renderWorksiteList() {
+  const el = document.getElementById('worksite-list');
+  if(!el) return;
+  el.innerHTML = '';
+  cfgWorksites.forEach(function(ws, i) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:100px 1fr 28px;gap:8px;align-items:center;margin-bottom:6px;';
+
+    const nameInp = document.createElement('input');
+    nameInp.type = 'text';
+    nameInp.value = ws.name;
+    nameInp.placeholder = '작업지명';
+    nameInp.style.cssText = 'padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-weight:700;color:var(--navy);outline:none;';
+    nameInp.addEventListener('input', function() { cfgWorksites[i].name = this.value; });
+
+    const addrInp = document.createElement('input');
+    addrInp.type = 'text';
+    addrInp.value = ws.addr;
+    addrInp.placeholder = '주소 입력';
+    addrInp.style.cssText = 'padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;outline:none;';
+    addrInp.addEventListener('input', function() { cfgWorksites[i].addr = this.value; });
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'del-btn';
+    delBtn.textContent = '✕';
+    delBtn.addEventListener('click', function() {
+      cfgWorksites.splice(i, 1);
+      renderWorksiteList();
+    });
+
+    row.appendChild(nameInp);
+    row.appendChild(addrInp);
+    row.appendChild(delBtn);
+    el.appendChild(row);
+  });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn-add';
+  addBtn.textContent = '+ 작업지 추가';
+  addBtn.style.marginTop = '8px';
+  addBtn.addEventListener('click', function() {
+    cfgWorksites.push({ name: '', addr: '' });
+    renderWorksiteList();
+  });
+  el.appendChild(addBtn);
+}
+
+async function saveWorksites() {
+  const ok = await saveToStorage('cfg_worksites', cfgWorksites);
+  if(ok) {
+    showToast('작업지 주소가 저장됐어요!');
+    updateFwWorksiteDisplay();
+  }
+}
+
+function updateFwWorksiteDisplay() {
+  const el = document.getElementById('fw-worksite-list');
+  if(!el) return;
+  if(!cfgWorksites || cfgWorksites.length === 0) return;
+  el.innerHTML = cfgWorksites.map(function(ws) {
+    return (ws.name ? '<strong>' + ws.name + ':</strong> ' : '') + (ws.addr || '');
+  }).join('<br>');
+}
+
+
+
+
+
+// ══════════════════════════════════════════════════════
+// 포워더 입력양식 스타일 포함 다운로드 (xlsx-js-style 사용)
+// ══════════════════════════════════════════════════════
+
+
+// ── 관리자 로그아웃
+function adminLogout() {
+  sessionStorage.removeItem('admin_token');
+  window.location.href = '/admin-login';
+}
+
+// ── 페이지 초기화: 서버 토큰 검증
+(async function() {
+  const token = sessionStorage.getItem('admin_token');
+
+  if(!token) {
+    window.location.replace('/admin-login');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/verify', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ token })
+    });
+    const data = await res.json();
+
+    if(!res.ok || data.role !== 'admin') {
+      sessionStorage.removeItem('admin_token');
+      window.location.replace('/admin-login');
+      return;
+    }
+
+    // 인증 성공 → 대시보드 표시
+    document.getElementById('auth-check').style.display = 'none';
+    document.getElementById('admin-wrap').style.display = 'block';
+
+    await loadSettings();
+    const saved = await loadFromStorage('eval_scores');
+    if(saved) Object.assign(evalScores, saved);
+    await refreshData();
+
+  } catch(e) {
+    window.location.replace('/admin-login');
+  }
+})();
+</script>
+</body>
+</html>
