@@ -11,8 +11,10 @@ function ensureObject(value) {
   return {};
 }
 
-const ADMIN_PW = process.env.ADMIN_PASSWORD || 'maeil2026!';
-const DEFAULT_FW_PW = process.env.FW_PASSWORD || 'bidding2026';
+const ADMIN_PW = process.env.ADMIN_PASSWORD;
+const DEFAULT_FW_PW = process.env.FW_PASSWORD;
+
+if (!ADMIN_PW) throw new Error('ADMIN_PASSWORD 환경변수가 설정되지 않았습니다.');
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_SECONDS = 600;
 
