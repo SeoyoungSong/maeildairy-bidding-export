@@ -545,13 +545,11 @@ async function doLogin() {
     if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = '입장하기'; }
   }
 }
-document.getElementById('admin-password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
-document.getElementById('fw-password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 
 function showLoginErr(msg) {
   const el = document.getElementById('login-err');
-  el.textContent = msg; el.style.display = 'block';
-  setTimeout(()=>el.style.display='none', 3000);
+  if(el) { el.textContent = msg; el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 3000); }
 }
 
 function showPage(id) {
@@ -1660,6 +1658,7 @@ async function loadSettings() {
 
 function updateFwDropdown() {
   const sel = document.getElementById('fw-select');
+  if(!sel) return;
   const cur = sel.value;
   sel.innerHTML = '<option value="">-- 업체를 선택하세요 --</option>';
   cfgForwarders.forEach(fw => {
