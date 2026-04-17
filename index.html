@@ -364,6 +364,84 @@ let fwData = {}; // 현재 포워더 입력 데이터
 let allSubmissions = {}; // 전체 제출 데이터 (admin용)
 let evalScores = {}; // 종합평가 점수
 
+// ── 설정값 (스토리지에서 로드, 없으면 기본값)
+let cfgForwarders = [...FORWARDERS];
+let cfgFwPasswords = {};
+let cfgRoutes = ROUTES.map(r=>({...r}));
+let cfgExRate = EXCHANGE_RATE;
+let cfgPlanSales = PLAN_SALES;
+let cfgPlanLogistics = PLAN_LOGISTICS;
+let cfgFSales = F_SALES;
+let cfgFLogistics = F_LOGISTICS;
+let cfgPrevCSales = 0;
+let cfgPrevCLogistics = 0;
+let cfgPrevFSales = 0;
+let cfgPrevFLogistics = 0;
+let cfgFwPw = '';
+
+const DEFAULT_WORKSITES = [
+  { name: '켄달', addr: '경기도 평택시 포승읍 평택항로 6 켄달스퀘어물류센터' },
+  { name: '도곡', addr: '경기도 안성시 양성면 도곡리 40-6 (양성로 376-92) 지하 2층' },
+  { name: '경산', addr: '경북 경산시 진량읍 대학로 1090 매일유업 경산공장' },
+  { name: '우성월드', addr: '경상북도 영천시 대창면 금박로 945' }
+];
+let cfgWorksites = DEFAULT_WORKSITES.map(w=>({...w}));
+
+async function loadWorksites() {
+  const saved = await loadFromStorage('cfg_worksites');
+  if(saved && saved.length > 0) cfgWorksites = saved;
+}
+
+function updateFwDropdown() {
+  const sel = document.getElementById('fw-select');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- 업체를 선택하세요 --</option>';
+  cfgForwarders.forEach(fw => {
+    const opt = document.createElement('option');
+    opt.value = fw; opt.textContent = fw;
+    if(fw === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function updateFwWorksiteDisplay() {
+  const el = document.getElementById('fw-worksite-list');
+  if(!el) return;
+  if(!cfgWorksites || cfgWorksites.length === 0) return;
+  el.innerHTML = cfgWorksites.map(function(ws) {
+    return (ws.name ? '<strong>' + ws.name + ':</strong> ' : '') + (ws.addr || '');
+  }).join('<br>');
+}
+
+async function loadSettings() {
+  const fwSaved = await loadFromStorage('cfg_forwarders');
+  if(fwSaved && fwSaved.length > 0) cfgForwarders = fwSaved;
+
+  const rtSaved = await loadFromStorage('cfg_routes');
+  if(rtSaved && rtSaved.length > 0) cfgRoutes = rtSaved;
+
+  const cfgSaved = await loadFromStorage('cfg_basic');
+  if(cfgSaved) {
+    if(cfgSaved.exRate) cfgExRate = cfgSaved.exRate;
+    if(cfgSaved.planSales) cfgPlanSales = cfgSaved.planSales;
+    if(cfgSaved.planLogistics) cfgPlanLogistics = cfgSaved.planLogistics;
+    if(cfgSaved.fSales) cfgFSales = cfgSaved.fSales;
+    if(cfgSaved.fLogistics) cfgFLogistics = cfgSaved.fLogistics;
+    if(cfgSaved.prevCSales) cfgPrevCSales = cfgSaved.prevCSales;
+    if(cfgSaved.prevCLogistics) cfgPrevCLogistics = cfgSaved.prevCLogistics;
+    if(cfgSaved.prevFSales) cfgPrevFSales = cfgSaved.prevFSales;
+    if(cfgSaved.prevFLogistics) cfgPrevFLogistics = cfgSaved.prevFLogistics;
+    if(cfgSaved.fwPw) cfgFwPw = cfgSaved.fwPw;
+  }
+
+  const pwSaved = await loadFromStorage('cfg_fw_passwords');
+  if(pwSaved) cfgFwPasswords = pwSaved;
+
+  await loadWorksites();
+  updateFwDropdown();
+}
+
 FORWARDERS.forEach(fw => { evalScores[fw] = {stability:0, network:0, response:0}; });
 evalScores['람세스'] = {stability:3, network:2, response:5};
 evalScores['원스탑'] = {stability:3, network:2, response:5};
