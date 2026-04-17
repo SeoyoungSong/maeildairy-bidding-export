@@ -452,6 +452,11 @@ if(fwPwEl) fwPwEl.addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin()
 })();
 
 async function handleExcelUpload(input) {
+  if(isBiddingClosed) {
+    showToast('비딩이 마감됐습니다. 업로드가 불가합니다.');
+    input.value = '';
+    return;
+  }
   const file = input.files[0];
   if(!file) return;
 
@@ -877,6 +882,7 @@ function onInputChange(el) {
 }
 
 async function autoSave() {
+  if(isBiddingClosed) return; // 마감 중 저장 차단
   const ind = document.getElementById('fw-save-indicator');
   if(ind) ind.textContent = '저장 중...';
   const ok = await saveToStorage(`fw_data_${currentFw}`, fwData);
@@ -893,6 +899,7 @@ function calcTotal(d) {
 }
 
 async function saveDraft() {
+  if(isBiddingClosed) { showToast('비딩이 마감됐습니다. 저장이 불가합니다.'); return; }
   const btn = document.getElementById('draft-btn');
   const status = document.getElementById('submit-status');
   btn.textContent = '저장 중...';
@@ -912,6 +919,7 @@ async function saveDraft() {
 }
 
 async function submitQuote() {
+  if(isBiddingClosed) { showToast('비딩이 마감됐습니다. 제출이 불가합니다.'); return; }
   const btn = document.getElementById('submit-btn');
   const status = document.getElementById('submit-status');
   const info = document.getElementById('submit-info');
