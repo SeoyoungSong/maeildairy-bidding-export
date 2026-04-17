@@ -92,8 +92,10 @@ export default async function handler(req, res) {
     const { token } = body || {};
     if (!token) return res.status(401).json({ error: '인증이 필요합니다.' });
 
-    const session = await redis.get(`session:${token}`);
-    if (!session) return res.status(401).json({ error: '세션이 만료됐습니다. 다시 로그인해주세요.' });
+    const rawSession = await redis.get(`session:${token}`);
+    if (!rawSession) return res.status(401).json({ error: '세션이 만료됐습니다. 다시 로그인해주세요.' });
+    const session = typeof rawSession === 'string' ? JSON.parse(rawSession) : rawSession;
+    if (!session || !session.role) return res.status(401).json({ error: '세션 오류' });
 
     // Redis에서 설정 로드
     const [rawRoutes, rawForwarders, rawWorksites, rawBasic] = await Promise.all([
