@@ -2341,22 +2341,43 @@ function buildAdminUI() {
   </div>`;
 }
 
-// ── 페이지 초기화: 쿠키 기반 서버 검증
+// ── 페이지 초기화
 (async function() {
+  const loading = document.getElementById('auth-check');
+  const adminWrap = document.getElementById('admin-wrap');
+
+  // 1. sessionStorage에서 토큰 확인
+  const token = sessionStorage.getItem('admin_token');
+  if (!token) {
+    window.location.replace('/admin-login.html');
+    return;
+  }
+
   try {
-    // 쿠키 검증 (HttpOnly 쿠키는 서버에서만 읽을 수 있음)
-    const res = await fetch('/api/admin-check', { method: 'GET', credentials: 'include' });
+    // 2. 서버에서 토큰 검증
+    const res = await fetch('/api/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
 
     if (!res.ok) {
-      // 미인증 → 로그인 페이지로
+      sessionStorage.removeItem('admin_token');
       window.location.replace('/admin-login.html');
       return;
     }
 
-    // 인증 성공 → UI 빌드 후 표시
+    const data = await res.json();
+    if (data.role !== 'admin') {
+      sessionStorage.removeItem('admin_token');
+      window.location.replace('/admin-login.html');
+      return;
+    }
+
+    // 3. 인증 성공 → UI 빌드 후 표시
     buildAdminUI();
-    document.getElementById('auth-check').style.display = 'none';
-    document.getElementById('admin-wrap').style.display = 'block';
+    loading.style.display = 'none';
+    adminWrap.style.display = 'block';
 
     await loadSettings();
     const saved = await loadFromStorage('eval_scores');
@@ -2364,6 +2385,12 @@ function buildAdminUI() {
     await refreshData();
 
   } catch(e) {
-    window.location.replace('/admin-login.html');
+    console.error('Auth error:', e);
+    // 서버 오류여도 토큰 있으면 일단 진입
+    buildAdminUI();
+    loading.style.display = 'none';
+    adminWrap.style.display = 'block';
+    await loadSettings();
+    await refreshData();
   }
 })();
