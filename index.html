@@ -333,50 +333,49 @@ evalScores['JPI']   = {stability:2, network:2, response:3};
 
 // ── 스토리지 (Vercel KV API 기반 — 모든 기기에서 공유)
 async function saveToStorage(key, value) {
+  const token = sessionStorage.getItem('bidding_token');
+  if (!token) { console.warn('토큰 없음, 저장 불가'); return false; }
   try {
     const res = await fetch('/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, value })
+      body: JSON.stringify({ key, value, token })
     });
+    if (res.status === 401) {
+      sessionStorage.removeItem('bidding_token');
+      sessionStorage.removeItem('bidding_fw');
+      showPage('login-page');
+      return false;
+    }
     if (!res.ok) throw new Error(await res.text());
-    // 로컬에도 캐시 (오프라인 대비)
-    try { localStorage.setItem('bidding_cache_' + key, JSON.stringify(value)); } catch(e) {}
     return true;
   } catch(e) {
     console.error('저장 실패:', e);
-    // API 실패 시 로컬 캐시로 fallback
-    try { localStorage.setItem('bidding_cache_' + key, JSON.stringify(value)); return true; } catch(e2) { return false; }
+    return false;
   }
 }
 
 async function loadFromStorage(key) {
+  const token = sessionStorage.getItem('bidding_token');
+  if (!token) return null;
   try {
-    const res = await fetch('/api/load?key=' + encodeURIComponent(key));
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error(await res.text());
+    const res = await fetch('/api/load', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, token })
+    });
+    if (res.status === 401 || res.status === 403) return null;
+    if (!res.ok) return null;
     const data = await res.json();
     return data.value ?? null;
   } catch(e) {
-    console.warn('API 로드 실패, 캐시 사용:', e);
-    // API 실패 시 로컬 캐시로 fallback
-    try {
-      const v = localStorage.getItem('bidding_cache_' + key);
-      return v ? JSON.parse(v) : null;
-    } catch(e2) { return null; }
+    console.warn('API 로드 실패:', e);
+    return null;
   }
 }
 
 async function deleteFromStorage(key) {
-  try {
-    await fetch('/api/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, value: null })
-    });
-    localStorage.removeItem('bidding_cache_' + key);
-    return true;
-  } catch(e) { return false; }
+  return await saveToStorage(key, null);
 }
 
 // ── 유틸
