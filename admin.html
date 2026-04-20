@@ -1037,7 +1037,51 @@ function renderRankTable() {
   renderFwSelectionSummary();
 }
 
+// ── 보고자료 설정
+function getReportUnit() {
+  const sel = document.getElementById('report-unit');
+  return sel ? parseInt(sel.value) : 1;
+}
+
+function getUnitLabel() {
+  const unit = getReportUnit();
+  if (unit === 1000000) return '백만원';
+  if (unit === 100000000) return '억원';
+  return '원';
+}
+
+function fmtR(n) {
+  // 단위 적용 후 포맷
+  const unit = getReportUnit();
+  if (!n) return '';
+  const v = n / unit;
+  if (unit === 1) return Math.round(v).toLocaleString('ko-KR');
+  return v.toFixed(1).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function applyReportFontSize() {
+  const sz = document.getElementById('report-fontsize')?.value || '13';
+  const els = document.querySelectorAll('#tab-report table, #tab-report td, #tab-report th');
+  els.forEach(el => el.style.fontSize = sz + 'px');
+}
+
+function updateReportHeaders() {
+  const lbl = getUnitLabel();
+  const ids = ['rh-rank1price','rh-selprice','rh-diff','rh-prevsales','rh-prevplan','rh-currsales','rh-currplan','rh-bidcost','rh-saving'];
+  const labels = [
+    `1위 견적가(${lbl})`, `선정 견적가(${lbl})`, `1위↔선정 차액(${lbl})`,
+    `직전반기<br>매출(${lbl})`, `직전반기<br>물류비(${lbl})`,
+    `이번반기<br>매출(${lbl})`, `이번반기<br>물류비(${lbl})`,
+    `비딩<br>물류비(${lbl})`, `절감금액(${lbl})`
+  ];
+  ids.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = labels[i];
+  });
+}
+
 function renderReport() {
+  updateReportHeaders();
   // 비딩 물류비 계산 (해외 구간 NO1~35, 1위금액×예상물량)
   let bidTotal = 0;
   cfgRoutes.filter(r=>r.nation && r.nation!=='국내').forEach(route => {
@@ -1062,37 +1106,37 @@ function renderReport() {
     <tbody>
       ${cfgPrevCSales>0 ? `<tr style="background:#F8F9FA;">
         <td style="color:#888;font-size:11px;">직전반기 C조건 (참고)</td>
-        <td style="color:#888;font-size:11px;">${fmt(cfgPrevCSales)}</td>
-        <td style="color:#888;font-size:11px;">${fmt(cfgPrevCLogistics)}</td>
+        <td style="color:#888;font-size:11px;">${fmtR(cfgPrevCSales)}</td>
+        <td style="color:#888;font-size:11px;">${fmtR(cfgPrevCLogistics)}</td>
         <td style="color:#888;">-</td><td>-</td>
         <td style="color:#888;font-size:11px;">${pct(cfgPrevCLogistics/cfgPrevCSales)}</td>
         <td>-</td><td>-</td>
       </tr>` : ''}
       <tr>
         <td>이번반기 C조건 (비딩 대상)</td>
-        <td>${fmt(cfgPlanSales||PLAN_SALES)}</td><td>${fmt(cfgPlanLogistics||PLAN_LOGISTICS)}</td>
-        <td class="${bidTotal>(cfgPlanLogistics||PLAN_LOGISTICS)?'negative':'highlight'}">${fmt(bidTotal)}</td>
-        <td class="${savings>=0?'highlight':'negative'}">${savings>=0?'-':'+'}${fmt(Math.abs(savings))}</td>
+        <td>${fmtR(cfgPlanSales||PLAN_SALES)}</td><td>${fmtR(cfgPlanLogistics||PLAN_LOGISTICS)}</td>
+        <td class="${bidTotal>(cfgPlanLogistics||PLAN_LOGISTICS)?'negative':'highlight'}">${fmtR(bidTotal)}</td>
+        <td class="${savings>=0?'highlight':'negative'}">${savings>=0?'-':'+'}${fmtR(Math.abs(savings))}</td>
         <td>${pct(planRate)}</td><td>${pct(bidRate)}</td>
         <td class="${planRate>=bidRate?'highlight':'negative'}">${planRate>=bidRate?'-':'+'}${pct(Math.abs(planRate-bidRate))}</td>
       </tr>
       ${cfgPrevFSales>0 ? `<tr style="background:#F8F9FA;">
         <td style="color:#888;font-size:11px;">직전반기 F조건 (참고)</td>
-        <td style="color:#888;font-size:11px;">${fmt(cfgPrevFSales)}</td>
-        <td style="color:#888;font-size:11px;">${fmt(cfgPrevFLogistics)}</td>
+        <td style="color:#888;font-size:11px;">${fmtR(cfgPrevFSales)}</td>
+        <td style="color:#888;font-size:11px;">${fmtR(cfgPrevFLogistics)}</td>
         <td style="color:#888;">-</td><td>-</td>
         <td style="color:#888;font-size:11px;">${pct(cfgPrevFLogistics/cfgPrevFSales)}</td>
         <td>-</td><td>-</td>
       </tr>` : ''}
       <tr>
         <td>이번반기 F조건 (비딩 미대상)</td>
-        <td>${fmt(cfgFSales)}</td><td>${fmt(cfgFLogistics)}</td><td>${fmt(cfgFLogistics)}</td>
+        <td>${fmtR(cfgFSales)}</td><td>${fmtR(cfgFLogistics)}</td><td>${fmtR(cfgFLogistics)}</td>
         <td>0</td><td>${pct(cfgFLogistics/cfgFSales)}</td><td>${pct(cfgFLogistics/cfgFSales)}</td><td>0.00%</td>
       </tr>
       <tr class="total">
         <td>이번반기 합 계</td>
-        <td>${fmt(fSales)}</td><td>${fmt(fPlanTot)}</td><td>${fmt(fBidTot)}</td>
-        <td class="${fPlanTot>=fBidTot?'highlight':'negative'}">${fPlanTot>=fBidTot?'-':'+'}${fmt(Math.abs(fPlanTot-fBidTot))}</td>
+        <td>${fmtR(fSales)}</td><td>${fmtR(fPlanTot)}</td><td>${fmtR(fBidTot)}</td>
+        <td class="${fPlanTot>=fBidTot?'highlight':'negative'}">${fPlanTot>=fBidTot?'-':'+'}${fmtR(Math.abs(fPlanTot-fBidTot))}</td>
         <td>${pct(fPlanTot/fSales)}</td><td>${pct(fBidTot/fSales)}</td>
         <td class="${fPlanTot/fSales>=fBidTot/fSales?'highlight':'negative'}">${fPlanTot/fSales>=fBidTot/fSales?'-':'+'}${pct(Math.abs(fPlanTot/fSales-fBidTot/fSales))}</td>
       </tr>
@@ -1139,16 +1183,16 @@ function renderReport() {
     tr.innerHTML = '<td>' + route.no + '</td><td>' + route.nation + '</td><td>' + route.site + '</td>' +
       '<td>' + route.port_o + '</td><td>' + route.port_i + '</td><td>' + route.ctnr + '</td><td>' + (vol||'') + '</td>' +
       '<td class="rank-1">' + (r1?r1.fw:'-') + '</td>' +
-      '<td class="rank-1">' + (r1?fmt(r1.total):'') + '</td>' +
+      '<td class="rank-1">' + (r1?fmtR(r1.total):'') + '</td>' +
       '<td style="background:#F0FAF0;font-weight:700;color:#375623;">' + selName + '</td>' +
-      '<td style="background:#F0FAF0;font-weight:700;color:#375623;">' + (selPrice?fmt(selPrice):'') + '</td>' +
-      '<td style="' + (isSelected?'color:#ED7D31;font-weight:700;':'') + '">' + (r1&&selPrice&&r1.total!==selPrice?fmt(selPrice-r1.total):'') + '</td>' +
-      '<td style="text-align:right;color:#999;font-size:10px;">' + (routePrevSales>0?fmt(routePrevSales):'-') + '</td>' +
-      '<td style="text-align:right;color:#999;font-size:10px;">' + (routePrevPlan>0?fmt(routePrevPlan):'-') + '</td>' +
-      '<td style="text-align:right;color:#2E75B6;font-size:10px;">' + (routeCurrSales>0?fmt(routeCurrSales):'-') + '</td>' +
-      '<td style="text-align:right;color:#2E75B6;">' + (routePlan?fmt(routePlan):'-') + '</td>' +
-      '<td style="text-align:right;">' + (bidCost?fmt(bidCost):'-') + '</td>' +
-      '<td style="text-align:right;' + (savings>=0?'color:#1565C0;font-weight:700;':'color:#C00000;font-weight:700;') + '">' + (routePlan>0?(savings>=0?'-':'+') + fmt(Math.abs(savings)):'-') + '</td>' +
+      '<td style="background:#F0FAF0;font-weight:700;color:#375623;">' + (selPrice?fmtR(selPrice):'') + '</td>' +
+      '<td style="' + (isSelected?'color:#ED7D31;font-weight:700;':'') + '">' + (r1&&selPrice&&r1.total!==selPrice?fmtR(selPrice-r1.total):'') + '</td>' +
+      '<td style="text-align:right;color:#999;font-size:10px;">' + (routePrevSales>0?fmtR(routePrevSales):'-') + '</td>' +
+      '<td style="text-align:right;color:#999;font-size:10px;">' + (routePrevPlan>0?fmtR(routePrevPlan):'-') + '</td>' +
+      '<td style="text-align:right;color:#2E75B6;font-size:10px;">' + (routeCurrSales>0?fmtR(routeCurrSales):'-') + '</td>' +
+      '<td style="text-align:right;color:#2E75B6;">' + (routePlan?fmtR(routePlan):'-') + '</td>' +
+      '<td style="text-align:right;">' + (bidCost?fmtR(bidCost):'-') + '</td>' +
+      '<td style="text-align:right;' + (savings>=0?'color:#1565C0;font-weight:700;':'color:#C00000;font-weight:700;') + '">' + (routePlan>0?(savings>=0?'-':'+') + fmtR(Math.abs(savings)):'-') + '</td>' +
       '<td style="text-align:center;' + (savings>=0?'color:#1565C0;font-weight:700;':'color:#C00000;font-weight:700;') + '">' + (routePlan>0?savePct:'-') + '</td>';
 
     rtbody.appendChild(tr);
@@ -1177,7 +1221,7 @@ function renderReport() {
     });
     grandTotal+=tot;
     const totalVol = routes.reduce((s,r)=>s+(r.vol||0),0);
-    const totDisplay = tot>0 ? fmt(tot) : (hasData ? '(물량 미입력)' : '-');
+    const totDisplay = tot>0 ? fmtR(tot) : (hasData ? '(물량 미입력)' : '-');
     // 국가별 사업계획 물류비: 노선별 직접 입력값 합산 우선, 없으면 물량 비율 배분
     const totalVol_all = cfgRoutes.filter(function(r){ return r.nation && r.nation !== '국내'; }).reduce(function(s,r){ return s+(r.vol||0); }, 0);
     const sumPlanCost = routes.reduce(function(s,r){ return s+(r.plan_cost||0); }, 0);
@@ -1185,12 +1229,12 @@ function renderReport() {
       : (totalVol_all > 0 && totalVol > 0 ? Math.round(cPlanLogistics * totalVol / totalVol_all) : 0);
     const savingsAmt = nationPlan > 0 && tot > 0 ? nationPlan - tot : 0;
     const savingsPctNation = nationPlan > 0 && tot > 0 ? ((savingsAmt/nationPlan)*100).toFixed(1)+'%' : '-';
-    const planDisplay = nationPlan > 0 ? fmt(nationPlan) : '-';
-    const savingsDisplay = savingsAmt !== 0 ? fmt(savingsAmt) : '-';
+    const planDisplay = nationPlan > 0 ? fmtR(nationPlan) : '-';
+    const savingsDisplay = savingsAmt !== 0 ? fmtR(savingsAmt) : '-';
     // 절감: savings>0 → 파랑(-), 초과: savings<0 → 빨강(+)
     const savColor = savingsAmt > 0 ? 'color:#1565C0;font-weight:700;' : (savingsAmt < 0 ? 'color:#C00000;font-weight:700;' : '');
     const savSign = savingsAmt > 0 ? '-' : (savingsAmt < 0 ? '+' : '');
-    const savingsDisplaySigned = savingsAmt !== 0 ? savSign + fmt(Math.abs(savingsAmt)) : '-';
+    const savingsDisplaySigned = savingsAmt !== 0 ? savSign + fmtR(Math.abs(savingsAmt)) : '-';
     const savingsPctSigned = savingsAmt !== 0 && nationPlan > 0
       ? savSign + ((Math.abs(savingsAmt)/nationPlan)*100).toFixed(1)+'%' : '-';
     const sumPrevSales    = routes.reduce(function(s,r){ return s+(r.prev_sales||0); }, 0);
@@ -1198,9 +1242,9 @@ function renderReport() {
     const sumCurrSales    = routes.reduce(function(s,r){ return s+(r.curr_sales||0); }, 0);
     ctRows+=`<tr>
       <td>${c}</td><td>${routes.length}</td><td style="text-align:right;">${totalVol||'-'}</td>
-      <td style="text-align:right;color:#999;font-size:10px;">${sumPrevSales>0?fmt(sumPrevSales):'-'}</td>
-      <td style="text-align:right;color:#999;font-size:10px;">${sumPrevPlanCost>0?fmt(sumPrevPlanCost):'-'}</td>
-      <td style="text-align:right;color:#2E75B6;font-size:10px;">${sumCurrSales>0?fmt(sumCurrSales):'-'}</td>
+      <td style="text-align:right;color:#999;font-size:10px;">${sumPrevSales>0?fmtR(sumPrevSales):'-'}</td>
+      <td style="text-align:right;color:#999;font-size:10px;">${sumPrevPlanCost>0?fmtR(sumPrevPlanCost):'-'}</td>
+      <td style="text-align:right;color:#2E75B6;font-size:10px;">${sumCurrSales>0?fmtR(sumCurrSales):'-'}</td>
       <td style="text-align:right;color:#2E75B6;">${planDisplay}</td>
       <td style="text-align:right;">${totDisplay}</td>
       <td style="text-align:right;${savColor}">${savingsDisplaySigned}</td>
@@ -1219,12 +1263,12 @@ function renderReport() {
   const totalPrevPlan     = routes_os.reduce(function(s,r){ return s+(r.prev_plan_cost||0); }, 0);
   const totalCurrSales    = routes_os.reduce(function(s,r){ return s+(r.curr_sales||0); }, 0);
   ctRows+='<tr class="total"><td>합 계</td><td></td><td style="text-align:right;">' + totalAllVol2 +
-    '</td><td style="text-align:right;color:#888;">' + (totalPrevSales>0?fmt(totalPrevSales):'-') +
-    '</td><td style="text-align:right;color:#888;">' + (totalPrevPlan>0?fmt(totalPrevPlan):'-') +
-    '</td><td style="text-align:right;color:#2E75B6;">' + (totalCurrSales>0?fmt(totalCurrSales):'-') +
-    '</td><td style="text-align:right;color:#2E75B6;">' + fmt(cPlanLogistics) +
-    '</td><td style="text-align:right;">' + fmt(grandTotal) +
-    '</td><td style="text-align:right;' + savCls + '">' + totalSign + fmt(Math.abs(savings_c)) +
+    '</td><td style="text-align:right;color:#888;">' + (totalPrevSales>0?fmtR(totalPrevSales):'-') +
+    '</td><td style="text-align:right;color:#888;">' + (totalPrevPlan>0?fmtR(totalPrevPlan):'-') +
+    '</td><td style="text-align:right;color:#2E75B6;">' + (totalCurrSales>0?fmtR(totalCurrSales):'-') +
+    '</td><td style="text-align:right;color:#2E75B6;">' + fmtR(cPlanLogistics) +
+    '</td><td style="text-align:right;">' + fmtR(grandTotal) +
+    '</td><td style="text-align:right;' + savCls + '">' + totalSign + fmtR(Math.abs(savings_c)) +
     '</td><td style="text-align:center;' + savCls + '">' + totalPct + '</td></tr></tbody>';
   document.getElementById('country-table').innerHTML=ctRows;
 }
@@ -2270,7 +2314,26 @@ function buildAdminUI() {
     <div class="section-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <h3 style="margin:0;">물류비 비딩 결과 보고자료</h3>
-        <button class="btn-sm" onclick="printReport()" style="background:white;border:1.5px solid var(--border);">🖨️ 인쇄</button>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dgray);">
+            <span>금액 단위</span>
+            <select id="report-unit" onchange="renderReport()" style="padding:4px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;">
+              <option value="1">원</option>
+              <option value="1000000">백만원</option>
+              <option value="100000000">억원</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dgray);">
+            <span>글씨 크기</span>
+            <select id="report-fontsize" onchange="applyReportFontSize()" style="padding:4px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;">
+              <option value="11">작게 (11px)</option>
+              <option value="13" selected>보통 (13px)</option>
+              <option value="15">크게 (15px)</option>
+              <option value="17">더 크게 (17px)</option>
+            </select>
+          </div>
+          <button class="btn-sm" onclick="printReport()" style="background:white;border:1.5px solid var(--border);">🖨️ 인쇄</button>
+        </div>
       </div>
       <h4>1. 물류비 비딩 결과 요약</h4>
       <div style="overflow-x:auto;margin-bottom:20px;"><table class="summary-table" id="summary-table"></table></div>
@@ -2279,15 +2342,15 @@ function buildAdminUI() {
         <table class="report-table" id="report-route-table">
           <thead><tr>
             <th>NO</th><th>국가</th><th>작업지</th><th>출발PORT</th><th>도착PORT</th><th>CTNR</th><th>예상물량</th>
-            <th class="rank-1">1위 업체</th><th class="rank-1">1위 견적가(원)</th>
-            <th style="background:#375623;color:white;">선정업체</th><th style="background:#375623;color:white;">선정 견적가(원)</th>
-            <th>1위↔선정 차액(원)</th>
-            <th style="background:#AAAAAA;color:white;font-size:9px;">직전반기<br>매출(원)</th>
-            <th style="background:#AAAAAA;color:white;font-size:9px;">직전반기<br>물류비(원)</th>
-            <th style="background:#2E75B6;color:white;font-size:9px;">이번반기<br>매출(원)</th>
-            <th style="background:#2E75B6;color:white;">이번반기<br>물류비(원)</th>
-            <th style="background:#2E75B6;color:white;">비딩<br>물류비(원)</th>
-            <th style="background:#2E75B6;color:white;">절감금액(원)</th>
+            <th class="rank-1">1위 업체</th><th class="rank-1" id="rh-rank1price">1위 견적가(원)</th>
+            <th style="background:#375623;color:white;">선정업체</th><th style="background:#375623;color:white;" id="rh-selprice">선정 견적가(원)</th>
+            <th id="rh-diff">1위↔선정 차액(원)</th>
+            <th style="background:#AAAAAA;color:white;font-size:9px;" id="rh-prevsales">직전반기<br>매출(원)</th>
+            <th style="background:#AAAAAA;color:white;font-size:9px;" id="rh-prevplan">직전반기<br>물류비(원)</th>
+            <th style="background:#2E75B6;color:white;font-size:9px;" id="rh-currsales">이번반기<br>매출(원)</th>
+            <th style="background:#2E75B6;color:white;" id="rh-currplan">이번반기<br>물류비(원)</th>
+            <th style="background:#2E75B6;color:white;" id="rh-bidcost">비딩<br>물류비(원)</th>
+            <th style="background:#2E75B6;color:white;" id="rh-saving">절감금액(원)</th>
             <th style="background:#2E75B6;color:white;">절감율</th>
           </tr></thead>
           <tbody id="report-route-tbody"></tbody>
