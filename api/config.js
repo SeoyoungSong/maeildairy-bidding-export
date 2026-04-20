@@ -98,19 +98,21 @@ export default async function handler(req, res) {
     if (!session || !session.role) return res.status(401).json({ error: '세션 오류' });
 
     // Redis에서 설정 로드
-    const [rawRoutes, rawForwarders, rawWorksites, rawBasic] = await Promise.all([
+    const [rawRoutes, rawForwarders, rawWorksites, rawBasic, rawFwPw] = await Promise.all([
       redis.get('bidding:cfg_routes'),
       redis.get('bidding:cfg_forwarders'),
       redis.get('bidding:cfg_worksites'),
       redis.get('bidding:cfg_basic'),
+      session.role === 'admin' ? redis.get('bidding:cfg_fw_passwords') : Promise.resolve(null),
     ]);
 
-    const routes     = ensureObject(rawRoutes)     || DEFAULT_ROUTES;
-    const forwarders = ensureObject(rawForwarders) || DEFAULT_FORWARDERS;
-    const worksites  = ensureObject(rawWorksites)  || DEFAULT_WORKSITES;
-    const basic      = ensureObject(rawBasic)      || {};
+    const routes      = ensureObject(rawRoutes)     || DEFAULT_ROUTES;
+    const forwarders  = ensureObject(rawForwarders) || DEFAULT_FORWARDERS;
+    const worksites   = ensureObject(rawWorksites)  || DEFAULT_WORKSITES;
+    const basic       = ensureObject(rawBasic)      || {};
+    const fwPasswords = ensureObject(rawFwPw)       || null;
 
-    return res.status(200).json({ routes, forwarders, worksites, basic });
+    return res.status(200).json({ routes, forwarders, worksites, basic, fwPasswords });
   } catch (e) {
     console.error('config error:', e);
     return res.status(500).json({ error: e.message });
