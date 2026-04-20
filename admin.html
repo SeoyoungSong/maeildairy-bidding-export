@@ -238,19 +238,14 @@ evalScores['JPI']   = {stability:2, network:2, response:3};
 // ── 스토리지 (Vercel KV API 기반 — 모든 기기에서 공유)
 async function saveToStorage(key, value) {
   const token = sessionStorage.getItem('admin_token');
-  if (!token) { window.location.replace('/admin-login.html'); return false; }
+  if (!token) return false;
   try {
     const res = await fetch('/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key, value, token })
     });
-    if (res.status === 401 || res.status === 403) {
-      sessionStorage.removeItem('admin_token');
-      window.location.replace('/admin-login.html');
-      return false;
-    }
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) { console.error('저장 실패:', res.status); return false; }
     return true;
   } catch(e) {
     console.error('저장 실패:', e);
@@ -260,18 +255,13 @@ async function saveToStorage(key, value) {
 
 async function loadFromStorage(key) {
   const token = sessionStorage.getItem('admin_token');
-  if (!token) { window.location.replace('/admin-login.html'); return null; }
+  if (!token) return null;
   try {
     const res = await fetch('/api/load', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key, token })
     });
-    if (res.status === 401 || res.status === 403) {
-      sessionStorage.removeItem('admin_token');
-      window.location.replace('/admin-login.html');
-      return null;
-    }
     if (!res.ok) return null;
     const data = await res.json();
     return data.value ?? null;
@@ -1418,29 +1408,20 @@ async function loadSettings() {
   const token = sessionStorage.getItem('admin_token');
   if (!token) { window.location.replace('/admin-login.html'); return; }
 
-  // 첫 시도
-  let res = await fetch('/api/config', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token })
-  }).catch(() => null);
-
-  // 401이면 500ms 후 1회 재시도 (세션 저장 타이밍 이슈 대비)
-  if (!res || res.status === 401) {
-    await new Promise(r => setTimeout(r, 500));
-    res = await fetch('/api/config', {
+  try {
+    const res = await fetch('/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token })
-    }).catch(() => null);
-  }
+    });
 
-  try {
-    if (!res || res.status === 401) {
+    if (res.status === 401) {
       sessionStorage.removeItem('admin_token');
       window.location.replace('/admin-login.html');
       return;
     }
+
+    if (!res.ok) { console.error('config 오류:', res.status); return; }
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
 
@@ -1461,9 +1442,7 @@ async function loadSettings() {
       if (data.basic.fwPw)           cfgFwPw           = data.basic.fwPw;
     }
 
-    // 비밀번호는 관리자만 별도 로드
-    const pwSaved = await loadFromStorage('cfg_fw_passwords');
-    if (pwSaved) cfgFwPasswords = pwSaved;
+    if (data.fwPasswords) cfgFwPasswords = data.fwPasswords;
 
     updateFwDropdown();
   } catch(e) {
