@@ -683,6 +683,9 @@ async function showFwPage() {
           노란색 셀에만 운임을 입력하세요. 입력한 내용은 실시간으로 저장됩니다. 모든 구간 입력 완료 후 하단의 <strong>[견적 제출]</strong> 버튼을 눌러주세요.
           기준환율: <strong id="fw-exrate-display">${(cfgExRate||1450).toLocaleString('ko-KR')} KRW/USD</strong>
         </div>
+        <div style="background:#F0F4F8;border:1px solid #C5D0DC;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:11px;color:#4A5568;">
+          ※ 본 시스템은 포워딩 비딩 업무 전용입니다. 이름·연락처 등 개인식별정보 입력을 금지합니다.
+        </div>
         <div style="background:white;border:1.5px dashed #90CAF9;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
           <div style="font-size:13px;color:var(--navy);font-weight:700;">📂 엑셀 일괄 입력</div>
           <button onclick="downloadFwExcel()" style="background:#1F4E79;color:white;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;">⬇ 양식 다운로드</button>
