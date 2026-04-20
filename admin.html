@@ -1418,13 +1418,25 @@ async function loadSettings() {
   const token = sessionStorage.getItem('admin_token');
   if (!token) { window.location.replace('/admin-login.html'); return; }
 
-  try {
-    const res = await fetch('/api/config', {
+  // 첫 시도
+  let res = await fetch('/api/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token })
+  }).catch(() => null);
+
+  // 401이면 500ms 후 1회 재시도 (세션 저장 타이밍 이슈 대비)
+  if (!res || res.status === 401) {
+    await new Promise(r => setTimeout(r, 500));
+    res = await fetch('/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token })
-    });
-    if (res.status === 401) {
+    }).catch(() => null);
+  }
+
+  try {
+    if (!res || res.status === 401) {
       sessionStorage.removeItem('admin_token');
       window.location.replace('/admin-login.html');
       return;
